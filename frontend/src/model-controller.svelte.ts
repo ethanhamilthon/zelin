@@ -1,4 +1,4 @@
-import { agentInfo, configureModel, listModels } from './agent';
+import { agentInfo, configureModel, listModels, setTitleModel } from './agent';
 import { placeholderInfo } from './agent-types';
 import type { ModelOption } from './agent-types';
 
@@ -25,5 +25,6 @@ export function createModelController() {
     },
     select: (id: string) => apply(configureModel(id, state.info.effort)),
     effort: (effort: string) => apply(configureModel(state.info.model, effort)),
+    titleModel: (id: string) => apply(setTitleModel(id)),
   };
 }

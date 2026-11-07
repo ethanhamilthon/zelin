@@ -20,7 +20,7 @@ func TestAnswerIsDurableBeforeReturningToUI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := store.Save(session.ID, []sessions.Message{{Role: "user", Content: "Calculate"}}, ""); err != nil {
+	if err := store.Save(session.ID, []sessions.Message{{Role: "user", Content: "Calculate"}}, "", nil); err != nil {
 		t.Fatal(err)
 	}
 	service := &AgentService{store: store, agents: map[string]*agent.Agent{session.ID: agent.New(&serviceClient{success: true})}}

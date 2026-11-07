@@ -16,20 +16,20 @@ type ModelInfo struct {
 	Effort        string           `json:"effort"`
 	ContextWindow int              `json:"contextWindow"`
 	Efforts       []string         `json:"efforts"`
-	DefaultEffort string           `json:"defaultEffort"`
 	Pricing       provider.Pricing `json:"pricing"`
+	TitleModel    string           `json:"titleModel"`
 }
 
 func (s *AgentService) Info(ctx context.Context) ModelInfo {
 	id, effort := s.client.Selection()
-	info := ModelInfo{Model: id, Name: id, Effort: effort, Efforts: []string{}}
+	info := ModelInfo{Model: id, Name: id, Effort: effort, Efforts: provider.Efforts}
 	if model, err := s.client.Lookup(ctx, id); err == nil {
-		info.Name, info.ContextWindow, info.Efforts = model.Name, model.ContextWindow, model.Efforts
-		info.DefaultEffort, info.Pricing = model.DefaultEffort, model.Pricing
+		info.Name, info.ContextWindow, info.Pricing = model.Name, model.ContextWindow, model.Pricing
 	}
 	if size, err := strconv.Atoi(os.Getenv("OPENAI_CONTEXT_WINDOW")); err == nil && size > 0 {
 		info.ContextWindow = size
 	}
+	info.TitleModel, _ = s.store.Setting("titleModel")
 	return info
 }
 
@@ -38,12 +38,11 @@ func (s *AgentService) Models(ctx context.Context) ([]provider.Model, error) {
 }
 
 func (s *AgentService) Configure(ctx context.Context, id, effort string) (ModelInfo, error) {
-	model, err := s.client.Lookup(ctx, id)
-	if err != nil {
+	if _, err := s.client.Lookup(ctx, id); err != nil {
 		return ModelInfo{}, err
 	}
-	if !slices.Contains(model.Efforts, effort) {
-		effort = ""
+	if !slices.Contains(provider.Efforts, effort) {
+		effort = provider.DefaultEffort
 	}
 	if err := s.store.SetSetting("model", id); err != nil {
 		return ModelInfo{}, err
@@ -55,12 +54,25 @@ func (s *AgentService) Configure(ctx context.Context, id, effort string) (ModelI
 	return s.Info(ctx), nil
 }
 
+func (s *AgentService) SetTitleModel(ctx context.Context, id string) (ModelInfo, error) {
+	if _, err := s.client.Lookup(ctx, id); err != nil {
+		return ModelInfo{}, err
+	}
+	if err := s.store.SetSetting("titleModel", id); err != nil {
+		return ModelInfo{}, err
+	}
+	return s.Info(ctx), nil
+}
+
 func restoreSelection(store *sessions.Store, client *provider.Client) error {
 	model, err := store.Setting("model")
 	if err != nil || model == "" {
 		return err
 	}
 	effort, err := store.Setting("effort")
+	if !slices.Contains(provider.Efforts, effort) {
+		effort = provider.DefaultEffort
+	}
 	client.Select(model, effort)
 	return err
 }

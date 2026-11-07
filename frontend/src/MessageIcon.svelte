@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { kind }: { kind: 'user' | 'assistant' | 'code' | 'loading' | 'done' } = $props();
+  let { kind }: { kind: 'user' | 'assistant' | 'loading' | 'done' | 'thinking' } = $props();
   const filled = $derived(kind === 'user' || kind === 'assistant');
 </script>
 
@@ -11,8 +11,10 @@
       <path d="M21 12a9 9 0 1 1-9-9" />
     {:else if kind === 'done'}
       <path d="m4.5 12.5 5 5 10-11" />
-    {:else if kind === 'code'}
-      <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
+    {:else if kind === 'thinking'}
+      <path d="M12 5a3 3 0 1 0-6 .1 4 4 0 0 0-2.5 5.8 4 4 0 0 0 .5 6.6A4 4 0 1 0 12 18Z" />
+      <path d="M12 5a3 3 0 1 1 6 .1 4 4 0 0 1 2.5 5.8 4 4 0 0 1-.5 6.6A4 4 0 1 1 12 18Z" />
+      <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
     {:else}
       <path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" />
     {/if}
@@ -20,7 +22,7 @@
 </span>
 
 <style>
-  .icon { position: absolute; left: -30px; top: 6px; display: inline-flex; color: #737373; }
+  .icon { position: absolute; left: -30px; top: 6px; display: inline-flex; color: var(--dim); }
   .loading { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .loading { animation: none; } }

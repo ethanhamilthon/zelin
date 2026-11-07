@@ -3,44 +3,37 @@ package sessions
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
 	"zash/internal/agent"
 	"zash/internal/provider"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Message struct {
 	Role       string            `json:"role"`
 	Content    string            `json:"content"`
+	Images     []string          `json:"images,omitempty"`
 	Executions []agent.Execution `json:"executions,omitempty"`
 }
 
 type Session struct {
-	ID       string          `json:"id"`
-	Title    string          `json:"title"`
-	Messages []Message       `json:"messages"`
-	Draft    string          `json:"draft"`
-	Updated  string          `json:"updated"`
-	Usage    provider.Totals `json:"usage"`
-	State    agent.State     `json:"-"`
+	ID          string          `json:"id"`
+	Title       string          `json:"title"`
+	Messages    []Message       `json:"messages"`
+	Draft       string          `json:"draft"`
+	Attachments []string        `json:"attachments"`
+	Updated     string          `json:"updated"`
+	Usage       provider.Totals `json:"usage"`
+	State       agent.State     `json:"-"`
 }
+
+const DefaultTitle = "New session"
 
 type Store struct{ db *sql.DB }
-
-func DefaultPath() (string, error) {
-	base := os.Getenv("XDG_DATA_HOME")
-	if base == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		base = filepath.Join(home, ".local", "share")
-	}
-	return filepath.Join(base, "zash", "sessions.db"), nil
-}
 
 func Open(path string) (*Store, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
@@ -60,6 +53,12 @@ func Open(path string) (*Store, error) {
  id TEXT PRIMARY KEY, title TEXT NOT NULL, messages TEXT NOT NULL DEFAULT '[]',
  draft TEXT NOT NULL DEFAULT '', state TEXT NOT NULL DEFAULT '{}', updated TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);`)
+	if err == nil {
+		_, err = db.Exec(`ALTER TABLE sessions ADD COLUMN attachments TEXT NOT NULL DEFAULT '[]'`)
+		if err != nil && strings.Contains(err.Error(), "duplicate column") {
+			err = nil
+		}
+	}
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -71,59 +70,19 @@ func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) Get(id string) (Session, error) {
 	var session Session
-	var messages, state string
-	err := s.db.QueryRow("SELECT id,title,messages,draft,state,updated FROM sessions WHERE id=?", id).
-		Scan(&session.ID, &session.Title, &messages, &session.Draft, &state, &session.Updated)
+	var messages, attachments, state string
+	err := s.db.QueryRow("SELECT id,title,messages,draft,attachments,state,updated FROM sessions WHERE id=?", id).
+		Scan(&session.ID, &session.Title, &messages, &session.Draft, &attachments, &state, &session.Updated)
 	if err != nil {
 		return session, err
 	}
 	if err = json.Unmarshal([]byte(messages), &session.Messages); err != nil {
 		return session, err
 	}
+	if err = json.Unmarshal([]byte(attachments), &session.Attachments); err != nil {
+		return session, err
+	}
 	err = json.Unmarshal([]byte(state), &session.State)
 	session.Usage = session.State.Usage
 	return session, err
-}
-
-func (s *Store) Save(id string, messages []Message, draft string) error {
-	if messages == nil {
-		messages = []Message{}
-	}
-	title := "New session"
-	for _, message := range messages {
-		if message.Role == "user" {
-			runes := []rune(message.Content)
-			if len(runes) > 60 {
-				runes = runes[:60]
-			}
-			title = string(runes)
-			break
-		}
-	}
-	data, err := json.Marshal(messages)
-	if err != nil {
-		return err
-	}
-	result, err := s.db.Exec("UPDATE sessions SET title=?,messages=?,draft=?,updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?", title, string(data), draft, id)
-	return changed(result, err)
-}
-
-func (s *Store) SaveState(id string, state agent.State) error {
-	data, err := json.Marshal(state)
-	if err != nil {
-		return err
-	}
-	result, err := s.db.Exec("UPDATE sessions SET state=? WHERE id=?", string(data), id)
-	return changed(result, err)
-}
-
-func changed(result sql.Result, err error) error {
-	if err != nil {
-		return err
-	}
-	count, err := result.RowsAffected()
-	if err == nil && count == 0 {
-		return fmt.Errorf("Session not found")
-	}
-	return err
 }

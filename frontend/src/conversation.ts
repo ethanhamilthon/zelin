@@ -1,9 +1,11 @@
 import type { AgentEvent, AgentResult, Execution, Usage } from './agent-types';
 
-export type Message = { role: 'user' | 'assistant'; content: string; executions?: Execution[] };
+export type Message = { role: 'user' | 'assistant'; content: string; images?: string[]; executions?: Execution[] };
 export type Conversation = {
   messages: Message[];
   draft: string;
+  attachments: string[];
+  unread: boolean;
   busy: boolean;
   error: string;
   activity: string;
@@ -17,9 +19,12 @@ export async function sendMessage(
 ): Promise<boolean> {
   if (state.busy || !state.draft.trim()) return false;
   const draft = state.draft;
+  const attachments = state.attachments;
   const previous = state.messages;
-  state.messages = [...previous, { role: 'user', content: draft }];
+  const images = attachments.map((url, index) => draft.includes(`[Image #${index + 1}]`) ? url : '');
+  state.messages = [...previous, images.some(Boolean) ? { role: 'user', content: draft, images } : { role: 'user', content: draft }];
   state.draft = '';
+  state.attachments = [];
   state.busy = true;
   state.error = '';
   state.activity = 'Thinking';
@@ -50,7 +55,7 @@ export async function sendMessage(
       }];
     } else {
       state.messages = previous;
-      if (!state.draft) state.draft = draft;
+      if (!state.draft) { state.draft = draft; state.attachments = attachments; }
     }
     state.error = error instanceof Error ? error.message : String(error);
     return false;

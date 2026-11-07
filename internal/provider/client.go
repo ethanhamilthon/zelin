@@ -10,23 +10,25 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
+
+	"zash/internal/metadata"
 )
 
-type ToolCall struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Function struct {
-		Name      string `json:"name"`
-		Arguments string `json:"arguments"`
-	} `json:"function"`
+var Efforts = []string{"none", "low", "medium", "high", "xhigh", "max"}
+
+const DefaultEffort = "medium"
+
+type Tool struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Parameters  map[string]any `json:"parameters"`
 }
 
-type Message struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string     `json:"tool_call_id,omitempty"`
+type Request struct {
+	Model    string
+	Effort   string
+	Messages []Message
+	Tools    []Tool
 }
 
 type Client struct {
@@ -35,6 +37,7 @@ type Client struct {
 	Model   string
 	Effort  string
 	HTTP    *http.Client
+	Meta    *metadata.Catalog
 	mu      sync.Mutex
 	catalog sync.Mutex
 	models  []Model
@@ -49,7 +52,7 @@ func FromEnv() *Client {
 	if model == "" {
 		model = "gpt-4.1-mini"
 	}
-	return &Client{URL: strings.TrimRight(base, "/") + "/chat/completions", Key: os.Getenv("OPENAI_API_KEY"), Model: model, HTTP: &http.Client{Timeout: 5 * time.Minute}}
+	return &Client{URL: strings.TrimRight(base, "/") + "/chat/completions", Key: os.Getenv("OPENAI_API_KEY"), Model: model, Effort: DefaultEffort, HTTP: &http.Client{}}
 }
 
 func (c *Client) Selection() (string, string) {
@@ -64,32 +67,24 @@ func (c *Client) Select(model, effort string) {
 	c.Model, c.Effort = model, effort
 }
 
-func (c *Client) pricing(id string) Pricing {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for _, model := range c.models {
-		if model.ID == id {
-			return model.Pricing
-		}
-	}
-	return Pricing{}
-}
-
-func (c *Client) Complete(ctx context.Context, messages []Message) (Message, Usage, error) {
+func (c *Client) complete(ctx context.Context, request Request) (Message, Usage, error) {
 	if c.Key == "" {
 		return Message{}, Usage{}, fmt.Errorf("Set OPENAI_API_KEY before starting Zash")
 	}
 	model, effort := c.Selection()
-	tool := map[string]any{
-		"type": "function",
-		"function": map[string]any{
-			"name": "js_repl", "description": "Execute synchronous JavaScript in a persistent Goja REPL. The only host function is bash(cmd, timeout). Return the final expression as output. No async/await.",
-			"parameters": map[string]any{"type": "object", "properties": map[string]any{"code": map[string]string{"type": "string"}}, "required": []string{"code"}, "additionalProperties": false},
-		},
+	if request.Model != "" {
+		model, effort = request.Model, request.Effort
 	}
-	payload := map[string]any{"model": model, "messages": messages, "tools": []any{tool}}
+	payload := map[string]any{"model": model, "messages": wire(request.Messages)}
+	if len(request.Tools) > 0 {
+		tools := make([]map[string]any, len(request.Tools))
+		for i, tool := range request.Tools {
+			tools[i] = map[string]any{"type": "function", "function": tool}
+		}
+		payload["tools"] = tools
+	}
 	if effort != "" {
-		payload["reasoning"] = map[string]string{"effort": effort}
+		payload["reasoning_effort"] = effort
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -103,11 +98,15 @@ func (c *Client) Complete(ctx context.Context, messages []Message) (Message, Usa
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.HTTP.Do(req)
 	if err != nil {
-		return Message{}, Usage{}, fmt.Errorf("Provider request failed: %w", err)
+		return Message{}, Usage{}, retryable{fmt.Errorf("Provider request failed: %w", err)}
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return Message{}, Usage{}, fmt.Errorf("Provider returned HTTP %d", res.StatusCode)
+		err := fmt.Errorf("Provider returned HTTP %d", res.StatusCode)
+		if res.StatusCode == 408 || res.StatusCode == 429 || res.StatusCode >= 500 {
+			return Message{}, Usage{}, retryable{err}
+		}
+		return Message{}, Usage{}, err
 	}
 	var data struct {
 		Choices []struct {
@@ -115,11 +114,11 @@ func (c *Client) Complete(ctx context.Context, messages []Message) (Message, Usa
 		} `json:"choices"`
 		Usage *rawUsage `json:"usage"`
 	}
-	if err := json.NewDecoder(io.LimitReader(res.Body, 4<<20)).Decode(&data); err != nil {
-		return Message{}, Usage{}, fmt.Errorf("Invalid provider response: %w", err)
+	if err := json.NewDecoder(io.LimitReader(res.Body, 16<<20)).Decode(&data); err != nil {
+		return Message{}, Usage{}, retryable{fmt.Errorf("Invalid provider response: %w", err)}
 	}
 	if len(data.Choices) == 0 {
 		return Message{}, Usage{}, fmt.Errorf("Provider returned no choices")
 	}
-	return data.Choices[0].Message, data.Usage.usage(c.pricing(model)), nil
+	return data.Choices[0].Message, data.Usage.usage(c.metadata(ctx, model).Pricing), nil
 }

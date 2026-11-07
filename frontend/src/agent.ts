@@ -1,40 +1,27 @@
 import type { Message } from './conversation';
 import type { AgentEvent, AgentInfo, AgentResult, ModelOption } from './agent-types';
 import { placeholderInfo } from './agent-types';
-
-type BridgeWindow = Window & {
-  chrome?: { webview?: { postMessage?: unknown } };
-  webkit?: { messageHandlers?: { external?: { postMessage?: unknown } } };
-  wails?: { invoke?: unknown };
-};
-
-function desktop() {
-  const bridge = window as BridgeWindow;
-  return Boolean(bridge.webkit?.messageHandlers?.external?.postMessage ||
-    bridge.chrome?.webview?.postMessage || bridge.wails?.invoke);
-}
-
-async function call<T>(method: string, ...args: unknown[]): Promise<T> {
-  if (!desktop()) throw new Error('Available in the desktop app only');
-  const { Call } = await import('@wailsio/runtime');
-  return Call.ByName(`main.AgentService.${method}`, ...args);
-}
+import { call, desktop, listen } from './bridge';
 
 export async function agentInfo(): Promise<AgentInfo> {
   if (!desktop()) return placeholderInfo('Desktop only');
-  return call<AgentInfo>('Info');
+  return call<AgentInfo>('AgentService.Info');
 }
 
-export const listModels = () => call<ModelOption[]>('Models');
-export const configureModel = (id: string, effort: string) => call<AgentInfo>('Configure', id, effort);
+export const listModels = () => call<ModelOption[]>('AgentService.Models');
+export const configureModel = (id: string, effort: string) => call<AgentInfo>('AgentService.Configure', id, effort);
+export const setTitleModel = (id: string) => call<AgentInfo>('AgentService.SetTitleModel', id);
+export const stopAgent = (sessionId: string) => call<boolean>('AgentService.Stop', sessionId);
 
 export async function runAgent(
   messages: Message[], onEvent: (event: AgentEvent) => void, sessionId: string,
 ): Promise<AgentResult> {
   if (!desktop()) throw new Error('The agent is available in the desktop app. Start Zash with go run .');
-  const { Call, Events } = await import('@wailsio/runtime');
-  const off = Events.On('agent:update', (event) => onEvent(event.data as AgentEvent));
+  const off = await listen('agent:update', (data) => {
+    const event = data as AgentEvent & { session?: string };
+    if (event.session === sessionId) onEvent(event);
+  });
   try {
-    return await Call.ByName('main.AgentService.Run', sessionId, messages.map(({ role, content }) => ({ role, content })));
+    return await call<AgentResult>('AgentService.Run', sessionId, messages.map(({ role, content, images }) => ({ role, content, images })));
   } finally { off(); }
 }

@@ -16,7 +16,7 @@ type serviceClient struct {
 	success bool
 }
 
-func (c *serviceClient) Complete(context.Context, []provider.Message) (provider.Message, provider.Usage, error) {
+func (c *serviceClient) Complete(context.Context, provider.Request) (provider.Message, provider.Usage, error) {
 	c.step++
 	if c.step == 1 {
 		call := provider.ToolCall{ID: "call", Type: "function"}

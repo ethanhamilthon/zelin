@@ -2,18 +2,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { EditorView } from '@codemirror/view';
 import App from './App.svelte';
-import { agentInfo, configureModel, listModels, runAgent } from './agent';
+import { agentInfo, runAgent, stopAgent } from './agent';
 import { currentSession, createSession, openSession, listSessions, saveSession } from './sessions';
+import { call } from './bridge';
 import type { AgentEvent, AgentResult, Execution } from './agent-types';
 import { placeholderInfo } from './agent-types';
 
-vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn() }));
+vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn(), setTitleModel: vi.fn(), stopAgent: vi.fn() }));
 vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn() }));
+vi.mock('./bridge', () => ({ call: vi.fn(), desktop: () => false, listen: vi.fn(async () => () => {}) }));
+vi.mock('./sound', () => ({ chime: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
 let app: ReturnType<typeof mount> | undefined;
 const execution: Execution = { id: 'call', code: 'bash("pwd", 10)', output: '"/tmp"', state: 'complete' };
+const thinking: Execution = { id: 'think', kind: 'thinking', code: 'Plan the command', output: '', state: 'complete' };
 const wait = async () => { await new Promise((resolve) => setTimeout(resolve, 0)); await tick(); };
-const session = (id = 'first', draft = 'Hello **world**') => ({ id, title: id, draft, messages: [], updated: new Date().toISOString() });
+const session = (id = 'first', draft = 'Hello **world**') => ({ id, title: `${id} title`, draft, messages: [], updated: new Date().toISOString() });
+const $ = (selector: string) => document.querySelector<HTMLElement>(selector);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -23,106 +28,123 @@ beforeEach(() => {
     getBoundingClientRect: { configurable: true, value: () => new DOMRect() },
   });
   vi.mocked(currentSession).mockResolvedValue(session());
-  vi.mocked(createSession).mockResolvedValue(session('new', ''));
-  vi.mocked(openSession).mockResolvedValue(session('second', 'Saved draft'));
-  vi.mocked(listSessions).mockResolvedValue([session(), session('second')]);
+  vi.mocked(createSession).mockResolvedValue(session('new', 'Second task'));
+  vi.mocked(openSession).mockImplementation(async (id) => session(id, ''));
+  vi.mocked(listSessions).mockResolvedValue([session(), session('new')]);
   vi.mocked(saveSession).mockResolvedValue();
-  vi.mocked(agentInfo).mockResolvedValue({ ...placeholderInfo('Test Model'), model: 'test/model', contextWindow: 128000 });
+  vi.mocked(stopAgent).mockResolvedValue(true);
+  vi.mocked(call).mockResolvedValue('');
+  vi.mocked(agentInfo).mockResolvedValue({ ...placeholderInfo('Test Model'), model: 'test/model', effort: 'medium', efforts: ['none', 'medium'], contextWindow: 128000 });
 });
-
-afterEach(async () => { if (app) await unmount(app); document.body.replaceChildren(); });
+afterEach(async () => { if (app) await unmount(app); app = undefined; document.body.replaceChildren(); });
 async function start() { app = mount(App, { target: document.body }); flushSync(); await wait(); }
-function key(key: string, ctrlKey = false) { window.dispatchEvent(new KeyboardEvent('keydown', { key, ctrlKey, cancelable: true })); }
-function submit() {
-  document.querySelector('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', {
-    key: 'Enter', code: 'Enter', shiftKey: true, bubbles: true, cancelable: true,
-  }));
-}
+function key(key: string, code: string, init: KeyboardEventInit = {}) { window.dispatchEvent(new KeyboardEvent('keydown', { key, code, cancelable: true, ...init })); }
+function submit() { $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true })); }
 function draft(text: string) {
-  const view = EditorView.findFromDOM(document.querySelector('.cm-editor')!)!;
+  const view = EditorView.findFromDOM($('.cm-editor')!)!;
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
 }
+function pending() {
+  const runs: { finish: (result: AgentResult) => void; notify: (event: AgentEvent) => void }[] = [];
+  vi.mocked(runAgent).mockImplementation((_, notify) => new Promise((finish) => { runs.push({ finish, notify }); }));
+  return runs;
+}
+const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(text))!;
 
 describe('agent UI', () => {
-  it('keeps drafts editable, renders plain code, and persists answers', async () => {
-    let finish!: (result: AgentResult) => void;
-    let notify!: (event: AgentEvent) => void;
-    vi.mocked(runAgent).mockImplementation((_, observe) => {
-      notify = observe;
-      return new Promise((resolve) => { finish = resolve; });
-    });
+  it('sends with Enter, shows thinking and code, and renders minimal Markdown', async () => {
+    const runs = pending();
     await start(); submit(); await wait();
-    expect(document.querySelector('article .text')?.textContent).toBe('Hello **world**');
-    expect(document.querySelector('article header')).toBeNull();
-    expect(document.querySelector('[aria-label="Request running"]')).not.toBeNull();
-    expect(document.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
+    expect($('article .text')?.textContent).toBe('Hello **world**');
+    expect($('[aria-label="Request running"]')).not.toBeNull();
     draft('Next draft'); submit();
     expect(runAgent).toHaveBeenCalledOnce();
-    notify({ kind: 'activity', activity: 'Running JavaScript' });
-    notify({ kind: 'execution', execution: { ...execution, state: 'running', output: '' } });
-    notify({ kind: 'usage', usage: { requests: 1, unpriced: 0, context: 16000, input: 16000, output: 0, cacheRead: null, cacheWrite: null, cost: 0.1, estimated: false } });
+    runs[0].notify({ kind: 'execution', execution: thinking });
+    runs[0].notify({ kind: 'execution', execution: { ...execution, state: 'running', output: '' } });
     await tick();
-    expect(document.querySelector('footer [role="status"]')?.getAttribute('aria-label')).toBe('Running JavaScript');
-    finish({ content: '## Done', executions: [execution] }); await wait();
-    expect(document.querySelectorAll('article .text')[1]?.textContent).toBe('## Done');
-    expect(document.querySelectorAll('article')).toHaveLength(2);
-    expect(document.querySelector('[aria-label="Request running"]')).toBeNull();
-    expect(document.querySelector('article [aria-label="Turn complete"]')).not.toBeNull();
-    expect(document.querySelectorAll('[aria-label="JavaScript execution"]')).toHaveLength(1);
-    expect(document.querySelector('[aria-label="JavaScript execution"] header')).toBeNull();
-    expect(document.querySelector('.output')).toBeNull();
-    document.querySelector<HTMLButtonElement>('[aria-label="Toggle execution output"]')!.click(); await tick();
-    expect(document.querySelector('.output')?.textContent).toBe('"/tmp"');
-    expect(document.querySelector('.cm-content')?.textContent).toBe('Next draft');
-    expect(document.querySelector('footer')?.textContent).toContain('Test Model');
-    expect(document.querySelector('footer [aria-expanded]')?.getAttribute('aria-label')).toContain('12.5%');
-    expect(document.querySelector('footer')?.textContent).not.toContain('Shift + Enter');
-    expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '## Done' })]), 'Next draft');
+    expect($('[aria-label="Thinking"]')?.textContent).toContain('Plan the command');
+    runs[0].finish({ content: '**Done** with `code`', executions: [thinking, execution] }); await wait();
+    expect($('article.assistant strong')?.textContent).toBe('Done');
+    expect($('article.assistant .text')?.textContent).toBe('Done with code');
+    expect($('article [aria-label="Turn complete"]')).not.toBeNull();
+    button('bash').click(); await tick();
+    expect($('.output')?.textContent).toBe('"/tmp"');
+    $('[aria-label="Fold code"]')!.click(); await tick();
+    expect($('[aria-label="Unfold code"]')).not.toBeNull();
+    expect($('.cm-content')?.textContent).toBe('Next draft');
+    expect($('footer')?.textContent).toContain('Test Model');
+    expect($('footer')?.textContent).toContain('medium');
+    expect($('footer .hint')?.textContent).toBe('Ctrl+K for Commands');
+    expect($('footer [role="status"]')).toBeNull();
+    expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '**Done** with `code`' })]), 'Next draft', []);
   });
 
   it('preserves the next draft on failure', async () => {
     let fail!: (reason: Error) => void;
     vi.mocked(runAgent).mockImplementation(() => new Promise((_, reject) => { fail = reject; }));
     await start(); submit(); await wait(); draft('Keep this'); fail(new Error('Offline')); await wait();
-    expect(document.querySelector('[role="alert"]')?.textContent).toBe('Offline');
-    expect(document.querySelector('.cm-content')?.textContent).toBe('Keep this');
+    expect($('[role="alert"]')?.textContent).toBe('Offline');
+    expect($('.cm-content')?.textContent).toBe('Keep this');
   });
 
-  it('closes commands with Escape even if focus leaves the menu', async () => {
-    await start(); key('k', true); await tick();
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-    key('Escape');
-    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
-    expect(document.activeElement).toBe(document.querySelector('.cm-content'));
+  it('opens commands with a Russian layout and closes with Escape', async () => {
+    await start(); key('л', 'KeyK', { ctrlKey: true }); await tick();
+    expect($('[role="dialog"]')?.getAttribute('aria-label')).toBe('Commands');
+    key('Escape', 'Escape');
+    await vi.waitFor(() => expect($('[role="dialog"]')).toBeNull());
+    expect(document.activeElement).toBe($('.cm-content'));
   });
 
-  it('shows unread completion until the user scrolls to the end', async () => {
-    let finish!: (result: AgentResult) => void;
-    vi.mocked(runAgent).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  it('stops the current run with Ctrl+C', async () => {
+    pending();
     await start(); submit(); await wait();
-    let reached = false;
-    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      return new DOMRect(0, 0, 100, this.tagName === 'ARTICLE' && !reached ? 900 : 500);
-    });
-    finish({ content: 'Done', executions: [] }); await wait();
-    expect(document.querySelector('footer [role="status"]')?.getAttribute('aria-label')).toBe('Unread response');
-    reached = true;
-    document.querySelector('main')!.dispatchEvent(new Event('scroll')); await tick();
-    expect(document.querySelector('footer [role="status"]')?.getAttribute('aria-label')).toBe('Ready');
-    rect.mockRestore();
+    key('с', 'KeyC', { ctrlKey: true });
+    expect(stopAgent).toHaveBeenCalledWith('first');
   });
 
-  it('creates sessions and switches saved sessions with Ctrl+S', async () => {
-    await start(); key('k', true); await tick();
-    [...document.querySelectorAll('button')].find((button) => button.textContent?.includes('New session'))!.click();
-    await wait();
-    expect(createSession).toHaveBeenCalledOnce();
-    expect(document.querySelector('.cm-content')?.textContent).not.toContain('Hello');
-    key('s', true); await wait();
-    expect(document.querySelector('[aria-label="Sessions"]')).not.toBeNull();
-    [...document.querySelectorAll('button')].find((button) => button.textContent?.includes('second'))!.click();
-    await wait();
-    expect(openSession).toHaveBeenCalledWith('second');
-    expect(document.querySelector('.cm-content')?.textContent).toBe('Saved draft');
+  it('runs sessions in parallel and toasts when a background session finishes', async () => {
+    const runs = pending();
+    await start(); submit(); await wait();
+    key('n', 'KeyN', { ctrlKey: true }); await wait();
+    expect($('.cm-content')?.textContent).toBe('Second task');
+    submit(); await wait();
+    expect(runAgent).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(runAgent).mock.calls.map((args) => args[2])).toEqual(['first', 'new']);
+    key('s', 'KeyS', { ctrlKey: true }); await wait();
+    expect(button('first title').textContent).toContain('Running');
+    key('Escape', 'Escape'); await wait();
+    runs[0].finish({ content: 'First done', executions: [] }); await wait(); await wait();
+    expect($('.toasts button')?.textContent).toBe('first title · finished');
+    $('.toasts button')!.click(); await wait();
+    expect(openSession).toHaveBeenLastCalledWith('first');
+    expect($('article.assistant .text')?.textContent).toBe('First done');
+    expect($('[aria-label="Request running"]')).toBeNull();
+  });
+
+  it('edits the system prompt and saves with Ctrl+S', async () => {
+    vi.mocked(call).mockImplementation(async (method) => method === 'SettingsService.Read' ? 'You are Zash.' : '');
+    await start(); key('k', 'KeyK', { ctrlKey: true }); await tick();
+    button('Instructions').click(); await tick();
+    button('System Prompt').click(); await wait();
+    expect($('footer[aria-label="System Prompt"]')?.textContent).toContain('Ctrl+S to Save');
+    const editor = [...document.querySelectorAll<HTMLElement>('.cm-content')].find((item) => item.getAttribute('aria-label') === 'System Prompt')!;
+    expect(editor.textContent).toBe('You are Zash.');
+    const view = EditorView.findFromDOM(editor.parentElement!.parentElement!)!;
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' Be brief.' } });
+    key('ы', 'KeyS', { ctrlKey: true }); await wait();
+    expect(call).toHaveBeenCalledWith('SettingsService.Write', 'system', 'You are Zash. Be brief.');
+    expect($('[aria-label="System Prompt"] [role="status"]')?.textContent).toBe('Saved');
+  });
+
+  it('hides code blocks from settings', async () => {
+    vi.mocked(currentSession).mockResolvedValue({ ...session(), messages: [{ role: 'assistant', content: 'Done', executions: [execution, thinking] }] });
+    await start();
+    expect($('[aria-label="JavaScript execution"]')).not.toBeNull();
+    key('k', 'KeyK', { ctrlKey: true }); await tick();
+    button('Settings').click(); await tick();
+    button('Show code').click(); await tick();
+    expect($('[aria-label="JavaScript execution"]')).toBeNull();
+    expect($('[aria-label="Thinking"]')).not.toBeNull();
+    expect(call).toHaveBeenCalledWith('SettingsService.Save', expect.stringContaining('"showCode":false'));
   });
 });

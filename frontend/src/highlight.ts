@@ -6,7 +6,7 @@ import type { Highlighter } from '@lezer/highlight';
 type Tree = ReturnType<typeof parser.parse>;
 import { highlighting } from './editor-theme';
 
-function escape(text: string): string {
+export function escape(text: string): string {
   return text.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 }
 

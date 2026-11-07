@@ -32,59 +32,47 @@ Only the API key is required. The model and base URL above are defaults.
 The provider must support function calling. Keys stay in the Go backend.
 For a local provider without authentication, use a nonempty placeholder key.
 
-Enter inserts a newline. Shift+Enter sends the current message.
-Messages and answers stay selectable, non-editable text that looks exactly like
-the input: Markdown markers stay literal and use the editor highlighting.
-The input stays editable during a run, so you can draft the next message.
-Sending again is disabled until the current turn finishes. New drafts are never
-replaced by a completed answer or an error. Failed input is restored when no
-new draft exists and no commands were executed. Commands are never rolled back.
-Sessions, messages, execution output, drafts, and provider context are stored in
-SQLite at `$XDG_DATA_HOME/zash/sessions.db` (default
-`~/.local/share/zash/sessions.db`). The last active session reopens on startup.
-Ctrl+S opens saved sessions; the command menu can create a new one. Switching
-sessions is disabled during an agent turn. JavaScript bindings are isolated per
-session and survive switching, but reset when the application restarts; the
-agent is informed of that reset. Completed answers are committed before the
-backend returns them to the UI. Drafts are saved shortly after typing stops,
-and drafts typed during a run are saved when that turn finishes.
+Enter sends the current message; Shift+Enter inserts a newline. All hotkeys
+match physical keys, so they work on any keyboard layout, and can be changed in
+Commands -> Hotkeys. Defaults: Ctrl+K commands, Ctrl+S sessions, Ctrl+N new
+session, Ctrl+C stops the current run when no text is selected.
 
-The bottom bar shows activity, the active model, its reasoning effort, and its
-context window. Click the model name, or use the command menu, to choose a model
-from the provider's `/models` catalog (OpenRouter metadata includes context
-limits, pricing, and reasoning options). The selected model and effort are
-saved and override `OPENAI_MODEL` on the next start. Context size comes from the
-catalog or the explicit `OPENAI_CONTEXT_WINDOW` token count. Unsupported
-metadata is shown as Unknown, not an estimated or invented limit. Ctrl+K opens
-commands; Escape closes them.
+User messages look like the input. Agent answers render only `**bold**`,
+`*italic*`, and `` `code` `` without their markers; everything else stays literal.
+Paste or drop images into the input, or use Commands -> Attach image. Each image
+becomes a `[Image #1]` token that is deleted as one unit and opens on click.
 
-The ring icon next to the status dot shows how much of the context window is
-used. Click it, or choose Context and usage in the command menu, to see context
-tokens, session input and output tokens, cache reads and writes, and spending.
-Provider-reported costs are used when available; otherwise the cost is estimated
-from catalog pricing and labeled as estimated. Metrics the provider does not
-report are shown as Unknown. Totals are saved with the session and counted once
-per provider response.
+Sessions, messages, images, execution output, drafts, and provider context are
+stored in SQLite at `$XDG_DATA_HOME/zash/sessions.db` (default
+`~/.local/share/zash/sessions.db`; `ZASH_HOME` overrides the whole data
+directory). Several sessions can run at once. When a background session
+finishes, a toast at the top center (and a sound) links back to it; both can be
+turned off in Commands -> Settings, together with the theme and code display.
+The sessions list shows running, finished, and failed sessions. Each session
+gets a generated title from the title model chosen in Commands -> Models.
 
-Reasoning efforts come from each model's `reasoning` object in OpenRouter's
-`GET /api/v1/models`:
+The bottom bar shows the model and reasoning effort on the left and the command
+hotkey on the right. Models come from the provider's `/models` endpoint. Context
+window and pricing come only from OpenRouter and LiteLLM metadata, cached for a
+day in `metadata.json`; they are never used as providers. `OPENAI_CONTEXT_WINDOW`
+overrides the context size. Every model offers the same efforts: none, low,
+medium, high, xhigh, max, sent as `reasoning_effort`. Hidden models in
+Commands -> Models do not appear in the bottom bar picker.
 
-- `supported_efforts` lists the accepted levels, highest first.
-- `supported_efforts: null` means every gateway level is accepted:
-  `max`, `xhigh`, `high`, `medium`, `low`, `minimal`, `none`.
-- A missing `reasoning` object or `supported_efforts` field means the model has
-  no effort control, so the selector is hidden.
-- `mandatory: true` removes `none`, which such models reject.
-- `default_effort` labels the Default option.
+Commands -> Context and usage shows context tokens, session tokens, cache reads
+and writes, and spending. Provider-reported costs are used when available;
+otherwise the cost is estimated from metadata pricing and labeled as estimated.
 
-Default sends no `reasoning` field, leaving the choice to the provider. When
-metadata is unavailable, as with providers without this catalog, the selector is
-hidden and requests never include an effort. A chosen effort is sent as
-`reasoning: { effort }`; an effort the new model does not support is reset to
-Default when switching models.
-Executed JavaScript appears as dimmed, syntax-highlighted plain code; click it
-to toggle its output. The bottom status dot is gray when idle, blinking green
-while running, and blue for an unread response until you scroll to its end.
+Provider reasoning (`reasoning_content`, `reasoning`, `reasoning_details`) is
+shown as thinking blocks, stored with the session, and sent back unchanged in
+later requests. Responses are not streamed, so a thinking block appears when its
+provider response completes. Executed JavaScript appears in code blocks; the
+arrow folds a block and clicking the code toggles its output.
+
+The system prompt lives in `SYSTEM.md` in the data directory. Edit it in
+Commands -> Instructions -> System Prompt and save with Ctrl+S. The JavaScript
+runtime contract is part of the tool description, so prompt edits never break
+the tool.
 Additional space
 below the editor lets the latest message scroll to the center of the viewport.
 
@@ -125,6 +113,25 @@ wails3 task dev
 wails3 task build
 wails3 task test
 ```
+
+## Production install
+
+Install a separate production copy next to the development checkout:
+
+```sh
+wails3 task install:prod
+```
+
+This builds `~/.local/bin/zash-prod` and a `Zash` launcher entry. The production
+copy keeps its own data, sessions, system prompt, and web storage in
+`~/.local/share/zash-prod`, so the development build in `~/.local/share/zash`
+can be changed and restarted freely while you work with the production one.
+Run `wails3 task install:prod` again to update it, and
+`wails3 task uninstall:prod` to remove the binary and launcher (data is kept).
+On startup Zash reads `.env` from its data directory (for the production copy
+`~/.local/share/zash-prod/.env`, mode 600) with `KEY=value` lines such as
+`OPENAI_API_KEY` and `OPENAI_BASE_URL`. Variables already set in the environment
+take precedence.
 
 Restart the desktop app after code changes. `npm --prefix frontend run dev`
 previews the UI in a browser; agent calls require the desktop bridge.

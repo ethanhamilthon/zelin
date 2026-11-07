@@ -4,7 +4,7 @@ import type { Conversation } from './conversation';
 import type { AgentResult, Execution } from './agent-types';
 
 function initial(draft = 'Hello'): Conversation {
-  return { messages: [], draft, busy: false, error: '', activity: 'Ready', executions: [], usage: null };
+  return { messages: [], draft, attachments: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null };
 }
 const answer = (content: string): AgentResult => ({ content, executions: [] });
 const execution: Execution = { id: 'call', code: '1 + 1', output: '2', state: 'complete' };
@@ -78,5 +78,24 @@ describe('conversation', () => {
     await sendMessage(state, async () => answer(''));
     expect(state.draft).toBe('Hello');
     expect(state.error).toContain('empty response');
+  });
+});
+
+describe('image attachments', () => {
+  it('sends only referenced images and clears attachments', async () => {
+    const state = initial('Look [Image #2]');
+    state.attachments = ['data:a', 'data:b'];
+    const run = vi.fn(async () => ({ content: 'Seen', executions: [] }));
+    expect(await sendMessage(state, run)).toBe(true);
+    expect(state.messages[0]).toEqual({ role: 'user', content: 'Look [Image #2]', images: ['', 'data:b'] });
+    expect(state.attachments).toEqual([]);
+  });
+
+  it('restores attachments when the request fails', async () => {
+    const state = initial('[Image #1]');
+    state.attachments = ['data:a'];
+    expect(await sendMessage(state, async () => { throw new Error('Offline'); })).toBe(false);
+    expect(state.draft).toBe('[Image #1]');
+    expect(state.attachments).toEqual(['data:a']);
   });
 });

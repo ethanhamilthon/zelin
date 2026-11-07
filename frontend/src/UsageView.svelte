@@ -30,7 +30,7 @@
 
 <style>
   dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 24px; margin: 0; padding: 4px 12px; }
-  dt { color: #777; }
-  dd { margin: 0; color: #ddd; text-align: right; white-space: nowrap; }
-  p { margin: 12px 0 0; padding: 0 12px 8px; color: #666; white-space: normal; }
+  dt { color: var(--dim); }
+  dd { margin: 0; color: var(--foreground); text-align: right; white-space: nowrap; }
+  p { margin: 12px 0 0; padding: 0 12px 8px; color: var(--faint); white-space: normal; }
 </style>

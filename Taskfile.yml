@@ -34,3 +34,19 @@ tasks:
       - npm --prefix frontend test
       - npm --prefix frontend run check
       - go test ./...
+
+  install:prod:
+    desc: Install a production copy as zash-prod with its own data in ~/.local/share/zash-prod
+    deps: [frontend:build]
+    vars:
+      BIN: '{{.HOME}}/.local/bin'
+      APPS: '{{.HOME}}/.local/share/applications'
+    cmds:
+      - mkdir -p {{.BIN}} {{.APPS}}
+      - go build -tags production -ldflags "-s -w -X zash/internal/home.Name=zash-prod" -o {{.BIN}}/zash-prod .
+      - printf '[Desktop Entry]\nType=Application\nName=Zash\nComment=Zen AI agent\nExec=%s\nTerminal=false\nCategories=Development;\n' {{.BIN}}/zash-prod > {{.APPS}}/zash-prod.desktop
+
+  uninstall:prod:
+    desc: Remove the production binary and launcher, keeping its data
+    cmds:
+      - rm -f {{.HOME}}/.local/bin/zash-prod {{.HOME}}/.local/share/applications/zash-prod.desktop

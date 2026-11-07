@@ -1,18 +1,30 @@
 <script lang="ts">
   import Modal from './Modal.svelte';
-  let { onclose, onfocus, onlatest, onnew, onopen, reasoning = false, busy = false }: {
-    onclose: () => void; onfocus: () => void; onlatest: () => void;
-    onnew: () => void; onopen: (name: 'sessions' | 'models' | 'efforts' | 'usage') => void; reasoning?: boolean; busy?: boolean;
+  import SearchInput from './SearchInput.svelte';
+  import type { Action } from './hotkeys';
+  export type Panel = 'sessions' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions';
+  let { hotkeys, onclose, onopen }: {
+    hotkeys: Record<Action, string>; onclose: () => void; onopen: (name: Panel) => void;
   } = $props();
+  let query = $state('');
+  const commands: { panel: Panel; label: string; hint: string }[] = [
+    { panel: 'manager', label: 'Models', hint: 'Visibility and titles' },
+    { panel: 'instructions', label: 'Instructions', hint: 'System prompt' },
+    { panel: 'settings', label: 'Settings', hint: 'Theme, toasts, code' },
+    { panel: 'hotkeys', label: 'Hotkeys', hint: 'Keyboard' },
+    { panel: 'usage', label: 'Context and usage', hint: 'Usage' },
+    { panel: 'sessions', label: 'Switch session', hint: '' },
+  ];
+  const matches = $derived(commands.filter(({ label, hint }) => `${label} ${hint}`.toLowerCase().includes(query.trim().toLowerCase())));
 </script>
 
 <Modal title="Commands" {onclose}>
-  <button onclick={onnew} disabled={busy}>New session <span>Create</span></button>
-  <button onclick={() => onopen('sessions')} disabled={busy}>Switch session <span>Ctrl + S</span></button>
-  <button onclick={() => onopen('models')}>Select model <span>Model</span></button>
-  <button onclick={() => onopen('efforts')} disabled={!reasoning}>Select reasoning effort <span>{reasoning ? 'Effort' : 'Unsupported'}</span></button>
-  <button onclick={() => onopen('usage')}>Context and usage <span>Usage</span></button>
-  <button onclick={onfocus}>Focus message editor <span>Write</span></button>
-  <button onclick={onlatest}>Scroll to latest message <span>Navigate</span></button>
-  <button onclick={onclose}>Close commands <span>Esc</span></button>
+  <SearchInput bind:value={query} label="Search commands" onkeydown={(event) => {
+    if (event.key === 'Enter' && matches.length) { event.preventDefault(); onopen(matches[0].panel); }
+  }} />
+  {#each matches as command (command.panel)}
+    <button onclick={() => onopen(command.panel)}>{command.label} <span>{command.panel === 'sessions' ? hotkeys.sessions : command.hint}</span></button>
+  {:else}
+    <p>No commands found</p>
+  {/each}
 </Modal>

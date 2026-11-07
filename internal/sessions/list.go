@@ -11,7 +11,7 @@ func (s *Store) Create() (Session, error) {
 	if _, err := rand.Read(bytes); err != nil {
 		return Session{}, err
 	}
-	session := Session{ID: hex.EncodeToString(bytes), Title: "New session", Messages: []Message{}, Updated: time.Now().UTC().Format(time.RFC3339Nano)}
+	session := Session{ID: hex.EncodeToString(bytes), Title: DefaultTitle, Messages: []Message{}, Updated: time.Now().UTC().Format(time.RFC3339Nano)}
 	_, err := s.db.Exec("INSERT INTO sessions(id,title,updated) VALUES(?,?,?)", session.ID, session.Title, session.Updated)
 	if err != nil {
 		return Session{}, err

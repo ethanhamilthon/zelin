@@ -3,25 +3,26 @@ import { EditorView } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 
 export const theme = EditorView.theme({
-  '&': { height: '100%', backgroundColor: 'var(--background)', color: '#e0e0e0' },
+  '&': { height: '100%', backgroundColor: 'var(--background)', color: 'var(--foreground)' },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { overflow: 'auto', fontFamily: 'inherit', fontSize: 'var(--font-size)', lineHeight: '1.8' },
-  '.cm-content': { padding: '32px clamp(48px, 6vw, 80px)', minHeight: '100%', caretColor: '#eee', overflowWrap: 'anywhere' },
+  '.cm-content': { padding: '32px clamp(48px, 6vw, 80px)', minHeight: '100%', caretColor: 'var(--foreground)', overflowWrap: 'anywhere' },
   '.cm-line': { padding: '0' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#eee' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: '#3b3b3b' },
-  '.cm-content ::selection': { backgroundColor: '#3b3b3b' },
-  '.cm-placeholder': { color: '#666' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--foreground)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--selection)' },
+  '.cm-content ::selection': { backgroundColor: 'var(--selection)' },
+  '.cm-placeholder': { color: 'var(--faint)' },
+  '.cm-image-token': { color: 'var(--accent)', cursor: 'pointer' },
   '.cm-scroller::-webkit-scrollbar': { width: '8px', height: '8px' },
-  '.cm-scroller::-webkit-scrollbar-thumb': { backgroundColor: '#404040', border: '2px solid var(--background)', borderRadius: '8px' },
-}, { dark: true });
+  '.cm-scroller::-webkit-scrollbar-thumb': { backgroundColor: 'var(--border)', border: '2px solid var(--background)', borderRadius: '8px' },
+});
 
 export const highlighting = HighlightStyle.define([
-  { tag: tags.heading, color: '#eee', fontWeight: '600' },
-  { tag: tags.strong, color: '#eee', fontWeight: '700' },
-  { tag: tags.emphasis, color: '#ddd', fontStyle: 'italic' },
-  { tag: [tags.link, tags.url], color: '#aaa' },
-  { tag: tags.monospace, color: '#aaa' },
-  { tag: tags.quote, color: '#888' },
-  { tag: [tags.processingInstruction, tags.meta], color: '#666' },
+  { tag: tags.heading, color: 'var(--foreground)', fontWeight: '600' },
+  { tag: tags.strong, color: 'var(--foreground)', fontWeight: '700' },
+  { tag: tags.emphasis, color: 'var(--foreground)', fontStyle: 'italic' },
+  { tag: [tags.link, tags.url], color: 'var(--muted)' },
+  { tag: tags.monospace, color: 'var(--muted)' },
+  { tag: tags.quote, color: 'var(--dim)' },
+  { tag: [tags.processingInstruction, tags.meta], color: 'var(--faint)' },
 ]);

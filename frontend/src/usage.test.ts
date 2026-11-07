@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import UsageView from './UsageView.svelte';
-import ContextButton from './ContextButton.svelte';
 import type { Usage } from './agent-types';
 
 vi.mock('svelte/transition', () => ({ fly: () => ({ duration: 0 }) }));
@@ -35,13 +34,4 @@ describe('usage view', () => {
     expect(rows()).toMatchObject({ Context: 'Unknown / Unknown', 'Context used': 'Unknown' });
   });
 
-  it('opens the dropdown from the context icon', () => {
-    app = mount(ContextButton, { target: document.body, props: { usage: used, contextWindow: 128000 } }); flushSync();
-    const button = document.querySelector('button')!;
-    expect(button.getAttribute('aria-label')).toBe('Context and usage: 25.0% of context used');
-    button.click(); flushSync();
-    expect(document.querySelector('[role="dialog"]')?.textContent).toContain('50,000');
-    document.querySelector('.popover')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); flushSync();
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
-  });
 });

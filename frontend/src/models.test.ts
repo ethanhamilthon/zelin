@@ -1,70 +1,65 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import ModelList from './ModelList.svelte';
+import ModelManager from './ModelManager.svelte';
 import EffortList from './EffortList.svelte';
-import StatusBar from './StatusBar.svelte';
 import { createModelController } from './model-controller.svelte';
-import { configureModel, listModels } from './agent';
+import { configureModel, setTitleModel } from './agent';
 import { placeholderInfo } from './agent-types';
 import type { ModelOption } from './agent-types';
 
-vi.mock('./agent', () => ({ agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn() }));
+vi.mock('./agent', () => ({ agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn(), setTitleModel: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
 const pricing = { prompt: 0.000001, completion: 0.000004, cacheRead: null, cacheWrite: null };
 const models: ModelOption[] = [
-  { id: 'openai/gpt-5', name: 'GPT-5', contextWindow: 400000, pricing, efforts: ['high', 'low'], defaultEffort: 'low' },
-  { id: 'deepseek/chat', name: 'DeepSeek', contextWindow: 0, pricing: { ...pricing, prompt: null }, efforts: [], defaultEffort: '' },
+  { id: 'openai/gpt-5', name: 'GPT-5', contextWindow: 400000, pricing },
+  { id: 'deepseek/chat', name: 'DeepSeek', contextWindow: 0, pricing: { ...pricing, prompt: null } },
 ];
 let app: ReturnType<typeof mount> | undefined;
 afterEach(async () => { if (app) await unmount(app); app = undefined; document.body.replaceChildren(); });
+const buttons = () => [...document.querySelectorAll<HTMLButtonElement>('button')];
 
 describe('model selection', () => {
-  it('filters models and selects the first match with Enter', () => {
+  it('filters models, hides disabled ones, and selects the first match with Enter', () => {
     const onselect = vi.fn();
-    app = mount(ModelList, { target: document.body, props: { models, active: 'openai/gpt-5', loading: false, error: '', onclose: vi.fn(), onselect } });
+    app = mount(ModelList, { target: document.body, props: { models, active: '', hidden: ['openai/gpt-5'], loading: false, error: '', onclose: vi.fn(), onselect } });
     flushSync();
-    const input = document.querySelector('input')!;
-    expect(document.activeElement).toBe(input);
-    expect(document.querySelector('[aria-current="true"]')?.textContent).toContain('GPT-5');
-    expect(document.body.textContent).toContain('400K · $1.00/M in · $4.00/M out');
-    expect(document.body.textContent).toContain('? · Unknown in');
-    input.value = 'seek'; input.dispatchEvent(new Event('input', { bubbles: true })); flushSync();
-    expect(document.querySelectorAll('button')).toHaveLength(1);
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    expect(buttons().map((item) => item.querySelector('strong')?.textContent)).toEqual(['DeepSeek']);
+    expect(document.activeElement).toBe(document.querySelector('input'));
+    document.querySelector('input')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(onselect).toHaveBeenCalledWith('deepseek/chat');
   });
 
-  it('offers only supported efforts', () => {
-    const onselect = vi.fn();
-    app = mount(EffortList, { target: document.body, props: { efforts: ['high', 'low'], active: 'low', fallback: 'medium', onclose: vi.fn(), onselect } });
+  it('toggles visibility and chooses the title model', () => {
+    const ontoggle = vi.fn();
+    const ontitle = vi.fn();
+    app = mount(ModelManager, { target: document.body, props: { models, hidden: ['deepseek/chat'], titleModel: 'openai/gpt-5', loading: false, error: '', onclose: vi.fn(), ontoggle, ontitle } });
     flushSync();
-    expect([...document.querySelectorAll('button')].map((button) => button.textContent?.trim())).toEqual(['Default medium', 'high', 'low Current']);
-    document.querySelectorAll('button')[0].click();
-    expect(onselect).toHaveBeenCalledWith('');
+    expect(document.querySelector('[aria-label="Hide GPT 5"]')?.getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('[aria-label="Show DeepSeek"]')?.getAttribute('aria-pressed')).toBe('false');
+    document.querySelector<HTMLButtonElement>('[aria-label="Show DeepSeek"]')!.click();
+    expect(ontoggle).toHaveBeenCalledWith('deepseek/chat');
+    expect(buttons().filter((item) => item.textContent?.includes('Title model'))).toHaveLength(1);
+    buttons().find((item) => item.textContent?.includes('Use for titles'))!.click();
+    expect(ontitle).toHaveBeenCalledWith('deepseek/chat');
   });
 
-  it('shows the effort control only for reasoning models', async () => {
-    const info = { ...placeholderInfo('GPT-5'), model: 'openai/gpt-5', efforts: ['high'], effort: 'high' };
-    const props = { busy: false, activity: '', info, onopen: vi.fn() };
-    app = mount(StatusBar, { target: document.body, props }); flushSync();
-    expect(document.querySelector('.effort')?.textContent).toBe('high');
-    await unmount(app);
-    app = mount(StatusBar, { target: document.body, props: { ...props, info: { ...info, efforts: [] } } }); flushSync();
-    expect(document.querySelector('.effort')).toBeNull();
+  it('offers the same efforts for every model', () => {
+    const efforts = ['none', 'low', 'medium', 'high', 'xhigh', 'max'];
+    app = mount(EffortList, { target: document.body, props: { efforts, active: 'high', onclose: vi.fn(), onselect: vi.fn() } });
+    flushSync();
+    expect(buttons().map((item) => item.firstChild?.textContent?.trim())).toEqual(efforts);
   });
 
-  it('keeps the current effort when switching models and reports failures', async () => {
-    vi.mocked(listModels).mockResolvedValue(models);
-    vi.mocked(configureModel).mockImplementation(async (model, effort) => ({ ...placeholderInfo(model), model, effort }));
+  it('keeps the current effort when switching models and sets the title model', async () => {
+    const info = { ...placeholderInfo('GPT-5'), model: 'openai/gpt-5', effort: 'xhigh', efforts: ['xhigh'] };
+    vi.mocked(configureModel).mockResolvedValue(info);
+    vi.mocked(setTitleModel).mockResolvedValue({ ...info, titleModel: 'deepseek/chat' });
     const controller = createModelController();
-    controller.state.info = { ...placeholderInfo('GPT-5'), model: 'openai/gpt-5', effort: 'high' };
-    await controller.load(); await controller.load();
-    expect(listModels).toHaveBeenCalledOnce();
+    controller.state.info = info;
     expect(await controller.select('deepseek/chat')).toBe(true);
-    expect(configureModel).toHaveBeenCalledWith('deepseek/chat', 'high');
-    vi.mocked(configureModel).mockRejectedValueOnce(new Error('Unknown model'));
-    expect(await controller.effort('low')).toBe(false);
-    expect(controller.state.error).toContain('Unknown model');
-    expect(controller.state.info.model).toBe('deepseek/chat');
+    expect(configureModel).toHaveBeenCalledWith('deepseek/chat', 'xhigh');
+    expect(await controller.titleModel('deepseek/chat')).toBe(true);
+    expect(controller.state.info.titleModel).toBe('deepseek/chat');
   });
 });

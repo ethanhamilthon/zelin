@@ -22,7 +22,7 @@ func TestSessionsSurviveRestart(t *testing.T) {
 		{Role: "user", Content: "Hello SQLite"},
 		{Role: "assistant", Content: "Done", Executions: []agent.Execution{{ID: "call", Code: "2+2", Output: "4", State: "complete"}}},
 	}
-	if err := store.Save(first.ID, messages, "Next draft"); err != nil {
+	if err := store.Save(first.ID, messages, "Next draft", []string{"data:image/png;base64,AA"}); err != nil {
 		t.Fatal(err)
 	}
 	state := agent.State{History: []provider.Message{{Role: "user", Content: "Hello SQLite"}}, Transcript: []provider.Message{{Role: "tool", Content: "4", ToolCallID: "call"}}, Usage: provider.Totals{Requests: 2}}
@@ -51,7 +51,7 @@ func TestSessionsSurviveRestart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if loaded.ID != first.ID || loaded.Title != "Hello SQLite" || loaded.Draft != "Next draft" || len(loaded.Messages) != 2 {
+	if loaded.ID != first.ID || loaded.Title != "Hello SQLite" || loaded.Draft != "Next draft" || len(loaded.Messages) != 2 || loaded.Attachments[0] != "data:image/png;base64,AA" {
 		t.Fatalf("Session was not restored: %+v", loaded)
 	}
 	if loaded.Messages[1].Executions[0].Output != "4" || loaded.State.Transcript[0].ToolCallID != "call" || loaded.Usage.Requests != 2 {
@@ -68,8 +68,17 @@ func TestSessionsSurviveRestart(t *testing.T) {
 	if model, err := store.Setting("model"); err != nil || model != "test" {
 		t.Fatalf("%s %v", model, err)
 	}
-	if err := store.Save("missing", nil, ""); err == nil {
+	if err := store.Save("missing", nil, "", nil); err == nil {
 		t.Fatal("Accepted missing session")
+	}
+	if err := store.Rename(first.ID, "Generated"); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Save(first.ID, messages, "", nil); err != nil {
+		t.Fatal(err)
+	}
+	if renamed, _ := store.Get(first.ID); renamed.Title != "Generated" || len(renamed.Attachments) != 0 {
+		t.Fatalf("Generated title was overwritten: %+v", renamed)
 	}
 	if _, err := store.Activate("missing"); err == nil {
 		t.Fatal("Activated missing session")

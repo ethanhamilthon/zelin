@@ -1,15 +1,12 @@
 import type { Message } from './conversation';
 import type { Usage } from './agent-types';
+import { call } from './bridge';
 
-export type Session = { id: string; title: string; messages: Message[]; draft: string; updated: string; usage?: Usage };
+export type Session = { id: string; title: string; messages: Message[]; draft: string; attachments?: string[]; updated: string; usage?: Usage };
 
-async function call<T>(method: string, ...args: unknown[]): Promise<T> {
-  const { Call } = await import('@wailsio/runtime');
-  return Call.ByName(`main.SessionService.${method}`, ...args);
-}
-
-export const currentSession = () => call<Session>('Current');
-export const createSession = () => call<Session>('Create');
-export const openSession = (id: string) => call<Session>('Open', id);
-export const listSessions = () => call<Session[]>('List');
-export const saveSession = (id: string, messages: Message[], draft: string) => call<void>('Save', id, messages, draft);
+export const currentSession = () => call<Session>('SessionService.Current');
+export const createSession = () => call<Session>('SessionService.Create');
+export const openSession = (id: string) => call<Session>('SessionService.Open', id);
+export const listSessions = () => call<Session[]>('SessionService.List');
+export const saveSession = (id: string, messages: Message[], draft: string, attachments: string[]) =>
+  call<void>('SessionService.Save', id, messages, draft, attachments);
