@@ -14,6 +14,7 @@ export function createSessionController(conversation: Conversation) {
     conversation.error = '';
     conversation.activity = 'Ready';
     conversation.executions = [];
+    conversation.usage = session.usage ?? null;
   }
 
   async function save() {

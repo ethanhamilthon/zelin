@@ -1,6 +1,7 @@
 import type { Message } from './conversation';
+import type { Usage } from './agent-types';
 
-export type Session = { id: string; title: string; messages: Message[]; draft: string; updated: string };
+export type Session = { id: string; title: string; messages: Message[]; draft: string; updated: string; usage?: Usage };
 
 async function call<T>(method: string, ...args: unknown[]): Promise<T> {
   const { Call } = await import('@wailsio/runtime');

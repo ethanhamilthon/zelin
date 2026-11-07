@@ -4,7 +4,7 @@
   import { fade, fly } from 'svelte/transition';
   let { title, onclose, children }: { title: string; onclose: () => void; children: Snippet } = $props();
   let panel: HTMLDivElement;
-  onMount(() => panel.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus());
+  onMount(() => (panel.querySelector<HTMLButtonElement>('button:not(:disabled)') ?? panel).focus());
 
   function navigate(event: KeyboardEvent) {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onclose(); return; }

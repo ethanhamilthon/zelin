@@ -60,6 +60,7 @@ describe('agent UI', () => {
     expect(runAgent).toHaveBeenCalledOnce();
     notify({ kind: 'activity', activity: 'Running JavaScript' });
     notify({ kind: 'execution', execution: { ...execution, state: 'running', output: '' } });
+    notify({ kind: 'usage', usage: { requests: 1, unpriced: 0, context: 16000, input: 16000, output: 0, cacheRead: null, cacheWrite: null, cost: 0.1, estimated: false } });
     await tick();
     expect(document.querySelector('footer [role="status"]')?.getAttribute('aria-label')).toBe('Running JavaScript');
     finish({ content: '## Done', executions: [execution] }); await wait();
@@ -72,7 +73,8 @@ describe('agent UI', () => {
     document.querySelector<HTMLButtonElement>('[aria-label="Toggle execution output"]')!.click(); await tick();
     expect(document.querySelector('.output')?.textContent).toBe('"/tmp"');
     expect(document.querySelector('.cm-content')?.textContent).toBe('Next draft');
-    expect(document.querySelector('footer')?.textContent).toContain('128,000 tokens');
+    expect(document.querySelector('footer')?.textContent).toContain('Test Model');
+    expect(document.querySelector('footer [aria-expanded]')?.getAttribute('aria-label')).toContain('12.5%');
     expect(document.querySelector('footer')?.textContent).not.toContain('Shift + Enter');
     expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '## Done' })]), 'Next draft');
   });

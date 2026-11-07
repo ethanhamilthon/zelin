@@ -13,14 +13,16 @@
   import SessionList from './SessionList.svelte';
   import ModelList from './ModelList.svelte';
   import EffortList from './EffortList.svelte';
+  import Modal from './Modal.svelte';
+  import UsageView from './UsageView.svelte';
 
   let container: HTMLDivElement;
   let scroller: HTMLElement;
   let editor: ReturnType<typeof createEditor> | undefined;
-  type ModalName = 'commands' | 'sessions' | 'models' | 'efforts';
+  type ModalName = 'commands' | 'sessions' | 'models' | 'efforts' | 'usage';
   let modal = $state<ModalName | null>(null);
   let unread = $state(false);
-  const conversation = $state<Conversation>({ messages: [], draft: '', busy: false, error: '', activity: 'Ready', executions: [] });
+  const conversation = $state<Conversation>({ messages: [], draft: '', busy: false, error: '', activity: 'Ready', executions: [], usage: null });
   const sessions = createSessionController(conversation);
   const models = createModelController();
 
@@ -100,7 +102,7 @@
     {#if sessions.state.error}<p class="error" role="alert">{sessions.state.error}</p>{/if}
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar busy={conversation.busy} activity={conversation.activity} info={models.state.info} {unread} onopen={open} />
+  <StatusBar busy={conversation.busy} activity={conversation.activity} info={models.state.info} usage={conversation.usage} {unread} onopen={open} />
 </div>
 {#if modal === 'commands'}
   <Commands onclose={closeModal} onfocus={closeModal} onlatest={() => { closeModal(); scrollLatest(); }} onnew={() => { void selectSession(); }} onopen={open} reasoning={models.state.info.efforts.length > 0} busy={conversation.busy || sessions.state.loading} />
@@ -110,6 +112,8 @@
   <ModelList models={models.state.models} active={models.state.info.model} loading={models.state.loading} error={models.state.error} onclose={closeModal} onselect={(id) => { void selectModel(id); }} />
 {:else if modal === 'efforts'}
   <EffortList efforts={models.state.info.efforts} active={models.state.info.effort} fallback={models.state.info.defaultEffort} error={models.state.error} onclose={closeModal} onselect={(effort) => { void selectEffort(effort); }} />
+{:else if modal === 'usage'}
+  <Modal title="Context and usage" onclose={closeModal}><UsageView usage={conversation.usage} contextWindow={models.state.info.contextWindow} /></Modal>
 {/if}
 
 <style>

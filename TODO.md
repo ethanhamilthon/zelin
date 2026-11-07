@@ -17,13 +17,13 @@
 
 ## Context and session usage
 
-- [ ] Replace the context text in the status bar with an icon that opens a context and usage dropdown.
-- [ ] Expose the same context and usage view through the command menu.
-- [ ] Show current context token usage, the model maximum context size, and the percentage used.
-- [ ] Show cumulative input and output tokens for the session.
-- [ ] Show a cache summary, including cache reads and writes when reported by the provider.
-- [ ] Show cumulative session spending, using provider-reported costs when available and clearly labeling pricing-based estimates.
-- [ ] Persist session usage totals and avoid double counting requests. Show unavailable metrics as unknown rather than zero.
+- [x] Replace the context text in the status bar with an icon that opens a context and usage dropdown.
+- [x] Expose the same context and usage view through the command menu.
+- [x] Show current context token usage, the model maximum context size, and the percentage used.
+- [x] Show cumulative input and output tokens for the session.
+- [x] Show a cache summary, including cache reads and writes when reported by the provider.
+- [x] Show cumulative session spending, using provider-reported costs when available and clearly labeling pricing-based estimates.
+- [x] Persist session usage totals and avoid double counting requests. Show unavailable metrics as unknown rather than zero.
 
 ## Tool output
 

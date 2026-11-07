@@ -1,4 +1,4 @@
-import type { AgentEvent, AgentResult, Execution } from './agent-types';
+import type { AgentEvent, AgentResult, Execution, Usage } from './agent-types';
 
 export type Message = { role: 'user' | 'assistant'; content: string; executions?: Execution[] };
 export type Conversation = {
@@ -8,6 +8,7 @@ export type Conversation = {
   error: string;
   activity: string;
   executions: Execution[];
+  usage: Usage | null;
 };
 
 export async function sendMessage(
@@ -25,6 +26,7 @@ export async function sendMessage(
   state.executions = [];
   const observe = (event: AgentEvent) => {
     if (event.kind === 'activity') state.activity = event.activity;
+    else if (event.kind === 'usage') state.usage = event.usage;
     else if (event.kind === 'execution') {
       const execution = event.execution;
       const index = state.executions.findIndex((item) => item.id === execution.id);
