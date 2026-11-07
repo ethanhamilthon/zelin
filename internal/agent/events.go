@@ -1,5 +1,7 @@
 package agent
 
+import "zash/internal/provider"
+
 type Execution struct {
 	ID     string `json:"id"`
 	Code   string `json:"code"`
@@ -8,7 +10,8 @@ type Execution struct {
 }
 
 type Event struct {
-	Kind      string     `json:"kind"`
-	Activity  string     `json:"activity,omitempty"`
-	Execution *Execution `json:"execution,omitempty"`
+	Kind      string           `json:"kind"`
+	Activity  string           `json:"activity,omitempty"`
+	Execution *Execution       `json:"execution,omitempty"`
+	Usage     *provider.Totals `json:"usage,omitempty"`
 }

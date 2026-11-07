@@ -14,14 +14,15 @@ type fakeClient struct {
 	messages [][]provider.Message
 }
 
-func (f *fakeClient) Complete(_ context.Context, messages []provider.Message) (provider.Message, error) {
+func (f *fakeClient) Complete(_ context.Context, messages []provider.Message) (provider.Message, provider.Usage, error) {
 	f.messages = append(f.messages, append([]provider.Message{}, messages...))
 	if len(f.replies) == 0 {
-		return provider.Message{}, fmt.Errorf("Offline")
+		return provider.Message{}, provider.Usage{}, fmt.Errorf("Offline")
 	}
 	reply := f.replies[0]
 	f.replies = f.replies[1:]
-	return reply, nil
+	input, output := int64(10), int64(2)
+	return reply, provider.Usage{Input: &input, Output: &output}, nil
 }
 
 func TestToolLoop(t *testing.T) {
@@ -38,8 +39,11 @@ func TestToolLoop(t *testing.T) {
 	if err != nil || result != "**hello**" {
 		t.Fatalf("%s %v", result, err)
 	}
-	if len(events) != 5 || events[1].Activity != "Running JavaScript" || events[2].Execution.State != "running" || events[3].Execution.Output != `"hello"` {
+	if len(events) != 7 || events[1].Usage.Requests != 1 || events[2].Activity != "Running JavaScript" || events[3].Execution.State != "running" || events[4].Execution.Output != `"hello"` {
 		t.Fatalf("Invalid execution events: %+v", events)
+	}
+	if usage := a.State().Usage; usage.Requests != 2 || *usage.Input != 20 || *usage.Context != 12 {
+		t.Fatalf("%+v", usage)
 	}
 	tool := client.messages[1][3]
 	if tool.Role != "tool" || tool.ToolCallID != "test" || tool.Content != `"hello"` {

@@ -2,9 +2,7 @@ package sessions
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
-	"errors"
 	"time"
 )
 
@@ -26,18 +24,16 @@ func (s *Store) Activate(id string) (Session, error) {
 	if err != nil {
 		return session, err
 	}
-	_, err = s.db.Exec("INSERT INTO settings(key,value) VALUES('active',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", id)
-	return session, err
+	return session, s.SetSetting("active", id)
 }
 
 func (s *Store) Current() (Session, error) {
-	var id string
-	err := s.db.QueryRow("SELECT value FROM settings WHERE key='active'").Scan(&id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return s.Create()
-	}
+	id, err := s.Setting("active")
 	if err != nil {
 		return Session{}, err
+	}
+	if id == "" {
+		return s.Create()
 	}
 	return s.Get(id)
 }

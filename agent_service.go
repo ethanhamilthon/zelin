@@ -24,10 +24,6 @@ type AgentResult struct {
 	Error      string            `json:"error,omitempty"`
 }
 
-func (s *AgentService) Info(ctx context.Context) provider.Metadata {
-	return s.client.Metadata(ctx)
-}
-
 func (s *AgentService) Run(ctx context.Context, id string, history []provider.Message) (AgentResult, error) {
 	if !s.mu.TryLock() {
 		return AgentResult{}, fmt.Errorf("Agent is already running")

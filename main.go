@@ -25,6 +25,9 @@ func main() {
 	}
 	defer store.Close()
 	client := provider.FromEnv()
+	if err := restoreSelection(store, client); err != nil {
+		log.Fatal(err)
+	}
 	service := &AgentService{client: client, store: store, agents: map[string]*agent.Agent{}}
 	app := application.New(application.Options{
 		Name:        "zash",

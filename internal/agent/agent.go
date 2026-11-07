@@ -13,7 +13,7 @@ import (
 )
 
 type Completer interface {
-	Complete(context.Context, []provider.Message) (provider.Message, error)
+	Complete(context.Context, []provider.Message) (provider.Message, provider.Usage, error)
 }
 
 type Agent struct {
@@ -21,6 +21,7 @@ type Agent struct {
 	runtime    *jsruntime.Runtime
 	history    []provider.Message
 	transcript []provider.Message
+	usage      provider.Totals
 }
 
 func New(client Completer) *Agent { return &Agent{client: client, runtime: jsruntime.New()} }
@@ -56,10 +57,13 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			return "", err
 		}
 		emit(Event{Kind: "activity", Activity: "Thinking"})
-		reply, err := a.client.Complete(ctx, messages)
+		reply, usage, err := a.client.Complete(ctx, messages)
 		if err != nil {
 			return "", err
 		}
+		a.usage = a.usage.Add(usage)
+		totals := a.usage
+		emit(Event{Kind: "usage", Usage: &totals})
 		if len(reply.ToolCalls) == 0 {
 			if strings.TrimSpace(reply.Content) == "" {
 				return "", fmt.Errorf("Agent returned an empty response")

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -29,10 +30,14 @@ type Message struct {
 }
 
 type Client struct {
-	URL   string
-	Key   string
-	Model string
-	HTTP  *http.Client
+	URL     string
+	Key     string
+	Model   string
+	Effort  string
+	HTTP    *http.Client
+	mu      sync.Mutex
+	catalog sync.Mutex
+	models  []Model
 }
 
 func FromEnv() *Client {
@@ -44,13 +49,37 @@ func FromEnv() *Client {
 	if model == "" {
 		model = "gpt-4.1-mini"
 	}
-	return &Client{strings.TrimRight(base, "/") + "/chat/completions", os.Getenv("OPENAI_API_KEY"), model, &http.Client{Timeout: 90 * time.Second}}
+	return &Client{URL: strings.TrimRight(base, "/") + "/chat/completions", Key: os.Getenv("OPENAI_API_KEY"), Model: model, HTTP: &http.Client{Timeout: 5 * time.Minute}}
 }
 
-func (c *Client) Complete(ctx context.Context, messages []Message) (Message, error) {
-	if c.Key == "" {
-		return Message{}, fmt.Errorf("Set OPENAI_API_KEY before starting Zash")
+func (c *Client) Selection() (string, string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Model, c.Effort
+}
+
+func (c *Client) Select(model, effort string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.Model, c.Effort = model, effort
+}
+
+func (c *Client) pricing(id string) Pricing {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, model := range c.models {
+		if model.ID == id {
+			return model.Pricing
+		}
 	}
+	return Pricing{}
+}
+
+func (c *Client) Complete(ctx context.Context, messages []Message) (Message, Usage, error) {
+	if c.Key == "" {
+		return Message{}, Usage{}, fmt.Errorf("Set OPENAI_API_KEY before starting Zash")
+	}
+	model, effort := c.Selection()
 	tool := map[string]any{
 		"type": "function",
 		"function": map[string]any{
@@ -58,34 +87,39 @@ func (c *Client) Complete(ctx context.Context, messages []Message) (Message, err
 			"parameters": map[string]any{"type": "object", "properties": map[string]any{"code": map[string]string{"type": "string"}}, "required": []string{"code"}, "additionalProperties": false},
 		},
 	}
-	body, err := json.Marshal(map[string]any{"model": c.Model, "messages": messages, "tools": []any{tool}})
+	payload := map[string]any{"model": model, "messages": messages, "tools": []any{tool}}
+	if effort != "" {
+		payload["reasoning"] = map[string]string{"effort": effort}
+	}
+	body, err := json.Marshal(payload)
 	if err != nil {
-		return Message{}, err
+		return Message{}, Usage{}, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.URL, bytes.NewReader(body))
 	if err != nil {
-		return Message{}, err
+		return Message{}, Usage{}, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.Key)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.HTTP.Do(req)
 	if err != nil {
-		return Message{}, fmt.Errorf("Provider request failed: %w", err)
+		return Message{}, Usage{}, fmt.Errorf("Provider request failed: %w", err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return Message{}, fmt.Errorf("Provider returned HTTP %d", res.StatusCode)
+		return Message{}, Usage{}, fmt.Errorf("Provider returned HTTP %d", res.StatusCode)
 	}
 	var data struct {
 		Choices []struct {
 			Message Message `json:"message"`
 		} `json:"choices"`
+		Usage *rawUsage `json:"usage"`
 	}
 	if err := json.NewDecoder(io.LimitReader(res.Body, 4<<20)).Decode(&data); err != nil {
-		return Message{}, fmt.Errorf("Invalid provider response: %w", err)
+		return Message{}, Usage{}, fmt.Errorf("Invalid provider response: %w", err)
 	}
 	if len(data.Choices) == 0 {
-		return Message{}, fmt.Errorf("Provider returned no choices")
+		return Message{}, Usage{}, fmt.Errorf("Provider returned no choices")
 	}
-	return data.Choices[0].Message, nil
+	return data.Choices[0].Message, data.Usage.usage(c.pricing(model)), nil
 }

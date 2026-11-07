@@ -16,18 +16,18 @@ type serviceClient struct {
 	success bool
 }
 
-func (c *serviceClient) Complete(context.Context, []provider.Message) (provider.Message, error) {
+func (c *serviceClient) Complete(context.Context, []provider.Message) (provider.Message, provider.Usage, error) {
 	c.step++
 	if c.step == 1 {
 		call := provider.ToolCall{ID: "call", Type: "function"}
 		call.Function.Name = "js_repl"
 		call.Function.Arguments = `{"code":"1 + 1"}`
-		return provider.Message{Role: "assistant", ToolCalls: []provider.ToolCall{call}}, nil
+		return provider.Message{Role: "assistant", ToolCalls: []provider.ToolCall{call}}, provider.Usage{}, nil
 	}
 	if c.success {
-		return provider.Message{Role: "assistant", Content: "Result is 2"}, nil
+		return provider.Message{Role: "assistant", Content: "Result is 2"}, provider.Usage{}, nil
 	}
-	return provider.Message{}, fmt.Errorf("Provider disconnected")
+	return provider.Message{}, provider.Usage{}, fmt.Errorf("Provider disconnected")
 }
 
 func TestServicePreservesExecutionsOnFailure(t *testing.T) {
@@ -50,7 +50,10 @@ func TestServicePreservesExecutionsOnFailure(t *testing.T) {
 	if err != nil || result.Error != "Provider disconnected" || len(result.Executions) != 1 {
 		t.Fatalf("%+v %v", result, err)
 	}
-	if result.Executions[0].Output != "2" || len(events) != 5 {
+	if result.Executions[0].Output != "2" || len(events) != 6 {
 		t.Fatalf("%+v", result)
+	}
+	if saved, err := store.Get(session.ID); err != nil || saved.Usage.Requests != 1 {
+		t.Fatalf("Usage was not saved: %+v %v", saved.Usage, err)
 	}
 }

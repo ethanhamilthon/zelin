@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"zash/internal/agent"
+	"zash/internal/provider"
 )
 
 type Message struct {
@@ -18,12 +19,13 @@ type Message struct {
 }
 
 type Session struct {
-	ID       string      `json:"id"`
-	Title    string      `json:"title"`
-	Messages []Message   `json:"messages"`
-	Draft    string      `json:"draft"`
-	Updated  string      `json:"updated"`
-	State    agent.State `json:"-"`
+	ID       string          `json:"id"`
+	Title    string          `json:"title"`
+	Messages []Message       `json:"messages"`
+	Draft    string          `json:"draft"`
+	Updated  string          `json:"updated"`
+	Usage    provider.Totals `json:"usage"`
+	State    agent.State     `json:"-"`
 }
 
 type Store struct{ db *sql.DB }
@@ -79,6 +81,7 @@ func (s *Store) Get(id string) (Session, error) {
 		return session, err
 	}
 	err = json.Unmarshal([]byte(state), &session.State)
+	session.Usage = session.State.Usage
 	return session, err
 }
 
