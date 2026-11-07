@@ -48,10 +48,31 @@ agent is informed of that reset. Completed answers are committed before the
 backend returns them to the UI. Drafts are saved shortly after typing stops,
 and drafts typed during a run are saved when that turn finishes.
 
-The bottom bar shows activity, the active model, and its context window.
-Context size comes from the provider's `/models` metadata or the explicit
-`OPENAI_CONTEXT_WINDOW` token count. Unsupported metadata is shown as Unknown,
-not an estimated or invented limit. Ctrl+K opens commands; Escape closes them.
+The bottom bar shows activity, the active model, its reasoning effort, and its
+context window. Click the model name, or use the command menu, to choose a model
+from the provider's `/models` catalog (OpenRouter metadata includes context
+limits, pricing, and reasoning options). The selected model and effort are
+saved and override `OPENAI_MODEL` on the next start. Context size comes from the
+catalog or the explicit `OPENAI_CONTEXT_WINDOW` token count. Unsupported
+metadata is shown as Unknown, not an estimated or invented limit. Ctrl+K opens
+commands; Escape closes them.
+
+Reasoning efforts come from each model's `reasoning` object in OpenRouter's
+`GET /api/v1/models`:
+
+- `supported_efforts` lists the accepted levels, highest first.
+- `supported_efforts: null` means every gateway level is accepted:
+  `max`, `xhigh`, `high`, `medium`, `low`, `minimal`, `none`.
+- A missing `reasoning` object or `supported_efforts` field means the model has
+  no effort control, so the selector is hidden.
+- `mandatory: true` removes `none`, which such models reject.
+- `default_effort` labels the Default option.
+
+Default sends no `reasoning` field, leaving the choice to the provider. When
+metadata is unavailable, as with providers without this catalog, the selector is
+hidden and requests never include an effort. A chosen effort is sent as
+`reasoning: { effort }`; an effort the new model does not support is reset to
+Default when switching models.
 Executed JavaScript appears as dimmed, syntax-highlighted plain code; click it
 to toggle its output. The bottom status dot is gray when idle, blinking green
 while running, and blue for an unread response until you scroll to its end.
