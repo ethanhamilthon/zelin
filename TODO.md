@@ -10,9 +10,9 @@
 
 ## Model and reasoning effort selection
 
-- [ ] Add a model selector.
+- [x] Add a model selector.
 - [ ] Add a reasoning effort selector with options supported by the selected model.
-- [ ] Fetch model metadata from OpenRouter, including context limits, pricing, and supported parameters.
+- [x] Fetch model metadata from OpenRouter, including context limits, pricing, and supported parameters.
 - [ ] Investigate how to obtain supported reasoning efforts per model. Do not assume every model supports the same effort levels; define a fallback when metadata is unavailable.
 
 ## Context and session usage

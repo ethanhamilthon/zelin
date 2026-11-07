@@ -2,11 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { EditorView } from '@codemirror/view';
 import App from './App.svelte';
-import { agentInfo, runAgent } from './agent';
+import { agentInfo, configureModel, listModels, runAgent } from './agent';
 import { currentSession, createSession, openSession, listSessions, saveSession } from './sessions';
 import type { AgentEvent, AgentResult, Execution } from './agent-types';
+import { placeholderInfo } from './agent-types';
 
-vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn() }));
+vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn() }));
 vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
 let app: ReturnType<typeof mount> | undefined;
@@ -26,7 +27,7 @@ beforeEach(() => {
   vi.mocked(openSession).mockResolvedValue(session('second', 'Saved draft'));
   vi.mocked(listSessions).mockResolvedValue([session(), session('second')]);
   vi.mocked(saveSession).mockResolvedValue();
-  vi.mocked(agentInfo).mockResolvedValue({ model: 'test-model', contextWindow: 128000 });
+  vi.mocked(agentInfo).mockResolvedValue({ ...placeholderInfo('Test Model'), model: 'test/model', contextWindow: 128000 });
 });
 
 afterEach(async () => { if (app) await unmount(app); document.body.replaceChildren(); });

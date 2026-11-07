@@ -1,5 +1,6 @@
 import type { Message } from './conversation';
-import type { AgentEvent, AgentInfo, AgentResult } from './agent-types';
+import type { AgentEvent, AgentInfo, AgentResult, ModelOption } from './agent-types';
+import { placeholderInfo } from './agent-types';
 
 type BridgeWindow = Window & {
   chrome?: { webview?: { postMessage?: unknown } };
@@ -13,11 +14,19 @@ function desktop() {
     bridge.chrome?.webview?.postMessage || bridge.wails?.invoke);
 }
 
-export async function agentInfo(): Promise<AgentInfo> {
-  if (!desktop()) return { model: 'Desktop only', contextWindow: 0 };
+async function call<T>(method: string, ...args: unknown[]): Promise<T> {
+  if (!desktop()) throw new Error('Available in the desktop app only');
   const { Call } = await import('@wailsio/runtime');
-  return Call.ByName('main.AgentService.Info');
+  return Call.ByName(`main.AgentService.${method}`, ...args);
 }
+
+export async function agentInfo(): Promise<AgentInfo> {
+  if (!desktop()) return placeholderInfo('Desktop only');
+  return call<AgentInfo>('Info');
+}
+
+export const listModels = () => call<ModelOption[]>('Models');
+export const configureModel = (id: string, effort: string) => call<AgentInfo>('Configure', id, effort);
 
 export async function runAgent(
   messages: Message[], onEvent: (event: AgentEvent) => void, sessionId: string,

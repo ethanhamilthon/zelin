@@ -3,28 +3,36 @@
   import { createEditor } from './editor';
   import { sendMessage } from './conversation';
   import type { Conversation } from './conversation';
-  import type { AgentInfo } from './agent-types';
-  import { agentInfo, runAgent } from './agent';
+  import { runAgent } from './agent';
+  import { createModelController } from './model-controller.svelte';
   import { createSessionController } from './session-controller.svelte';
   import { readToEnd } from './reading';
   import History from './History.svelte';
   import StatusBar from './StatusBar.svelte';
   import Commands from './Commands.svelte';
   import SessionList from './SessionList.svelte';
+  import ModelList from './ModelList.svelte';
 
   let container: HTMLDivElement;
   let scroller: HTMLElement;
   let editor: ReturnType<typeof createEditor> | undefined;
-  let modal = $state<'commands' | 'sessions' | null>(null);
+  type ModalName = 'commands' | 'sessions' | 'models';
+  let modal = $state<ModalName | null>(null);
   let unread = $state(false);
-  let info = $state<AgentInfo>({ model: 'Loading model…', contextWindow: 0 });
   const conversation = $state<Conversation>({ messages: [], draft: '', busy: false, error: '', activity: 'Ready', executions: [] });
   const sessions = createSessionController(conversation);
+  const models = createModelController();
 
   function checkRead() { if (unread && readToEnd(scroller)) unread = false; }
   function scrollLatest() { scroller.querySelector('article:last-of-type')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   function closeModal() { modal = null; editor?.focus(); }
-  function showSessions() { modal = 'sessions'; void sessions.refresh(); }
+  function open(name: ModalName) {
+    modal = name;
+    if (name === 'sessions') void sessions.refresh();
+    if (name === 'models') void models.load();
+  }
+  function showSessions() { open('sessions'); }
+  async function selectModel(id: string) { if (await models.select(id)) closeModal(); }
 
   async function selectSession(id?: string) {
     if (await sessions.select(id)) {
@@ -73,9 +81,7 @@
       }, () => { void submit(); });
       editor.focus();
     });
-    void agentInfo().then((value) => { if (mounted) info = value; }).catch(() => {
-      if (mounted) info = { model: 'Model unavailable', contextWindow: 0 };
-    });
+    void models.start();
     return () => { mounted = false; sessions.dispose(); editor?.destroy(); };
   });
 </script>
@@ -92,12 +98,14 @@
     {#if sessions.state.error}<p class="error" role="alert">{sessions.state.error}</p>{/if}
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar busy={conversation.busy} activity={conversation.activity} {info} {unread} oncommands={() => { modal = 'commands'; }} onsessions={showSessions} />
+  <StatusBar busy={conversation.busy} activity={conversation.activity} info={models.state.info} {unread} onopen={open} />
 </div>
 {#if modal === 'commands'}
-  <Commands onclose={closeModal} onfocus={closeModal} onlatest={() => { closeModal(); scrollLatest(); }} onnew={() => { void selectSession(); }} onsessions={showSessions} busy={conversation.busy || sessions.state.loading} />
+  <Commands onclose={closeModal} onfocus={closeModal} onlatest={() => { closeModal(); scrollLatest(); }} onnew={() => { void selectSession(); }} onopen={open} busy={conversation.busy || sessions.state.loading} />
 {:else if modal === 'sessions'}
   <SessionList sessions={sessions.state.items} active={sessions.state.id} busy={conversation.busy || sessions.state.loading} onclose={closeModal} onselect={(id) => { void selectSession(id); }} onnew={() => { void selectSession(); }} />
+{:else if modal === 'models'}
+  <ModelList models={models.state.models} active={models.state.info.model} loading={models.state.loading} error={models.state.error} onclose={closeModal} onselect={(id) => { void selectModel(id); }} />
 {/if}
 
 <style>

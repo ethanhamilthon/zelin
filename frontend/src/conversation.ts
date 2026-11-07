@@ -25,7 +25,7 @@ export async function sendMessage(
   state.executions = [];
   const observe = (event: AgentEvent) => {
     if (event.kind === 'activity') state.activity = event.activity;
-    else {
+    else if (event.kind === 'execution') {
       const execution = event.execution;
       const index = state.executions.findIndex((item) => item.id === execution.id);
       if (index < 0) state.executions = [...state.executions, execution];
