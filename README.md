@@ -58,6 +58,14 @@ catalog or the explicit `OPENAI_CONTEXT_WINDOW` token count. Unsupported
 metadata is shown as Unknown, not an estimated or invented limit. Ctrl+K opens
 commands; Escape closes them.
 
+The ring icon next to the status dot shows how much of the context window is
+used. Click it, or choose Context and usage in the command menu, to see context
+tokens, session input and output tokens, cache reads and writes, and spending.
+Provider-reported costs are used when available; otherwise the cost is estimated
+from catalog pricing and labeled as estimated. Metrics the provider does not
+report are shown as Unknown. Totals are saved with the session and counted once
+per provider response.
+
 Reasoning efforts come from each model's `reasoning` object in OpenRouter's
 `GET /api/v1/models`:
 

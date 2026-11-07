@@ -122,5 +122,5 @@
   .editor { min-height: 180px; }
   .empty { min-height: calc(100vh - 44px); }
   .scroll-space { height: 50vh; }
-  .error { margin: 0; padding: 12px clamp(48px, 6vw, 80px); font: 13px/1.5 var(--mono); color: #aaa; }
+  .error { margin: 0; padding: 12px clamp(48px, 6vw, 80px); font: var(--font-size)/1.5 var(--mono); color: #aaa; }
 </style>

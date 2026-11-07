@@ -20,7 +20,7 @@
 </footer>
 
 <style>
-  footer { display: flex; align-items: center; gap: 18px; height: 44px; padding: 0 20px; border-top: 1px solid #2b2b2b; background: var(--background); color: #888; font: 13px/1.5 var(--mono); white-space: nowrap; }
+  footer { display: flex; align-items: center; gap: 18px; height: 44px; padding: 0 20px; border-top: 1px solid #2b2b2b; background: var(--background); color: #888; font: var(--font-size)/1.5 var(--mono); white-space: nowrap; }
   .dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #737373; transition: background 180ms; }
   .dot.busy { background: #69b881; animation: blink 1.2s ease-in-out infinite; }
   .dot.unread { background: #679bd4; }

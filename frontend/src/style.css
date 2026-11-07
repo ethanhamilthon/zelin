@@ -1,6 +1,8 @@
 :root {
   --mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --background: #111111;
+  --font-size: 16px;
+  font-size: var(--font-size);
   font-family: var(--mono);
   color: #e0e0e0;
   background: var(--background);

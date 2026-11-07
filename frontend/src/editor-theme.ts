@@ -5,7 +5,7 @@ import { tags } from '@lezer/highlight';
 export const theme = EditorView.theme({
   '&': { height: '100%', backgroundColor: 'var(--background)', color: '#e0e0e0' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { overflow: 'auto', fontFamily: 'inherit', fontSize: '16px', lineHeight: '1.8' },
+  '.cm-scroller': { overflow: 'auto', fontFamily: 'inherit', fontSize: 'var(--font-size)', lineHeight: '1.8' },
   '.cm-content': { padding: '32px clamp(48px, 6vw, 80px)', minHeight: '100%', caretColor: '#eee', overflowWrap: 'anywhere' },
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#eee' },

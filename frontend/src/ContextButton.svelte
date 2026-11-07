@@ -35,5 +35,5 @@
   .context { position: relative; display: flex; }
   button { display: flex; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; transition: color 140ms; }
   button:hover, button:focus-visible, button[aria-expanded='true'] { color: #ddd; }
-  .popover { position: absolute; bottom: 32px; left: -12px; z-index: 5; min-width: 300px; padding: 12px 4px 4px; border: 1px solid #353535; border-radius: 8px; background: #1c1c1c; box-shadow: 0 20px 80px #0006; cursor: default; }
+  .popover { position: absolute; bottom: 32px; left: -12px; z-index: 5; min-width: 380px; padding: 12px 4px 4px; border: 1px solid #353535; border-radius: 8px; background: #1c1c1c; box-shadow: 0 20px 80px #0006; cursor: default; }
 </style>

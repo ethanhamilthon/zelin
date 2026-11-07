@@ -22,11 +22,11 @@
   .source { display: block; width: 100%; text-align: left; color: #909090; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }
   .source:hover { color: #b0b0b0; }
   .source:focus-visible { outline: 1px solid #737373; outline-offset: 5px; }
-  pre { margin: 0; overflow-x: hidden; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 14px; line-height: 1.8; }
+  pre { margin: 0; overflow-x: hidden; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: var(--font-size); line-height: 1.8; }
   code { font-family: inherit; }
   .source :global(.tok-keyword), .source :global(.tok-operator) { color: #b5b5b5; }
   .source :global(.tok-string), .source :global(.tok-number) { color: #7c7c7c; }
   .source :global(.tok-comment) { color: #606060; font-style: italic; }
   .source :global(.tok-variableName), .source :global(.tok-propertyName) { color: #999; }
-  .output { margin-top: 8px; color: #606060; font-size: 13px; max-height: 320px; overflow-y: auto; }
+  .output { margin-top: 8px; color: #606060; font-size: var(--font-size); max-height: 320px; overflow-y: auto; }
 </style>

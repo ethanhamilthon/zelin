@@ -37,6 +37,6 @@
   article { margin-bottom: 32px; overflow-wrap: anywhere; color: #e0e0e0; animation: appear 180ms ease-out; }
   .message { position: relative; }
   .assistant { color: #b0b0b0; }
-  .text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; }
+  .text { font-size: var(--font-size); line-height: 1.8; white-space: pre-wrap; }
   @keyframes appear { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 </style>
