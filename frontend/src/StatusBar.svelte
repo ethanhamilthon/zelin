@@ -2,7 +2,7 @@
   import type { AgentInfo } from './agent-types';
   let { busy, activity, info, unread = false, onopen }: {
     busy: boolean; activity: string; info: AgentInfo; unread?: boolean;
-    onopen: (name: 'commands' | 'sessions' | 'models') => void;
+    onopen: (name: 'commands' | 'sessions' | 'models' | 'efforts') => void;
   } = $props();
   const context = $derived(info.contextWindow > 0 ? `${info.contextWindow.toLocaleString('en-US')} tokens` : 'Unknown');
   const status = $derived(busy ? activity : unread ? 'Unread response' : 'Ready');
@@ -10,7 +10,7 @@
 
 <footer aria-label="Agent status and commands">
   <span class="dot" class:busy class:unread={!busy && unread} role="status" aria-label={status} title={status}></span>
-  <div class="metadata"><button class="model" onclick={() => onopen('models')} title={`Select model (${info.model || info.name})`}>{info.name}</button><span class="context" title="Model context window">Context: {context}</span></div>
+  <div class="metadata"><button class="model" onclick={() => onopen('models')} title={`Select model (${info.model || info.name})`}>{info.name}</button>{#if info.efforts.length}<button class="effort" onclick={() => onopen('efforts')} title="Select reasoning effort">{info.effort || 'default'}</button>{/if}<span class="context" title="Model context window">Context: {context}</span></div>
   <button onclick={() => onopen('sessions')} aria-keyshortcuts="Control+s" title="Sessions">Ctrl + S</button>
   <button onclick={() => onopen('commands')} aria-keyshortcuts="Control+k" title="Commands">Ctrl + K</button>
 </footer>

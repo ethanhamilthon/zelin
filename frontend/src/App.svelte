@@ -12,11 +12,12 @@
   import Commands from './Commands.svelte';
   import SessionList from './SessionList.svelte';
   import ModelList from './ModelList.svelte';
+  import EffortList from './EffortList.svelte';
 
   let container: HTMLDivElement;
   let scroller: HTMLElement;
   let editor: ReturnType<typeof createEditor> | undefined;
-  type ModalName = 'commands' | 'sessions' | 'models';
+  type ModalName = 'commands' | 'sessions' | 'models' | 'efforts';
   let modal = $state<ModalName | null>(null);
   let unread = $state(false);
   const conversation = $state<Conversation>({ messages: [], draft: '', busy: false, error: '', activity: 'Ready', executions: [] });
@@ -33,6 +34,7 @@
   }
   function showSessions() { open('sessions'); }
   async function selectModel(id: string) { if (await models.select(id)) closeModal(); }
+  async function selectEffort(effort: string) { if (await models.effort(effort)) closeModal(); }
 
   async function selectSession(id?: string) {
     if (await sessions.select(id)) {
@@ -101,11 +103,13 @@
   <StatusBar busy={conversation.busy} activity={conversation.activity} info={models.state.info} {unread} onopen={open} />
 </div>
 {#if modal === 'commands'}
-  <Commands onclose={closeModal} onfocus={closeModal} onlatest={() => { closeModal(); scrollLatest(); }} onnew={() => { void selectSession(); }} onopen={open} busy={conversation.busy || sessions.state.loading} />
+  <Commands onclose={closeModal} onfocus={closeModal} onlatest={() => { closeModal(); scrollLatest(); }} onnew={() => { void selectSession(); }} onopen={open} reasoning={models.state.info.efforts.length > 0} busy={conversation.busy || sessions.state.loading} />
 {:else if modal === 'sessions'}
   <SessionList sessions={sessions.state.items} active={sessions.state.id} busy={conversation.busy || sessions.state.loading} onclose={closeModal} onselect={(id) => { void selectSession(id); }} onnew={() => { void selectSession(); }} />
 {:else if modal === 'models'}
   <ModelList models={models.state.models} active={models.state.info.model} loading={models.state.loading} error={models.state.error} onclose={closeModal} onselect={(id) => { void selectModel(id); }} />
+{:else if modal === 'efforts'}
+  <EffortList efforts={models.state.info.efforts} active={models.state.info.effort} fallback={models.state.info.defaultEffort} error={models.state.error} onclose={closeModal} onselect={(effort) => { void selectEffort(effort); }} />
 {/if}
 
 <style>

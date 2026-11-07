@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import ModelList from './ModelList.svelte';
+import EffortList from './EffortList.svelte';
+import StatusBar from './StatusBar.svelte';
 import { createModelController } from './model-controller.svelte';
 import { configureModel, listModels } from './agent';
 import { placeholderInfo } from './agent-types';
@@ -30,6 +32,25 @@ describe('model selection', () => {
     expect(document.querySelectorAll('button')).toHaveLength(1);
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     expect(onselect).toHaveBeenCalledWith('deepseek/chat');
+  });
+
+  it('offers only supported efforts', () => {
+    const onselect = vi.fn();
+    app = mount(EffortList, { target: document.body, props: { efforts: ['high', 'low'], active: 'low', fallback: 'medium', onclose: vi.fn(), onselect } });
+    flushSync();
+    expect([...document.querySelectorAll('button')].map((button) => button.textContent?.trim())).toEqual(['Default medium', 'high', 'low Current']);
+    document.querySelectorAll('button')[0].click();
+    expect(onselect).toHaveBeenCalledWith('');
+  });
+
+  it('shows the effort control only for reasoning models', async () => {
+    const info = { ...placeholderInfo('GPT-5'), model: 'openai/gpt-5', efforts: ['high'], effort: 'high' };
+    const props = { busy: false, activity: '', info, onopen: vi.fn() };
+    app = mount(StatusBar, { target: document.body, props }); flushSync();
+    expect(document.querySelector('.effort')?.textContent).toBe('high');
+    await unmount(app);
+    app = mount(StatusBar, { target: document.body, props: { ...props, info: { ...info, efforts: [] } } }); flushSync();
+    expect(document.querySelector('.effort')).toBeNull();
   });
 
   it('keeps the current effort when switching models and reports failures', async () => {
