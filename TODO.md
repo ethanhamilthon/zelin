@@ -27,7 +27,7 @@
 
 ## Tool output
 
-- [ ] Remove horizontal scrolling from tool call output. Render it as regular wrapping text, breaking long lines when necessary.
+- [x] Remove horizontal scrolling from tool call output. Render it as regular wrapping text, breaking long lines when necessary.
 
 ## Chat text consistency
 
