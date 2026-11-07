@@ -33,7 +33,8 @@ The provider must support function calling. Keys stay in the Go backend.
 For a local provider without authentication, use a nonempty placeholder key.
 
 Enter inserts a newline. Shift+Enter sends the current message.
-Messages and answers become selectable, non-editable rendered Markdown.
+Messages and answers stay selectable, non-editable text that looks exactly like
+the input: Markdown markers stay literal and use the editor highlighting.
 The input stays editable during a run, so you can draft the next message.
 Sending again is disabled until the current turn finishes. New drafts are never
 replaced by a completed answer or an error. Failed input is restored when no

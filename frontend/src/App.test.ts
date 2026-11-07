@@ -52,7 +52,7 @@ describe('agent UI', () => {
       return new Promise((resolve) => { finish = resolve; });
     });
     await start(); submit(); await wait();
-    expect(document.querySelector('article strong')?.textContent).toBe('world');
+    expect(document.querySelector('article .text')?.textContent).toBe('Hello **world**');
     expect(document.querySelector('article header')).toBeNull();
     expect(document.querySelector('[aria-label="Request running"]')).not.toBeNull();
     expect(document.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
@@ -64,6 +64,7 @@ describe('agent UI', () => {
     await tick();
     expect(document.querySelector('footer [role="status"]')?.getAttribute('aria-label')).toBe('Running JavaScript');
     finish({ content: '## Done', executions: [execution] }); await wait();
+    expect(document.querySelectorAll('article .text')[1]?.textContent).toBe('## Done');
     expect(document.querySelectorAll('article')).toHaveLength(2);
     expect(document.querySelector('[aria-label="Request running"]')).toBeNull();
     expect(document.querySelector('article [aria-label="Turn complete"]')).not.toBeNull();

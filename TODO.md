@@ -31,5 +31,5 @@
 
 ## Chat text consistency
 
-- [ ] Make chat message rendering match the input text one-to-one. Preserve literal Markdown markers instead of replacing them with formatted elements (for example, keep `-` rather than rendering a bullet).
+- [x] Make chat message rendering match the input text one-to-one. Preserve literal Markdown markers instead of replacing them with formatted elements (for example, keep `-` rather than rendering a bullet).
 - [ ] Use the input font size consistently throughout the interface, including chat messages, tool output, menus, and the status bar.
