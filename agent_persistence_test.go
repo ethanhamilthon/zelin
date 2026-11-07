@@ -37,7 +37,7 @@ func TestAnswerIsDurableBeforeReturningToUI(t *testing.T) {
 	}
 	defer reopened.Close()
 	saved, err := reopened.Get(session.ID)
-	if err != nil || len(saved.Messages) != 2 || saved.Messages[1].Content != "Result is 2" || saved.Messages[1].Executions[0].Output != "2" {
+	if err != nil || len(saved.Messages) != 2 || saved.Messages[1].Content != "Result is 2" || saved.Messages[1].Executions[0].Output != "2" || saved.Messages[1].Turn == nil || result.Turn == nil {
 		t.Fatalf("Response was not durable: %+v %v", saved, err)
 	}
 	if len(saved.State.Transcript) != 5 {

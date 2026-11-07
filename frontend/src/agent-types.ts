@@ -1,3 +1,5 @@
+import type { Turn } from './turn';
+
 export type Execution = {
   id: string;
   kind?: 'thinking';
@@ -26,7 +28,7 @@ export type AgentEvent =
 export type Pricing = { prompt: number | null; completion: number | null; cacheRead: number | null; cacheWrite: number | null };
 export type ModelOption = { id: string; name: string; contextWindow: number; pricing: Pricing };
 export type AgentInfo = Omit<ModelOption, 'id'> & { model: string; effort: string; efforts: string[]; titleModel: string };
-export type AgentResult = { content: string; executions: Execution[]; error?: string };
+export type AgentResult = { content: string; executions: Execution[]; turn?: Turn; error?: string };
 
 const noPricing: Pricing = { prompt: null, completion: null, cacheRead: null, cacheWrite: null };
 

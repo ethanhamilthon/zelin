@@ -18,6 +18,7 @@ type Message struct {
 	Content    string            `json:"content"`
 	Images     []string          `json:"images,omitempty"`
 	Executions []agent.Execution `json:"executions,omitempty"`
+	Turn       *Turn             `json:"turn,omitempty"`
 }
 
 type Session struct {

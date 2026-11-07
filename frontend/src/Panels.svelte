@@ -32,7 +32,7 @@
 {:else if modal === 'commands'}
   <Commands hotkeys={settings.state.hotkeys} {onclose} onopen={open} />
 {:else if modal === 'sessions'}
-  <SessionList sessions={sessions.state.items} active={sessions.state.id} status={sessions.status} {onclose} {onselect} {onnew} />
+  <SessionList hotkey={settings.state.hotkeys.newSession} sessions={sessions.state.items} active={sessions.state.id} status={sessions.status} {onclose} {onselect} {onnew} />
 {:else if modal === 'models'}
   <ModelList models={models.state.models} active={info.model} hidden={settings.state.hiddenModels} loading={models.state.loading} error={models.state.error} {onclose} onselect={(id) => { void apply(models.select(id)); }} />
 {:else if modal === 'manager'}

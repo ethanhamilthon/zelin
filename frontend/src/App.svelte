@@ -119,7 +119,7 @@
   <main bind:this={scroller}>
     {#if conversation.messages.length || conversation.busy}
       <History messages={conversation.messages} executions={conversation.executions} busy={conversation.busy}
-        showCode={settings.state.showCode} foldCode={settings.state.foldCode} onimage={(url, number) => showImage(url, number)} />
+        showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={(url, number) => showImage(url, number)} />
     {/if}
     <div class="editor" class:empty={!conversation.messages.length} bind:this={container}></div>
     {#if conversation.error}<p class="error" role="alert">{conversation.error}</p>{/if}

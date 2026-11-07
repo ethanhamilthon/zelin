@@ -23,8 +23,8 @@
 </div>
 
 <style>
-  .execution { position: relative; margin: 0 0 24px; padding: 10px 14px; border-radius: 6px; }
-  .fold { position: absolute; left: -30px; top: 16px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; transition: transform 160ms, color 140ms; }
+  .execution { position: relative; margin: 0 0 8px; padding: 4px 14px; border-radius: 6px; }
+  .fold { position: absolute; left: -30px; top: 10px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; transition: transform 160ms, color 140ms; }
   .fold:hover, .fold:focus-visible { color: var(--foreground); outline: none; }
   .fold.folded { transform: rotate(-90deg); }
   .source { display: block; width: 100%; text-align: left; color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }

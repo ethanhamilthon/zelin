@@ -1,6 +1,7 @@
 import type { AgentEvent, AgentResult, Execution, Usage } from './agent-types';
+import type { Turn } from './turn';
 
-export type Message = { role: 'user' | 'assistant'; content: string; images?: string[]; executions?: Execution[] };
+export type Message = { role: 'user' | 'assistant'; content: string; images?: string[]; executions?: Execution[]; turn?: Turn };
 export type Conversation = {
   messages: Message[];
   draft: string;
@@ -39,19 +40,21 @@ export async function sendMessage(
       else state.executions = state.executions.map((item, i) => i === index ? execution : item);
     }
   };
+  let turn: AgentResult['turn'];
   try {
     const result = await run(state.messages.map((message) => ({ ...message })), observe);
     state.executions = result.executions;
+    turn = result.turn;
     if (result.error) throw new Error(result.error);
     if (!result.content.trim()) throw new Error('Agent returned an empty response');
     state.messages = [...state.messages, {
-      role: 'assistant', content: result.content, executions: state.executions,
+      role: 'assistant', content: result.content, executions: state.executions, ...(turn && { turn }),
     }];
     return true;
   } catch (error) {
     if (state.executions.length) {
       state.messages = [...state.messages, {
-        role: 'assistant', content: 'The agent stopped before completing this turn.', executions: state.executions,
+        role: 'assistant', content: 'The agent stopped before completing this turn.', executions: state.executions, ...(turn && { turn }),
       }];
     } else {
       state.messages = previous;

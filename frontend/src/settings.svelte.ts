@@ -4,12 +4,12 @@ import { defaultHotkeys } from './hotkeys';
 import type { Action } from './hotkeys';
 
 export type Settings = {
-  theme: string; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean;
+  theme: string; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean; stackSteps: boolean;
   hiddenModels: string[]; hotkeys: Record<Action, string>;
 };
 
 export const defaultSettings = (): Settings => ({
-  theme: 'zen', toast: true, sound: true, showCode: true, foldCode: false,
+  theme: 'zen', toast: true, sound: true, showCode: true, foldCode: false, stackSteps: false,
   hiddenModels: [], hotkeys: { ...defaultHotkeys },
 });
 

@@ -30,11 +30,11 @@
   .overlay { position: fixed; inset: 0; background: color-mix(in srgb, #000 50%, transparent); z-index: 10; padding: min(20vh, 120px) 20px 20px; }
   .panel { max-width: 640px; max-height: 65vh; overflow-y: auto; margin: auto; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--foreground) 5%, var(--background)); padding: 8px; box-shadow: 0 20px 80px color-mix(in srgb, #000 40%, transparent); outline: none; }
   .title { padding: 10px 12px 16px; color: var(--muted); font: var(--font-size)/1.5 var(--mono); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .title :global(button) { width: auto; padding: 0 4px; }
   .title .heading { color: var(--muted); }
   .title span { color: var(--faint); font-size: var(--font-size); }
   .panel :global(button) { width: 100%; display: flex; justify-content: space-between; gap: 16px; padding: 12px; border: 0; border-radius: 4px; color: var(--foreground); background: none; text-align: left; font: var(--font-size)/1.5 var(--mono); cursor: pointer; transition: background 140ms; }
   .panel :global(button:focus), .panel :global(button:hover) { outline: none; background: var(--hover); }
+  .panel .title :global(button) { width: auto; flex-shrink: 0; gap: 12px; padding: 2px 8px; color: var(--muted); }
   .panel :global(button:disabled) { opacity: 0.35; cursor: default; }
   .panel :global(button span) { color: var(--dim); font-size: var(--font-size); }
 </style>

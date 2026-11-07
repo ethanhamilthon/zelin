@@ -70,6 +70,13 @@ describe('conversation', () => {
     expect(state.error).toBe('Offline');
   });
 
+  it('keeps the turn summary on the final answer', async () => {
+    const state = initial();
+    const turn = { finished: '2026-11-08T04:42:00Z', duration: 1000, cost: 0.1, context: 10, window: 100 };
+    await sendMessage(state, async () => ({ content: 'Done', executions: [], turn }));
+    expect(state.messages[1].turn).toEqual(turn);
+  });
+
   it('rejects empty input and empty responses', async () => {
     const run = vi.fn();
     expect(await sendMessage(initial(' \n'), run)).toBe(false);

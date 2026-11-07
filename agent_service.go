@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"zash/internal/agent"
 	"zash/internal/instructions"
@@ -26,6 +27,7 @@ type AgentService struct {
 type AgentResult struct {
 	Content    string            `json:"content"`
 	Executions []agent.Execution `json:"executions"`
+	Turn       *sessions.Turn    `json:"turn,omitempty"`
 	Error      string            `json:"error,omitempty"`
 }
 
@@ -84,6 +86,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	if len(history) == 1 && s.client != nil {
 		go s.title(id, history[0].Content)
 	}
+	started, before := time.Now(), current.State().Usage
 	result := AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
 		if event.Execution != nil && event.Execution.State == "complete" {
@@ -95,6 +98,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 		}
 	})
 	result.Content = content
+	result.Turn = s.turn(started, before, current.State().Usage)
 	if errors.Is(err, context.Canceled) {
 		result.Error = "Stopped"
 	} else if err != nil {
@@ -105,7 +109,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 		if content == "" {
 			content = "The agent stopped before completing this turn."
 		}
-		saveErr = s.store.Finish(id, sessions.Message{Role: "assistant", Content: content, Executions: result.Executions}, current.State())
+		saveErr = s.store.Finish(id, sessions.Message{Role: "assistant", Content: content, Executions: result.Executions, Turn: result.Turn}, current.State())
 	} else {
 		saveErr = s.store.SaveState(id, current.State())
 	}

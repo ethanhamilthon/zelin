@@ -13,6 +13,7 @@
   {#if settings.showCode}
     <button onclick={() => onchange({ foldCode: !settings.foldCode })} aria-pressed={settings.foldCode}>Fold code blocks by default <span>{state(settings.foldCode)}</span></button>
   {/if}
+  <button onclick={() => onchange({ stackSteps: !settings.stackSteps })} aria-pressed={settings.stackSteps}>Stack consecutive steps <span>{state(settings.stackSteps)}</span></button>
   <h3>Theme</h3>
   {#each themes as theme (theme.id)}
     <button onclick={() => onchange({ theme: theme.id })} aria-current={theme.id === settings.theme ? 'true' : undefined}>
