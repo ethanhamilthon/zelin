@@ -1,0 +1,71 @@
+package sessions
+
+import (
+	"path/filepath"
+	"testing"
+
+	"zash/internal/agent"
+	"zash/internal/provider"
+)
+
+func TestSessionsSurviveRestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "zash", "sessions.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := store.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	messages := []Message{
+		{Role: "user", Content: "Hello SQLite"},
+		{Role: "assistant", Content: "Done", Executions: []agent.Execution{{ID: "call", Code: "2+2", Output: "4", State: "complete"}}},
+	}
+	if err := store.Save(first.ID, messages, "Next draft"); err != nil {
+		t.Fatal(err)
+	}
+	state := agent.State{History: []provider.Message{{Role: "user", Content: "Hello SQLite"}}, Transcript: []provider.Message{{Role: "tool", Content: "4", ToolCallID: "call"}}}
+	if err := store.SaveState(first.ID, state); err != nil {
+		t.Fatal(err)
+	}
+	second, err := store.Create()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Activate(first.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	loaded, err := store.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.ID != first.ID || loaded.Title != "Hello SQLite" || loaded.Draft != "Next draft" || len(loaded.Messages) != 2 {
+		t.Fatalf("Session was not restored: %+v", loaded)
+	}
+	if loaded.Messages[1].Executions[0].Output != "4" || loaded.State.Transcript[0].ToolCallID != "call" {
+		t.Fatalf("History missing: %+v", loaded)
+	}
+	other, err := store.Get(second.ID)
+	if err != nil || len(other.Messages) != 0 || len(other.State.History) != 0 {
+		t.Fatalf("Session data leaked: %+v %v", other, err)
+	}
+	list, err := store.List()
+	if err != nil || len(list) != 2 {
+		t.Fatalf("%+v %v", list, err)
+	}
+	if err := store.Save("missing", nil, ""); err == nil {
+		t.Fatal("Accepted missing session")
+	}
+	if _, err := store.Activate("missing"); err == nil {
+		t.Fatal("Activated missing session")
+	}
+}

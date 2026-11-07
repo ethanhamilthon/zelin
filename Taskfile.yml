@@ -1,0 +1,36 @@
+version: '3'
+
+tasks:
+  frontend:install:
+    dir: frontend
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/.package-lock.json
+    cmds:
+      - npm ci
+
+  frontend:build:
+    deps: [frontend:install]
+    dir: frontend
+    cmds:
+      - npm run build
+
+  build:
+    deps: [frontend:build]
+    cmds:
+      - go build -tags production -o ./bin/ .
+
+  dev:
+    desc: Build frontend and run the desktop app (restart to apply changes)
+    deps: [frontend:build]
+    cmds:
+      - go run .
+
+  test:
+    deps: [frontend:install]
+    cmds:
+      - npm --prefix frontend test
+      - npm --prefix frontend run check
+      - go test ./...
