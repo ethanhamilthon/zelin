@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Hotkey from './Hotkey.svelte';
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  let { title, hint = 'Esc to close', onclose, children, actions }: { title: string; hint?: string; onclose: () => void; children: Snippet; actions?: Snippet } = $props();
+  let { title, hint = 'Close Esc', onclose, children, actions }: { title: string; hint?: string; onclose: () => void; children: Snippet; actions?: Snippet } = $props();
   let panel: HTMLDivElement;
   onMount(() => { if (!panel.contains(document.activeElement)) (panel.querySelector<HTMLButtonElement>('input:not(:disabled), textarea:not(:disabled), select:not(:disabled), button:not(:disabled)') ?? panel).focus(); });
 
@@ -21,7 +22,7 @@
 
 <div class="overlay" role="presentation" onclick={(event) => { if (event.target === event.currentTarget) onclose(); }} transition:fade={{ duration: 120 }}>
   <div class="panel" role="dialog" aria-modal="true" aria-label={title} tabindex="-1" bind:this={panel} onkeydown={navigate} transition:fly={{ y: -6, duration: 160 }}>
-    <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else}<span>{hint}</span>{/if}</div>
+    <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else}<span>{#if hint === 'Close Esc'}Close <Hotkey value="Esc" />{:else}{hint}{/if}</span>{/if}</div>
     {@render children()}
   </div>
 </div>

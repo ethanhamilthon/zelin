@@ -9,7 +9,7 @@ export const theme = EditorView.theme({
   '.cm-content': { padding: '32px clamp(48px, 6vw, 80px)', minHeight: '100%', caretColor: 'var(--foreground)', overflowWrap: 'anywhere' },
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--foreground)' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--selection)' },
+  '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': { background: 'var(--selection)' },
   '.cm-content ::selection': { backgroundColor: 'var(--selection)' },
   '.cm-placeholder': { color: 'var(--faint)' },
   '.cm-image-token': { color: 'var(--accent)', cursor: 'pointer' },

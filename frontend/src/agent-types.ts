@@ -21,6 +21,7 @@ export type Usage = {
 };
 
 export type AgentEvent =
+  | { kind: 'steer'; message: { content: string; images?: string[] } }
   | { kind: 'activity'; activity: string }
   | { kind: 'execution'; execution: Execution }
   | { kind: 'usage'; usage: Usage };

@@ -46,7 +46,7 @@ func (s *AgentService) start(ctx context.Context, id string) (*agent.Agent, cont
 		if err != nil {
 			return nil, nil, err
 		}
-		current = agent.New(s.client)
+		current = agent.New(sessionClient{s, id})
 		current.Restore(record.State)
 		s.agents[id] = current
 	}
@@ -63,6 +63,9 @@ func (s *AgentService) finish(id string) {
 	defer s.mu.Unlock()
 	if cancel := s.runs[id]; cancel != nil {
 		cancel()
+	}
+	if current := s.agents[id]; current != nil {
+		current.Steer(provider.Message{})
 	}
 	delete(s.runs, id)
 }
@@ -83,12 +86,24 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 		return AgentResult{}, err
 	}
 	defer s.finish(id)
+	if s.client != nil {
+		if err := s.pin(id); err != nil {
+			return AgentResult{}, err
+		}
+	}
 	if len(history) == 1 && s.client != nil {
 		go s.title(id, history[0].Content)
 	}
+	current.AutoCompact = func() (bool, int, int) { return s.compactionSettings(id) }
 	started, before := time.Now(), current.State().Usage
 	result := AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
+		if event.Kind == "steer" && event.Message != nil {
+			if err := s.store.Finish(id, sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images}, current.State()); err != nil {
+				result.Error = err.Error()
+				s.Stop(id)
+			}
+		}
 		if event.Execution != nil && event.Execution.State == "complete" {
 			result.Executions = append(result.Executions, *event.Execution)
 		}
@@ -98,7 +113,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 		}
 	})
 	result.Content = content
-	result.Turn = s.turn(started, before, current.State().Usage)
+	result.Turn = s.turn(id, started, before, current.State().Usage)
 	if errors.Is(err, context.Canceled) {
 		result.Error = "Stopped"
 	} else if err != nil {

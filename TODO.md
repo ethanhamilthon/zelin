@@ -59,3 +59,37 @@
 - [x] Step 3: pick the title model.
 - [x] Step 4: run a short test request for both models, show the result in the timeline, block finishing until both work.
 - [x] After a successful check, switch to a normal new session.
+
+## Hotkey labels
+
+- [x] Use one pattern for every button or hint with a hotkey: name first, then hotkey, e.g. `Commands Ctrl+K`, `New session Ctrl+N`.
+- [x] Render the hotkey with less emphasis: a noticeably darker color than the name.
+
+## Stop button
+
+- [x] While the agent is running, show a `Stop Ctrl+C` button in the status bar, left of the `Commands Ctrl+K` button, following the hotkey label pattern.
+- [x] The button and Ctrl+C stop the current turn. Hide the button when the agent is idle. Ctrl+C copies instead when text is selected.
+
+## Compaction
+
+- [x] Add manual compaction (command in the command menu).
+- [x] Add auto compaction: trigger when context usage reaches the threshold, default 60% of the context window.
+- [x] Settings: auto compaction toggle and threshold value.
+
+## Handoff
+
+- [x] Add a "Handoff" command to the command menu.
+- [x] The title model takes the whole session history and writes a handoff text.
+- [x] Create a new session that starts with this handoff text.
+
+## Steering
+
+- [x] Sending a message while a turn is running queues it as a steer message.
+- [x] The steer waits until all current tool calls finish, then goes to the agent.
+- [x] While it waits, show an animated three-dot icon on the left side of the first input line, same as in chat messages.
+- [x] Typing in the input again removes the icon and takes the steer out of the queue.
+
+## Selection
+
+- [x] Use one selection color everywhere (dark gray).
+- [x] Allow text selection only for chat text, disable it for the rest of the UI.

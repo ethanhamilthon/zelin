@@ -30,7 +30,7 @@ export function applyTheme(id: string, root: HTMLElement = document.documentElem
     background, foreground, accent, keyword, string, comment,
     muted: mix(foreground, 78), dim: mix(foreground, 48), faint: mix(foreground, 36),
     border: mix(foreground, 14), surface: mix(foreground, 7), hover: mix(foreground, 13),
-    selection: mix(accent, 32), 'code-bg': mix(foreground, current.dark ? 4 : 3),
+    selection: current.dark ? 'rgb(255 255 255 / 0.18)' : 'rgb(0 0 0 / 0.18)', 'code-bg': mix(foreground, current.dark ? 4 : 3),
     'thinking-bg': mix(shade, current.dark ? 32 : 8),
   };
   for (const [name, value] of Object.entries(values)) root.style.setProperty(`--${name}`, value);

@@ -1,5 +1,5 @@
 import { sendMessage } from './conversation';
-import { runAgent, stopAgent } from './agent';
+import { runAgent, stopAgent, steerAgent } from './agent';
 import type { createSessionController } from './session-controller.svelte';
 
 type Sessions = ReturnType<typeof createSessionController>;
@@ -20,6 +20,21 @@ export function createChat(sessions: Sessions, onFinish: (id: string, succeeded:
       }
       await sessions.save(id).catch(() => {});
       return id;
+    },
+    async steer() {
+      const id = sessions.state.id, conversation = sessions.conversations[id];
+      if (!conversation?.busy || !conversation.started || !conversation.draft.trim() || conversation.steering) return;
+      conversation.steering = true;
+      try {
+        const accepted = await steerAgent(id, conversation.draft, conversation.attachments);
+        if (!accepted) conversation.steering = false;
+      } catch (error) { conversation.steering = false; conversation.error = String(error); }
+    },
+    edit() {
+      const id = sessions.state.id, conversation = sessions.conversations[id];
+      if (!conversation?.steering) return;
+      conversation.steering = false;
+      void steerAgent(id, '').catch((error) => { conversation.error = String(error); });
     },
     stop() {
       const id = sessions.state.id;

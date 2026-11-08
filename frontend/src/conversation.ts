@@ -14,6 +14,7 @@ export type Conversation = {
   usage: Usage | null;
   started?: number;
   baseline?: Usage | null;
+  steering?: boolean;
 };
 
 export async function sendMessage(
@@ -35,7 +36,12 @@ export async function sendMessage(
   state.started = Date.now();
   state.baseline = state.usage;
   const observe = (event: AgentEvent) => {
-    if (event.kind === 'activity') state.activity = event.activity;
+    if (event.kind === 'steer') {
+      state.messages = [...state.messages, { role: 'user', content: event.message.content, images: event.message.images }];
+      if (state.steering) { state.draft = ''; state.attachments = []; }
+      state.steering = false;
+    }
+    else if (event.kind === 'activity') state.activity = event.activity;
     else if (event.kind === 'usage') state.usage = event.usage;
     else if (event.kind === 'execution') {
       const execution = event.execution;
@@ -71,5 +77,6 @@ export async function sendMessage(
     state.started = undefined;
     state.activity = state.error ? 'Error' : 'Ready';
     state.busy = false;
+    state.steering = false;
   }
 }

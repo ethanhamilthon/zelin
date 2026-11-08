@@ -17,11 +17,11 @@
   import Instructions from './Instructions.svelte';
   import Modal from './Modal.svelte';
   import UsageView from './UsageView.svelte';
-  let { modal, image, settings, sessions, models, conversation, onclose, open, onnew, onselect, onstop, onattach, onlatest, ondocument }: {
+  let { modal, image, settings, sessions, models, conversation, onclose, open, onnew, onselect, onstop, onattach, onlatest, ondocument, onaction }: {
     modal: ModalName | null; image: { url: string; number: number } | null; conversation: Conversation;
     settings: ReturnType<typeof createSettings>; sessions: ReturnType<typeof createSessionController>; models: ReturnType<typeof createModelController>;
     onclose: () => void; open: (name: ModalName) => void; onnew: () => void; onselect: (id: string) => void;
-    onstop: () => void; onattach: () => void; onlatest: () => void; ondocument: (name: string) => void;
+    onaction: (action: 'compact' | 'handoff') => void; onstop: () => void; onattach: () => void; onlatest: () => void; ondocument: (name: string) => void;
   } = $props();
   const info = $derived(models.state.info);
   async function apply(change: Promise<boolean>) { if (await change) onclose(); }
@@ -30,7 +30,7 @@
 {#if image}
   <Modal title={`Image #${image.number}`} {onclose}><img src={image.url} alt={`Attachment ${image.number}`} /></Modal>
 {:else if modal === 'commands'}
-  <Commands hotkeys={settings.state.hotkeys} {onclose} onopen={open} />
+  <Commands hotkeys={settings.state.hotkeys} {onclose} onopen={open} {onaction} busy={conversation.busy} hasMessages={!!conversation.messages.length} />
 {:else if modal === 'sessions'}
   <SessionList hotkey={settings.state.hotkeys.newSession} sessions={sessions.state.items} active={sessions.state.id} status={sessions.status} {onclose} {onselect} {onnew} />
 {:else if modal === 'models'}

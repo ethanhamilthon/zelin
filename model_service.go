@@ -20,8 +20,8 @@ type ModelInfo struct {
 	TitleModel    string           `json:"titleModel"`
 }
 
-func (s *AgentService) Info(ctx context.Context) ModelInfo {
-	id, effort := s.client.Selection()
+func (s *AgentService) Info(ctx context.Context, session string) ModelInfo {
+	id, effort := s.selection(session)
 	info := ModelInfo{Model: id, Name: id, Effort: effort, Efforts: provider.Efforts}
 	if model, err := s.client.Lookup(ctx, id); err == nil {
 		info.Name, info.ContextWindow, info.Pricing = model.Name, model.ContextWindow, model.Pricing
@@ -37,23 +37,6 @@ func (s *AgentService) Models(ctx context.Context) ([]provider.Model, error) {
 	return s.client.Models(ctx)
 }
 
-func (s *AgentService) Configure(ctx context.Context, id, effort string) (ModelInfo, error) {
-	if _, err := s.client.Lookup(ctx, id); err != nil {
-		return ModelInfo{}, err
-	}
-	if !slices.Contains(provider.Efforts, effort) {
-		effort = provider.DefaultEffort
-	}
-	if err := s.store.SetSetting("model", id); err != nil {
-		return ModelInfo{}, err
-	}
-	if err := s.store.SetSetting("effort", effort); err != nil {
-		return ModelInfo{}, err
-	}
-	s.client.Select(id, effort)
-	return s.Info(ctx), nil
-}
-
 func (s *AgentService) SetTitleModel(ctx context.Context, id string) (ModelInfo, error) {
 	if _, err := s.client.Lookup(ctx, id); err != nil {
 		return ModelInfo{}, err
@@ -61,7 +44,7 @@ func (s *AgentService) SetTitleModel(ctx context.Context, id string) (ModelInfo,
 	if err := s.store.SetSetting("titleModel", id); err != nil {
 		return ModelInfo{}, err
 	}
-	return s.Info(ctx), nil
+	return s.Info(ctx, ""), nil
 }
 
 func restoreSelection(store *sessions.Store, client *provider.Client) error {

@@ -55,10 +55,10 @@ describe('model selection', () => {
     const info = { ...placeholderInfo('GPT-5'), model: 'openai/gpt-5', effort: 'xhigh', efforts: ['xhigh'] };
     vi.mocked(configureModel).mockResolvedValue(info);
     vi.mocked(setTitleModel).mockResolvedValue({ ...info, titleModel: 'deepseek/chat' });
-    const controller = createModelController();
+    const controller = createModelController(() => 'session-1');
     controller.state.info = info;
     expect(await controller.select('deepseek/chat')).toBe(true);
-    expect(configureModel).toHaveBeenCalledWith('deepseek/chat', 'xhigh');
+    expect(configureModel).toHaveBeenCalledWith('session-1', 'deepseek/chat', 'xhigh');
     expect(await controller.titleModel('deepseek/chat')).toBe(true);
     expect(controller.state.info.titleModel).toBe('deepseek/chat');
   });

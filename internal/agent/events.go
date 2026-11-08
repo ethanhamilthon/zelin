@@ -11,9 +11,10 @@ type Execution struct {
 }
 
 type Event struct {
-	Session   string           `json:"session,omitempty"`
-	Kind      string           `json:"kind"`
-	Activity  string           `json:"activity,omitempty"`
-	Execution *Execution       `json:"execution,omitempty"`
-	Usage     *provider.Totals `json:"usage,omitempty"`
+	Session   string            `json:"session,omitempty"`
+	Kind      string            `json:"kind"`
+	Activity  string            `json:"activity,omitempty"`
+	Execution *Execution        `json:"execution,omitempty"`
+	Usage     *provider.Totals  `json:"usage,omitempty"`
+	Message   *provider.Message `json:"message,omitempty"`
 }

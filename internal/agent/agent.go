@@ -16,12 +16,14 @@ type Completer interface {
 }
 
 type Agent struct {
-	Prompt     func() string
-	client     Completer
-	runtime    *jsruntime.Runtime
-	history    []provider.Message
-	transcript []provider.Message
-	usage      provider.Totals
+	Prompt      func() string
+	client      Completer
+	runtime     *jsruntime.Runtime
+	history     []provider.Message
+	transcript  []provider.Message
+	usage       provider.Totals
+	steering    steering
+	AutoCompact func() (bool, int, int)
 }
 
 func New(client Completer) *Agent { return &Agent{client: client, runtime: jsruntime.New()} }
@@ -58,10 +60,21 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 	} else if len(a.history) > 0 {
 		a.runtime = jsruntime.New()
 	}
+	history = append([]provider.Message{}, history...)
+	defer func() { a.transcript = messages }()
 	for step := 0; ; step++ {
 		if err := ctx.Err(); err != nil {
 			return "", err
 		}
+		if message := a.takeSteer(emit); message != nil {
+			messages = append(messages, *message)
+			history = append(history, *message)
+		}
+		compacted, compactErr := a.autoCompact(ctx, messages, emit)
+		if compactErr != nil {
+			return "", compactErr
+		}
+		messages = compacted
 		emit(Event{Kind: "activity", Activity: "Thinking"})
 		reply, usage, err := a.client.Complete(ctx, provider.Request{Messages: messages, Tools: []provider.Tool{Tool}})
 		if err != nil {
@@ -79,7 +92,12 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			if strings.TrimSpace(reply.Content) == "" {
 				return "", fmt.Errorf("Agent returned an empty response")
 			}
-			a.transcript = append(messages, reply)
+			if message := a.takeSteer(emit); message != nil {
+				messages = append(messages, reply, *message)
+				history = append(history, *message)
+				continue
+			}
+			messages = append(messages, reply)
 			a.history = append(append([]provider.Message{}, history...), provider.Message{Role: "assistant", Content: reply.Content})
 			return reply.Content, nil
 		}

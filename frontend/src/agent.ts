@@ -3,14 +3,15 @@ import type { AgentEvent, AgentInfo, AgentResult, ModelOption } from './agent-ty
 import { placeholderInfo } from './agent-types';
 import { call, desktop, listen } from './bridge';
 
-export async function agentInfo(): Promise<AgentInfo> {
+export async function agentInfo(sessionId = ''): Promise<AgentInfo> {
   if (!desktop()) return placeholderInfo('Desktop only');
-  return call<AgentInfo>('AgentService.Info');
+  return call<AgentInfo>('AgentService.Info', sessionId);
 }
 
 export const listModels = () => call<ModelOption[]>('AgentService.Models');
-export const configureModel = (id: string, effort: string) => call<AgentInfo>('AgentService.Configure', id, effort);
+export const configureModel = (sessionId: string, id: string, effort: string) => call<AgentInfo>('AgentService.Configure', sessionId, id, effort);
 export const setTitleModel = (id: string) => call<AgentInfo>('AgentService.SetTitleModel', id);
+export const steerAgent = (sessionId: string, content: string, images: string[] = []) => call<boolean>('AgentService.Steer', sessionId, { role: 'user', content, images });
 export const stopAgent = (sessionId: string) => call<boolean>('AgentService.Stop', sessionId);
 
 export async function runAgent(

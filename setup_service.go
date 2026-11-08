@@ -72,7 +72,10 @@ func (s *SetupService) Check(ctx context.Context, model string) SetupCheck {
 }
 
 func (s *SetupService) Finish(ctx context.Context, model, titleModel string) (ModelInfo, error) {
-	if _, err := s.agent.Configure(ctx, model, provider.DefaultEffort); err != nil {
+	if _, err := s.client.Lookup(ctx, model); err != nil {
+		return ModelInfo{}, err
+	}
+	if err := s.agent.setDefault(model, provider.DefaultEffort); err != nil {
 		return ModelInfo{}, err
 	}
 	if _, err := s.agent.SetTitleModel(ctx, titleModel); err != nil {
@@ -81,5 +84,5 @@ func (s *SetupService) Finish(ctx context.Context, model, titleModel string) (Mo
 	if err := s.store.SetSetting("setup", "done"); err != nil {
 		return ModelInfo{}, err
 	}
-	return s.agent.Info(ctx), nil
+	return s.agent.Info(ctx, ""), nil
 }

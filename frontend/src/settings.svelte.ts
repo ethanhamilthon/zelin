@@ -5,11 +5,13 @@ import type { Action } from './hotkeys';
 
 export type Settings = {
   theme: string; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean; stackSteps: boolean;
+  autoCompact: boolean; compactThreshold: number;
   hiddenModels: string[]; hotkeys: Record<Action, string>;
 };
 
 export const defaultSettings = (): Settings => ({
   theme: 'zen', toast: true, sound: true, showCode: true, foldCode: false, stackSteps: false,
+  autoCompact: true, compactThreshold: 60,
   hiddenModels: [], hotkeys: { ...defaultHotkeys },
 });
 

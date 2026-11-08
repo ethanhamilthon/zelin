@@ -62,6 +62,7 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (text: 
       view.dispatch({ effects: keys.reconfigure(bindings(value)) });
     },
     setText(text: string) {
+      if (text === view.state.doc.toString()) return;
       view.setState(EditorState.create({ doc: text, extensions: extensions() }));
       onChange(text);
     },

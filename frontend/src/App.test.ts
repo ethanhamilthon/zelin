@@ -74,7 +74,7 @@ describe('agent UI', () => {
     expect($('.cm-content')?.textContent).toBe('Next draft');
     expect($('footer')?.textContent).toContain('Test Model');
     expect($('footer')?.textContent).toContain('medium');
-    expect($('footer .hint')?.textContent).toBe('Ctrl+K for Commands');
+    expect($('footer .right button')?.textContent).toBe('Commands Ctrl+K');
     expect($('footer [role="status"]')).toBeNull();
     expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '**Done** with `code`' })]), 'Next draft', []);
   });
@@ -117,6 +117,7 @@ describe('agent UI', () => {
     expect($('.toasts button')?.textContent).toBe('first title · finished');
     $('.toasts button')!.click(); await wait();
     expect(openSession).toHaveBeenLastCalledWith('first');
+    expect(agentInfo).toHaveBeenLastCalledWith('first');
     expect($('article.assistant .text')?.textContent).toBe('First done');
     expect($('[aria-label="Request running"]')).toBeNull();
   });
@@ -126,7 +127,7 @@ describe('agent UI', () => {
     await start(); key('k', 'KeyK', { ctrlKey: true }); await tick();
     button('Instructions').click(); await tick();
     button('System Prompt').click(); await wait();
-    expect($('footer[aria-label="System Prompt"]')?.textContent).toContain('Ctrl+S to Save');
+    expect($('footer[aria-label="System Prompt"]')?.textContent).toContain('Save Ctrl+S');
     const editor = [...document.querySelectorAll<HTMLElement>('.cm-content')].find((item) => item.getAttribute('aria-label') === 'System Prompt')!;
     expect(editor.textContent).toBe('You are Zash.');
     const view = EditorView.findFromDOM(editor.parentElement!.parentElement!)!;

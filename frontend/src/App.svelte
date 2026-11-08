@@ -10,7 +10,9 @@
   import { token } from './images';
   import ImagePicker from './ImagePicker.svelte';
   import { listen } from './bridge';
-  import { chime } from './sound';
+  import { finish } from './finish';
+  import { contextAction } from './context-actions';
+  import PendingDots from './PendingDots.svelte';
   import { fileDocument, namedDocument, type Document } from './documents';
   import { follow, links, type Target } from './links';
   import History from './History.svelte';
@@ -27,20 +29,11 @@
   let doc = $state<Document | null>(null);
   const settings = createSettings();
   const sessions = createSessionController();
-  const models = createModelController();
+  const models = createModelController(() => sessions.state.id);
   const toasts = createToasts();
-  const chat = createChat(sessions, finished);
+  const chat = createChat(sessions, finish(settings, sessions, toasts));
   const conversation = $derived(sessions.current ?? blank());
   const keys = $derived(settings.state.hotkeys);
-
-  async function finished(id: string, succeeded: boolean) {
-    if (settings.state.sound) chime();
-    if (!settings.state.toast) return;
-    await sessions.refresh();
-    const title = sessions.state.items.find((item) => item.id === id)?.title ?? 'Session';
-    toasts.push(id, `${title} · ${succeeded ? 'finished' : 'stopped'}`);
-  }
-
   const openLink = (target: Target) => follow(target, (path) => { modal = null; doc = fileDocument(path); }).catch((error) => toasts.push('', String(error)));
   function scrollLatest() { scroller.querySelector('article:last-of-type')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   function closeModal() { modal = null; image = null; editor?.focus(); }
@@ -64,7 +57,6 @@
     if (window.getSelection()?.toString() || editor?.selected()) return false;
     return chat.stop();
   }
-
   function keyboard(event: KeyboardEvent) {
     if (event.key === 'Escape' && (modal || image)) { event.preventDefault(); closeModal(); return; }
     if (event.key === 'Escape' && doc) { event.preventDefault(); doc = null; editor?.focus(); return; }
@@ -79,7 +71,8 @@
 
   async function submit() {
     const current = sessions.current;
-    if (!editor || !current || current.busy) return;
+    if (!editor || !current) return;
+    if (current.busy) { await chat.steer(); return; }
     const pending = chat.submit();
     editor.setText(current.draft);
     await tick();
@@ -89,6 +82,8 @@
     if (!modal && !doc) editor.focus();
   }
 
+  $effect(() => { if (!conversation.steering && !conversation.draft && editor?.text()) editor.setText(''); });
+  $effect(() => { if (sessions.state.id) void models.start(); });
   $effect(() => { editor?.setKeys({ send: keys.send, newline: keys.newline }); });
 
   onMount(() => {
@@ -98,6 +93,7 @@
       if (!mounted) return;
       editor = createEditor(container, conversation.draft, (text) => {
         if (!sessions.current) return;
+        chat.edit();
         sessions.current.draft = text;
         if (!sessions.state.loading) sessions.schedule();
       }, {
@@ -106,11 +102,9 @@
       });
       editor.focus();
     });
-    void models.start();
     return () => { mounted = false; sessions.dispose(); editor?.destroy(); void off.then((stop) => stop()); };
   });
 </script>
-
 <svelte:window onkeydown={keyboard} />
 
 <div class="app" class:hidden={!!doc}>
@@ -120,12 +114,16 @@
         started={conversation.started} usage={conversation.usage} baseline={conversation.baseline} window={models.state.info.contextWindow}
         showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={(url, number) => showImage(url, number)} />
     {/if}
-    <div class="editor" class:empty={!conversation.messages.length} bind:this={container}></div>
+    <div class="input-wrap">
+      {#if conversation.steering}<div class="steering"><PendingDots /></div>{/if}
+      <div class="editor" class:empty={!conversation.messages.length} bind:this={container}></div>
+    </div>
+    {#if conversation.busy && !conversation.started}<p class="error" role="status">{conversation.activity}</p>{/if}
     {#if conversation.error}<p class="error" role="alert">{conversation.error}</p>{/if}
     {#if sessions.state.error}<p class="error" role="alert">{sessions.state.error}</p>{/if}
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} onopen={open} />
+  <StatusBar context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} stop={keys.stop} busy={conversation.busy} onstop={() => chat.stop()} onopen={open} />
 </div>
 {#if doc}
   {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} saveKey={keys.save}
@@ -133,6 +131,7 @@
 {/if}
 <ImagePicker bind:this={picker} onpick={(url) => { editor?.insert(token(sessions.attach(url))); editor?.focus(); }} />
 <Panels {modal} {image} {settings} {sessions} {models} {conversation} onclose={closeModal} {open}
+  onaction={async (action) => { closeModal(); const id = await contextAction(sessions, action); if (id) await selectSession(id); }}
   onnew={() => { void selectSession(); }} onselect={(id) => { void selectSession(id); }}
   onstop={() => { closeModal(); chat.stop(); }} onattach={() => { closeModal(); picker.open(); }}
   onlatest={() => { closeModal(); scrollLatest(); }} ondocument={(name) => { modal = null; doc = namedDocument(name); }} />
@@ -142,6 +141,8 @@
   .app { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
   .hidden { display: none; }
   main { min-height: 0; overflow-x: hidden; overflow-y: auto; }
+  .input-wrap { position: relative; }
+  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) - 30px); top: 38px; z-index: 1; }
   .editor { min-height: 180px; }
   .empty { min-height: calc(100vh - 44px); }
   .scroll-space { height: 50vh; }

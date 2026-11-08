@@ -13,7 +13,7 @@
   <button class="fold" class:folded onclick={() => { folded = !folded; }} aria-expanded={!folded} aria-label={folded ? 'Unfold code' : 'Fold code'}>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
   </button>
-  <button class="source" class:folded onclick={() => { expanded = !expanded; }} aria-expanded={expanded && !folded} aria-label="Toggle execution output">
+  <button class="source" class:folded onclick={() => { if (!window.getSelection()?.toString()) expanded = !expanded; }} aria-expanded={expanded && !folded} aria-label="Toggle execution output">
     <pre><code>{@html highlightJavaScript(code)}</code></pre>
   </button>
   {#if !folded && expanded && execution.output}
