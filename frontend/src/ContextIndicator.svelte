@@ -5,11 +5,11 @@
   const label = $derived(percent === null ? 'Context usage unavailable' : `Context used: ${percent.toFixed(1)}%`);
 </script>
 
-<Button data-ui="ui-contextindicator" class="context" {onclick} title={label} aria-label={label}>
+<Button data-ui="ui-contextindicator" variant="icon" class="context" {onclick} title={label} aria-label={label}>
   <span style:background={`conic-gradient(var(--dim) ${(percent ?? 0)}%, var(--border) 0)`}></span>
 </Button>
 
 <style>
-  :global(.context) { display: inline-flex; flex-shrink: 0; align-items: center; padding: 4px; border: 0; background: none; cursor: pointer; }
+  :global(.context) { min-width: 0; min-height: 0; padding: 4px; }
   span { width: 14px; height: 14px; border-radius: 50%; }
 </style>

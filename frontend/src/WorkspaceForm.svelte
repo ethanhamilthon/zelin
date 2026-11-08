@@ -33,7 +33,7 @@
 
 <Modal title={workspace ? 'Workspace settings' : 'New workspace'} {back} {onclose} {ondismiss}>
   <label>Name<Input bind:ref={first} bind:value={name} aria-label="Workspace name" onkeydown={enter} /></label>
-  <fieldset><legend>Icon</legend><div class="icons">{#each icons as item}<Button data-ui="ui-workspaceform" class={{ chosen: icon === item.id }} title={item.name} aria-label={`Workspace icon ${item.name}`} aria-pressed={icon === item.id} onclick={() => icon = item.id}><WorkspaceIcon icon={item.id} /></Button>{/each}</div></fieldset>
+  <fieldset><legend>Icon</legend><div class="icons">{#each icons as item}<Button data-ui="ui-workspaceform" variant="icon" class={{ chosen: icon === item.id }} title={item.name} aria-label={`Workspace icon ${item.name}`} aria-pressed={icon === item.id} onclick={() => icon = item.id}><WorkspaceIcon icon={item.id} /></Button>{/each}</div></fieldset>
   <div class="directory"><span>Working directory</span><Button data-ui="ui-workspaceform" onclick={() => void choose()} disabled={choosing} aria-label="Choose working directory" title={dir}>{dir || 'Choose folder…'}</Button></div>
   {#if workspace}<p class="note">New sessions start in this directory. Existing sessions keep their own directory until they call cd().</p>{/if}
   {#if error}<p role="alert">{error}</p>{/if}

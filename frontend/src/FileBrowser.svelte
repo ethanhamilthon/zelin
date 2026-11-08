@@ -30,7 +30,7 @@
 <Modal title="Files" {back} {onclose} {ondismiss}>
   {#snippet actions()}
     <nav class="crumbs" aria-label="Project path" title={listing?.dir ?? root}>
-      {#if listing?.parent}<Button data-ui="ui-filebrowser" class="up" onclick={() => { void enter(listing!.parent); }} aria-label="Go up">←</Button>{/if}
+      {#if listing?.parent}<Button data-ui="ui-filebrowser" variant="icon" class="up" onclick={() => { void enter(listing!.parent); }} aria-label="Go up">←</Button>{/if}
       {#each trail as crumb, index (crumb.path)}
         {#if index}<span aria-hidden="true">/</span>{/if}
         <Button data-ui="ui-filebrowser" onclick={() => { void enter(crumb.path); }}>{index === 0 ? root : crumb.name}</Button>
@@ -47,13 +47,13 @@
         <span class="name" title={entry.link ?? entry.path}>{entry.name}{#if entry.link}<small> → {entry.link}</small>{/if}{#if entry.broken}<small> (broken link)</small>{/if}</span>
         <span class="acts">
           {#if entry.kind === 'dir'}
-            <Button data-ui="ui-filebrowser" onclick={() => { void enter(entry.link ?? entry.path); }} aria-label="Open folder" title="Open folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3Z" /></svg></Button>
+            <Button data-ui="ui-filebrowser" variant="icon" onclick={() => { void enter(entry.link ?? entry.path); }} aria-label="Open folder" title="Open folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3Z" /></svg></Button>
           {:else if isMarkdownName(entry.name)}
-            <Button data-ui="ui-filebrowser" onclick={() => onopenfile(entry)} aria-label="Open in app" title="Open in app">↗</Button>
+            <Button data-ui="ui-filebrowser" variant="icon" onclick={() => onopenfile(entry)} aria-label="Open in app" title="Open in app">↗</Button>
           {:else}
-            <Button data-ui="ui-filebrowser" onclick={() => onopenapp(entry)} disabled={entry.broken} aria-label="Open in default app" title="Open in default app">↗</Button>
+            <Button data-ui="ui-filebrowser" variant="icon" onclick={() => onopenapp(entry)} disabled={entry.broken} aria-label="Open in default app" title="Open in default app">↗</Button>
           {/if}
-          <Button data-ui="ui-filebrowser" onclick={() => ontag(entry)} disabled={entry.broken} aria-label="Tag" title="Tag">@</Button>
+          <Button data-ui="ui-filebrowser" variant="icon" onclick={() => ontag(entry)} disabled={entry.broken} aria-label="Tag" title="Tag">@</Button>
         </span>
       </div>
     {:else}<p>No matching files</p>

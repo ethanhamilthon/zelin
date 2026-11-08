@@ -17,6 +17,7 @@
   import { createFileRefs } from './file-refs.svelte';
   import FileOverlays from './FileOverlays.svelte';
   import { unresolved } from './refs';
+  import { inputPlaceholder } from './placeholder';
   import { createAppActions } from './app-actions.svelte';
   import PendingDots from './PendingDots.svelte';
   import { agentsDocument, fileDocument, namedDocument, type Document } from './documents';
@@ -93,6 +94,8 @@
   }
   $effect(() => { if (!conversation.steering && !conversation.draft && editor?.text()) editor.setText(''); });
   $effect(() => { if (sessions.state.id) void models.start(); });
+  const hint = $derived(inputPlaceholder(conversation.busy, conversation.messages.length));
+  $effect(() => { editor?.setPlaceholder(hint); });
   $effect(() => { editor?.setKeys({ send: keys.send, newline: keys.newline }); });
   onMount(() => {
     let mounted = true;
@@ -101,7 +104,7 @@
       if (!mounted) return;
       workspaces.follow(conversation.workspaceId);
       editor = createEditor(container, conversation.draft, onChange, {
-        keys: { send: keys.send, newline: keys.newline }, onSubmit: () => { void submit(); },
+        placeholder: hint, keys: { send: keys.send, newline: keys.newline }, onSubmit: () => { void submit(); },
         onImage: (number) => showImage(sessions.current?.attachments[number - 1], number), onAttach: files.image,
         onRef: files.openById, onMention: mentions.update, onMenuKey: files.menuKey,
       });
@@ -143,7 +146,7 @@
   .hidden { display: none; }
   main { min-height: 0; overflow-x: hidden; overflow-y: auto; }
   .input-wrap { position: relative; }
-  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) - 30px); top: 38px; z-index: 1; }
+  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) - 30px); top: 32px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; }
   .editor { min-height: 180px; }
   .empty { min-height: calc(100vh - 44px); }
   .scroll-space { height: 50vh; }

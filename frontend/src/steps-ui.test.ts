@@ -57,8 +57,9 @@ it('shows a summary divider after the final answer', () => {
   expect(divider?.closest('article')?.getAttribute('aria-label')).toBe('Assistant message');
 });
 
-it('shows the new session hotkey in the header button', () => {
-  app = mount(SessionList, { target: document.body, props: { sessions: [], active: '', hotkey: 'Ctrl+N', status: () => '', onclose: vi.fn(), onselect: vi.fn(), onnew: vi.fn() } });
+it('titles the list Workspaces with a new workspace button', () => {
+  app = mount(SessionList, { target: document.body, props: { sessions: [], active: '', status: () => '', onclose: vi.fn(), onselect: vi.fn() } });
   flushSync();
-  expect(document.querySelector('.title button')?.textContent).toBe('New session Ctrl+N');
+  expect(document.querySelector('.heading')?.textContent).toBe('Workspaces');
+  expect(document.querySelector('.title button')?.textContent).toBe('New workspace');
 });

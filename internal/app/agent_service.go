@@ -114,10 +114,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	started, before, result := time.Now(), current.State().Usage, AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
 		if event.Kind == "steer" && event.Message != nil {
-			if err := s.store.Finish(id, sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images, Refs: s.takeRefs(id)}, current.State()); err != nil {
-				result.Error = err.Error()
-				s.Stop(id)
-			}
+			s.recordSteer(id, event, &result, current)
 		}
 		if event.Execution != nil && event.Execution.State == "complete" {
 			result.Executions = append(result.Executions, *event.Execution)

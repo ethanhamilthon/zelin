@@ -77,7 +77,8 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (text: 
     },
     setText(text: string, notify = true) {
       if (text === view.state.doc.toString()) return;
-      view.setState(EditorState.create({ doc: text, extensions: extensions() }));
+      const anchor = Math.min(view.state.selection.main.head, text?.length ?? 0);
+      view.setState(EditorState.create({ doc: text, selection: { anchor }, extensions: extensions() }));
       if (notify) onChange(text);
     },
   };

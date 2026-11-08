@@ -36,17 +36,17 @@ it('focuses command search and removes redundant actions', () => {
   expect(onopen).toHaveBeenCalledWith('instructions');
 });
 
-it('closes outside the modal but not inside and keeps New session in the header', () => {
+it('closes outside the modal but not inside and keeps New workspace in the header', () => {
   const onclose = vi.fn();
-  const onnew = vi.fn();
+  const oncreate = vi.fn();
   app = mount(SessionList, { target: document.body, props: {
-    sessions: [], active: '', status: () => '', onclose, onnew, onselect: vi.fn(),
+    sessions: [], active: '', status: () => '', onclose, oncreate, onselect: vi.fn(),
   } });
   flushSync();
   const button = document.querySelector<HTMLButtonElement>('.title button')!;
-  expect(button.textContent).toContain('New session');
+  expect(button.textContent).toContain('New workspace');
   button.click();
-  expect(onnew).toHaveBeenCalledOnce();
+  expect(oncreate).toHaveBeenCalledOnce();
   expect(onclose).not.toHaveBeenCalled();
   document.querySelector<HTMLElement>('.overlay')!.click();
   expect(onclose).toHaveBeenCalledOnce();

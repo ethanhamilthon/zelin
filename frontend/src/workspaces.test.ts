@@ -53,8 +53,8 @@ it('groups sessions by workspace and puts legacy sessions in the default one', (
 });
 
 it('gives every workspace row an independent settings button', async () => {
-  expect(all('.head .more').map((el) => el.getAttribute('aria-label'))).toEqual(['Settings for Default', 'Settings for Docs']);
-  all('.head .more')[1].click(); await wait();
+  expect(all('.head .settings').map((el) => el.getAttribute('aria-label'))).toEqual(['Settings for Default', 'Settings for Docs']);
+  all('.head .settings')[1].click(); await wait();
   expect($('[role="dialog"]')?.getAttribute('aria-label')).toBe('Workspace settings');
   expect(($('[aria-label="Workspace name"]') as HTMLInputElement).value).toBe('Docs');
   expect($('[aria-label="Choose working directory"]')?.textContent).toBe('/docs');
@@ -70,7 +70,7 @@ it('keeps session search working across groups', async () => {
 it('starts a new session in the selected workspace', async () => {
   all('.head .name')[1].click(); await wait();
   expect(all('.head')[1].classList.contains('selected')).toBe(true);
-  button('New session').click(); await wait();
+  all('.head .add')[1].click(); await wait();
   expect(call).toHaveBeenCalledWith('WorkspaceService.NewSession', 'w2');
   expect(createSession).not.toHaveBeenCalled();
 });
@@ -91,7 +91,7 @@ it('creates a workspace and validates input', async () => {
 });
 
 it('shows the backend error and keeps the form open', async () => {
-  all('.head .more')[0].click(); await wait();
+  all('.head .settings')[0].click(); await wait();
   vi.mocked(call).mockImplementation(async (method) => { if (method === 'WorkspaceService.Update') throw new Error('Directory is not accessible'); return ''; });
   button('Save').click(); await wait();
   expect($('[role="alert"]')?.textContent).toContain('Directory is not accessible');
@@ -99,12 +99,12 @@ it('shows the backend error and keeps the form open', async () => {
 });
 
 it('explains that existing sessions keep their directory', async () => {
-  all('.head .more')[1].click(); await wait();
+  all('.head .settings')[1].click(); await wait();
   expect($('.note')?.textContent).toContain('Existing sessions keep their own directory');
 });
 
 it('offers to create AGENTS.md and opens it in the in-app editor', async () => {
-  all('.head .more')[1].click(); await wait();
+  all('.head .settings')[1].click(); await wait();
   button('Create AGENTS.md').click(); await wait(); await wait();
   expect($('[aria-label="/docs/AGENTS.md"]')).not.toBeNull();
   expect(call).not.toHaveBeenCalledWith('FileService.Write', expect.anything(), expect.anything());
@@ -117,7 +117,7 @@ it('opens an existing AGENTS.md and writes only on explicit save', async () => {
     if (method === 'FileService.Read') return 'Be brief';
     return base(method, ...args);
   });
-  all('.head .more')[1].click(); await wait();
+  all('.head .settings')[1].click(); await wait();
   button('Open AGENTS.md').click(); await wait(); await wait();
   expect(($('.cm-content[aria-label="/docs/AGENTS.md"]'))?.textContent).toBe('Be brief');
   expect(call).not.toHaveBeenCalledWith('FileService.Write', expect.anything(), expect.anything());

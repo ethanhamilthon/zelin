@@ -3,7 +3,9 @@ package app
 import (
 	"strings"
 
+	"zelin/internal/agent"
 	"zelin/internal/provider"
+	"zelin/internal/sessions"
 	"zelin/internal/tagged"
 )
 
@@ -40,4 +42,14 @@ func (s *AgentService) takeRefs(id string) []tagged.Ref {
 	refs := s.steerRefs[id]
 	delete(s.steerRefs, id)
 	return refs
+}
+
+func (s *AgentService) recordSteer(id string, event agent.Event, result *AgentResult, current *agent.Agent) {
+	message := sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images, Refs: s.takeRefs(id), Executions: result.Executions}
+	if err := s.store.Finish(id, message, current.State()); err != nil {
+		result.Error = err.Error()
+		s.Stop(id)
+		return
+	}
+	result.Executions = []agent.Execution{}
 }

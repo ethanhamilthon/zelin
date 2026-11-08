@@ -28,7 +28,7 @@ func (s *Store) Finish(id string, message Message, state agent.State) error {
 	if err != nil {
 		return err
 	}
-	if _, err := tx.Exec("UPDATE sessions SET messages=?,state=?,pending=CASE WHEN ? THEN '[]' ELSE pending END,updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?", string(history), string(snapshot), message.Role == "assistant", id); err != nil {
+	if _, err := tx.Exec("UPDATE sessions SET messages=?,state=?,pending=CASE WHEN ? THEN '[]' ELSE pending END,updated=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?", string(history), string(snapshot), message.Role == "assistant" || len(message.Executions) > 0, id); err != nil {
 		return err
 	}
 	return tx.Commit()

@@ -8,7 +8,7 @@
 </script>
 
 <div class="thinking" aria-label="Thinking">
-  <Button data-ui="ui-thinkingblock" class={["think-fold", { folded }]} onclick={() => { folded = !folded; }} aria-expanded={!folded} aria-label={folded ? 'Unfold thinking' : 'Fold thinking'}>
+  <Button data-ui="ui-thinkingblock" variant="icon" class={["think-fold", { folded }]} onclick={() => { folded = !folded; }} aria-expanded={!folded} aria-label={folded ? 'Unfold thinking' : 'Fold thinking'}>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 5a3 3 0 1 0-6 .1 4 4 0 0 0-2.5 5.8 4 4 0 0 0 .5 6.6A4 4 0 1 0 12 18Z" />
       <path d="M12 5a3 3 0 1 1 6 .1 4 4 0 0 1 2.5 5.8 4 4 0 0 1-.5 6.6A4 4 0 1 1 12 18Z" />

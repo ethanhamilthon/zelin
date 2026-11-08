@@ -45,8 +45,8 @@
 {:else if modal === 'rename'}
   <RenameSession title={sessions.state.items.find((item) => item.id === target)?.title ?? ''} {back} {onclose} {ondismiss} onsave={onrename} />
 {:else if modal === 'sessions'}
-  <SessionList hotkey={settings.state.hotkeys.newSession} sessions={sessions.state.items} active={sessions.state.id} status={sessions.status} steps={sessions.steps} {back} {onclose} {ondismiss} {onselect} {onnew}
-    workspaces={workspaces.state.items} selected={workspaces.state.selected}
+  <SessionList sessions={sessions.state.items} active={sessions.state.id} status={sessions.status} steps={sessions.steps} {back} {onclose} {ondismiss} {onselect}
+    onworkspacenew={(id) => { workspaces.follow(id); onnew(); }} workspaces={workspaces.state.items} selected={workspaces.state.selected}
     onworkspace={(id) => workspaces.follow(id)} onsettings={(id) => { void workspaces.edit(id).then(() => open('workspace')); }}
     oncreate={() => { void workspaces.edit(null).then(() => open('workspace')); }} />
 {:else if modal === 'about'}
