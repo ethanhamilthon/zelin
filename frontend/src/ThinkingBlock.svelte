@@ -22,10 +22,10 @@
 
 <style>
   :global(.thinking) { position: relative; margin: 0 0 8px; color: var(--dim); }
-  :global(.think-fold) { position: absolute; left: -30px; top: 6px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--violet); cursor: pointer; transition: color 140ms, opacity 140ms; }
+  :global(.think-fold) { position: absolute; left: -30px; top: 6px; display: inline-flex; min-height: 0; padding: 0; border: 0; background: none; color: var(--violet); cursor: pointer; transition: color 140ms, opacity 140ms; }
   :global(.think-fold.folded) { opacity: 0.65; }
   :global(.think-fold):hover, :global(.think-fold):focus-visible { color: var(--foreground); opacity: 1; outline: none; }
-  :global(button[data-ui="ui-thinkingblock"].body) { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: color 160ms; }
+  :global(button[data-ui="ui-thinkingblock"].body) { display: block; width: 100%; min-height: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: color 160ms; }
   :global(button[data-ui="ui-thinkingblock"].body):hover { color: var(--muted); }
   :global(button[data-ui="ui-thinkingblock"].body):focus-visible { outline: 1px solid var(--dim); outline-offset: 5px; }
   p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }

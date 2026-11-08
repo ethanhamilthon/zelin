@@ -33,6 +33,7 @@ type Agent struct {
 	reportedLen    int
 	compactFailed  bool
 	steering       steering
+	Persist        func(State) error
 }
 
 func New(client Completer) *Agent { return NewIn(client, "") }
@@ -61,15 +62,14 @@ func (a *Agent) compose(extra string) provider.Message {
 }
 
 func (a *Agent) Run(ctx context.Context, history []provider.Message, observers ...func(Event)) (_ string, runErr error) {
-	progress := false
 	emit := func(event Event) {
-		progress = progress || event.Kind == "execution"
 		for _, observer := range observers {
 			observer(event)
 		}
 	}
 	messages, err := a.begin(history)
 	if err != nil {
+		a.Reject(history, err)
 		return "", err
 	}
 	if a.continues(history) && len(a.transcript) > 0 {
@@ -81,24 +81,28 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 		}
 	}
 	history = append([]provider.Message{}, history...)
-	prior := a.transcript
-	defer func() { a.settle(runErr, progress, prior, messages, history) }()
+	defer func() { a.settle(runErr, messages, history) }()
+	sync := func() { a.checkpoint(messages, history) }
+	sync()
 	for step := 0; ; step++ {
 		if err := ctx.Err(); err != nil {
 			return "", err
 		}
 		if imgMessage := a.takeImages(); imgMessage != nil {
 			messages = append(messages, *imgMessage)
+			sync()
 		}
 		if message, model := a.takeSteer(emit); message != nil {
 			messages = append(messages, *model)
 			history = append(history, *message)
+			sync()
 		}
 		compacted, compactErr := a.autoCompact(ctx, messages, emit)
 		if compactErr != nil {
 			return "", compactErr
 		}
 		messages = compacted
+		sync()
 		emit(Event{Kind: "activity", Activity: "Thinking"})
 		reply, usage, err := a.client.Complete(ctx, provider.Request{Messages: messages, Tools: []provider.Tool{Tool}})
 		if err != nil {
@@ -127,15 +131,18 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			if message, model := a.takeSteer(emit); message != nil {
 				messages = append(messages, reply, *model)
 				history = append(history, *message)
+				sync()
 				continue
 			}
 			messages = append(messages, reply)
-			a.history = append(append([]provider.Message{}, history...), provider.Message{Role: "assistant", Content: reply.Content})
+			history = append(history, provider.Message{Role: "assistant", Content: reply.Content})
+			a.complete(messages, history)
 			return reply.Content, nil
 		}
 		messages = append(messages, reply)
 		for _, call := range reply.ToolCalls {
 			messages = append(messages, provider.Message{Role: "tool", Content: a.call(ctx, call, emit), ToolCallID: call.ID})
 		}
+		sync()
 	}
 }

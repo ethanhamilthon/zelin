@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 	"zelin/internal/agent"
@@ -99,21 +100,18 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	defer s.endLive(id)
 	if s.client != nil {
 		if err := s.pin(id); err != nil {
+			current.Reject(history, err)
 			return AgentResult{}, err
 		}
 	}
 	if s.client != nil && shouldTitle(history) {
-		titled := append([]provider.Message{}, history...)
-		for i := range titled {
-			titled[i].Content = tagged.Plain(titled[i].Content)
-		}
-		go s.title(id, titled)
+		go s.title(id, plainHistory(history))
 	}
 	current.TakeAttachments()
+	current.Persist = func(state agent.State) error { return s.store.SaveState(id, state) }
 	current.Expand = s.expander(id, refs)
 	current.AutoCompact = func() (bool, int, int) { return s.compactionSettings(id) }
-	started, before := time.Now(), current.State().Usage
-	result := AgentResult{Executions: []agent.Execution{}}
+	started, before, result := time.Now(), current.State().Usage, AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
 		if event.Kind == "steer" && event.Message != nil {
 			if err := s.store.Finish(id, sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images, Refs: s.takeRefs(id)}, current.State()); err != nil {
@@ -123,6 +121,9 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 		}
 		if event.Execution != nil && event.Execution.State == "complete" {
 			result.Executions = append(result.Executions, *event.Execution)
+			if err := s.store.AddStep(id, *event.Execution); err != nil {
+				log.Printf("persist step: %v", err)
+			}
 		}
 		s.recordLive(id, event)
 		if s.emit != nil {
@@ -138,8 +139,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	} else if err != nil {
 		result.Error = err.Error()
 	}
-	saveErr := s.saveAnswer(id, content, result, current)
-	if saveErr != nil {
+	if saveErr := s.saveAnswer(id, content, result, current); saveErr != nil {
 		return result, fmt.Errorf("Could not save session: %w", saveErr)
 	}
 	return result, nil

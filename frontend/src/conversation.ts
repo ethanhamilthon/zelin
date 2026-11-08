@@ -31,7 +31,6 @@ export async function sendMessage(
   const draft = state.draft;
   const attachments = state.attachments;
   const refs = usedRefs(draft, state.refs);
-  const allRefs = state.refs;
   const previous = state.messages;
   const images = attachments.map((url, index) => draft.includes(`[Image #${index + 1}]`) ? url : '');
   const sent: Message = images.some(Boolean) ? { role: 'user', content: draft, images } : { role: 'user', content: draft };
@@ -61,14 +60,9 @@ export async function sendMessage(
     }];
     return true;
   } catch (error) {
-    if (state.executions.length || files?.length) {
-      state.messages = [...state.messages, {
-        role: 'assistant', content: 'The agent stopped before completing this turn.', executions: state.executions, ...(turn && { turn }),
-      }];
-    } else {
-      state.messages = previous;
-      if (!state.draft) { state.draft = draft; state.attachments = attachments; state.refs = allRefs; }
-    }
+    state.messages = [...state.messages, {
+      role: 'assistant', content: 'The agent stopped before completing this turn.', executions: state.executions, ...(turn && { turn }),
+    }];
     state.error = error instanceof Error ? error.message : String(error);
     return false;
   } finally {

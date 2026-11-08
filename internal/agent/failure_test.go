@@ -36,7 +36,7 @@ func TestFailureKeepsToolHistoryAndRuntime(t *testing.T) {
 		t.Fatalf("JavaScript state was reset: %v %v", outputs, err)
 	}
 	sent := client.messages[len(client.messages)-2]
-	if len(sent) != 6 || sent[2].ToolCalls[0].ID != "one" || sent[3].Role != "tool" || sent[3].Content != "41" || sent[4].Content != StoppedMessage {
+	if len(sent) != 7 || sent[2].ToolCalls[0].ID != "one" || sent[3].Role != "tool" || sent[3].Content != "41" || sent[4].Role != "system" || !strings.Contains(sent[4].Content, "Offline") || sent[5].Content != StoppedMessage {
 		t.Fatalf("Tool history was dropped: %+v", sent)
 	}
 }

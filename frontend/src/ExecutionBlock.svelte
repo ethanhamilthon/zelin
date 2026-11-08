@@ -25,10 +25,10 @@
 
 <style>
   :global(.execution) { position: relative; margin: 0 0 8px; }
-  :global(.fold) { position: absolute; left: -30px; top: 6px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; transition: transform 160ms, color 140ms; }
+  :global(.fold) { position: absolute; left: -30px; top: 6px; display: inline-flex; min-height: 0; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; transition: transform 160ms, color 140ms; }
   :global(.fold):hover, :global(.fold):focus-visible { color: var(--foreground); outline: none; }
   :global(.fold.folded) { transform: rotate(-90deg); }
-  :global(.source) { display: block; width: 100%; text-align: left; color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }
+  :global(.source) { display: block; width: 100%; min-height: 0; text-align: left; color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }
   :global(.source.folded) pre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   :global(.source):hover { color: var(--muted); }
   :global(.source):focus-visible { outline: 1px solid var(--dim); outline-offset: 5px; }

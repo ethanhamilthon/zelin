@@ -11,7 +11,7 @@ func migrate(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	for _, column := range []string{`workspace_id TEXT NOT NULL DEFAULT ''`, `refs TEXT NOT NULL DEFAULT '[]'`} {
+	for _, column := range []string{`workspace_id TEXT NOT NULL DEFAULT ''`, `refs TEXT NOT NULL DEFAULT '[]'`, `pending TEXT NOT NULL DEFAULT '[]'`} {
 		_, err = db.Exec(`ALTER TABLE sessions ADD COLUMN ` + column)
 		if err != nil && !strings.Contains(err.Error(), "duplicate column") {
 			return err

@@ -25,8 +25,12 @@
 <style>
   :global(.stack) { margin: 0 0 8px; }
   :global(.items) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; padding-left: 30px; }
-  :global(.items) > :global(*) { margin: 0; }
-  :global(.toggle) { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
+  :global(.items) { position: relative; text-align: left; }
+  :global(.items) > :global(*) { margin: 0; text-align: left; }
+  :global(.items) > :global(.execution)::before, :global(.items) > :global(.thinking)::before { content: ""; position: absolute; left: -52px; top: -8px; height: calc(100% + 8px); border-left: 1px solid var(--border); }
+  :global(.items) > :global(.execution)::after, :global(.items) > :global(.thinking)::after { content: ""; position: absolute; left: -52px; top: 14px; width: 18px; border-top: 1px solid var(--border); }
+  :global(.items) > :global(.execution:last-child)::before, :global(.items) > :global(.thinking:last-child)::before { height: 22px; border-bottom-left-radius: 6px; }
+  :global(.toggle) { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 0; padding: 0; justify-content: flex-start; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
   :global(.toggle):hover, :global(.toggle):focus-visible { color: var(--muted); outline: none; }
   :global(.count), :global(.sep) { flex-shrink: 0; }
   :global(.preview) { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--faint); }

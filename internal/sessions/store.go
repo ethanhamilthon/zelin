@@ -69,6 +69,9 @@ func Open(path string) (*Store, error) {
 	if err == nil {
 		err = migrate(db)
 	}
+	if err == nil {
+		err = recoverPending(db)
+	}
 	if err != nil {
 		db.Close()
 		return nil, err

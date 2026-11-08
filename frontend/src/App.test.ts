@@ -76,7 +76,7 @@ describe('agent UI', () => {
     expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '**Done** with `code`' })]), 'Next draft', []);
   });
 
-  it('preserves the next draft on failure', async () => {
+  it('keeps the next draft on failure', async () => {
     let fail!: (reason: Error) => void;
     vi.mocked(runAgent).mockImplementation(() => new Promise((_, reject) => { fail = reject; }));
     await start(); submit(); await wait(); draft('Keep this'); fail(new Error('Offline')); await wait();

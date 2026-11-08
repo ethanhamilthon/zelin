@@ -48,17 +48,3 @@ func (a *Agent) continues(history []provider.Message) bool {
 		return x.Role == y.Role && x.Content == y.Content
 	})
 }
-
-func (a *Agent) settle(err error, progress bool, prior, messages, history []provider.Message) {
-	a.pinned = nil
-	switch {
-	case err == nil:
-		a.transcript = messages
-	case !progress:
-		a.transcript = prior
-	default:
-		stopped := provider.Message{Role: "assistant", Content: StoppedMessage}
-		a.transcript = append(messages, stopped)
-		a.history = append(append([]provider.Message{}, history...), stopped)
-	}
-}

@@ -33,19 +33,13 @@ describe('conversation', () => {
     expect(run).toHaveBeenCalledTimes(1);
   });
 
-  it('restores failed input without overwriting a new draft', async () => {
-    for (const next of ['', 'New draft']) {
-      const state = initial();
-      state.messages = [{ role: 'assistant', content: 'Earlier' }];
-      await sendMessage(state, async () => {
-        state.draft = next;
-        throw new Error('Offline');
-      });
-      expect(state.draft).toBe(next || 'Hello');
-      expect(state.error).toBe('Offline');
-      expect(state.busy).toBe(false);
-      expect(state.messages).toEqual([{ role: 'assistant', content: 'Earlier' }]);
-    }
+  it('keeps the failed turn in history with a stopped marker', async () => {
+    const state = initial();
+    state.messages = [{ role: 'assistant', content: 'Earlier' }];
+    expect(await sendMessage(state, async () => { throw new Error('Offline'); })).toBe(false);
+    expect(state.error).toBe('Offline');
+    expect(state.busy).toBe(false);
+    expect(state.messages.map((message) => message.content)).toEqual(['Earlier', 'Hello', 'The agent stopped before completing this turn.']);
   });
 
   it('updates live executions and retains them in the answer', async () => {
@@ -83,7 +77,7 @@ describe('conversation', () => {
     expect(run).not.toHaveBeenCalled();
     const state = initial();
     await sendMessage(state, async () => answer(''));
-    expect(state.draft).toBe('Hello');
+    expect(state.draft).toBe('');
     expect(state.error).toContain('empty response');
   });
 });
@@ -98,11 +92,4 @@ describe('image attachments', () => {
     expect(state.attachments).toEqual([]);
   });
 
-  it('restores attachments when the request fails', async () => {
-    const state = initial('[Image #1]');
-    state.attachments = ['data:a'];
-    expect(await sendMessage(state, async () => { throw new Error('Offline'); })).toBe(false);
-    expect(state.draft).toBe('[Image #1]');
-    expect(state.attachments).toEqual(['data:a']);
-  });
 });
