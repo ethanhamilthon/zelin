@@ -7,7 +7,6 @@ import (
 
 	"github.com/dop251/goja"
 	"zelin/internal/files"
-	"zelin/internal/host"
 )
 
 type Runtime struct {
@@ -56,13 +55,7 @@ func (r *Runtime) TakeImages() []files.Image {
 func (r *Runtime) Run(ctx context.Context, code string) string {
 	ctx, cancel := context.WithTimeout(ctx, 125*time.Second)
 	defer cancel()
-	r.vm.Set("bash", func(command string, timeout float64) map[string]any {
-		if err := r.usable(); err != nil {
-			return map[string]any{"stdout": "", "stderr": err.Error(), "exitCode": -1, "timedOut": false}
-		}
-		result := host.BashIn(ctx, r.cwd, command, timeout)
-		return map[string]any{"stdout": result.Stdout, "stderr": result.Stderr, "exitCode": result.ExitCode, "timedOut": result.TimedOut}
-	})
+	r.bindBash(ctx)
 	r.bindMCP(ctx)
 	done := make(chan struct{})
 	stop := context.AfterFunc(ctx, func() {

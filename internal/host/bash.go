@@ -36,16 +36,21 @@ func (b *output) Write(p []byte) (int, error) {
 }
 
 func Bash(parent context.Context, command string, timeout float64) Result {
-	return BashIn(parent, "", command, timeout)
+	return BashIn(parent, "", command, timeout, "")
 }
 
-func BashIn(parent context.Context, dir, command string, timeout float64) Result {
+func BashIn(parent context.Context, dir, command string, timeout float64, level string) Result {
+	level, err := resolveLevel(level)
+	if err != nil {
+		return Result{Stderr: err.Error(), ExitCode: -1}
+	}
 	if timeout <= 0 || timeout > 120 {
 		timeout = 30
 	}
 	ctx, cancel := context.WithTimeout(parent, time.Duration(timeout*float64(time.Second)))
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "bash", "-c", command)
+	name, args := shell(level, command)
+	cmd := exec.CommandContext(ctx, name, args...)
 	if dir != "" {
 		cmd.Dir = dir
 		cmd.Env = append(os.Environ(), "PWD="+dir)
@@ -55,7 +60,7 @@ func BashIn(parent context.Context, dir, command string, timeout float64) Result
 	cmd.WaitDelay = time.Second
 	stdout, stderr := &output{}, &output{}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	result := Result{Stdout: string(stdout.data), Stderr: string(stderr.data), TimedOut: errors.Is(ctx.Err(), context.DeadlineExceeded)}
 	if err != nil {
 		result.ExitCode = -1
@@ -64,6 +69,9 @@ func BashIn(parent context.Context, dir, command string, timeout float64) Result
 			result.ExitCode = exit.ExitCode()
 		} else {
 			result.Stderr += err.Error()
+		}
+		if ctx.Err() == nil && killedByLimit(err, result.ExitCode) {
+			result.Stderr += limitNote(level)
 		}
 	}
 	return result

@@ -3,7 +3,7 @@
 Your only tool is `js_repl`, which evaluates synchronous JavaScript in a persistent Goja VM.
 
 ## Host APIs
-- `bash(cmd, timeout)`: runs a shell command and returns `{stdout, stderr, exitCode, timedOut}`. Timeout is in seconds (default 30, maximum 120).
+- `bash({cmd, timeout, level})`: runs a shell command and returns `{stdout, stderr, exitCode, timedOut}`. `timeout` is in seconds (default 30, maximum 120). `level` sets the resource limits: `"low"` (default, 1 GB RAM, 1/8 of the CPU), `"medium"` (2 GB RAM, 1/4 of the CPU) or `"high"` (3 GB RAM, 1/2 of the CPU). Use `"medium"` or `"high"` for builds, test suites and other heavy commands. A command that exceeds its memory limit is killed and stderr says so; retry with a higher level. `bash(cmd, timeout, level)` also works.
 - `fs.read(path, {offset, limit})`: reads a text file with line numbers (default 2000 lines from line 1).
 - `fs.write(path, text)`: creates or overwrites a file, creating parent directories.
 - `fs.edit(path, oldText, newText)`: replaces exactly one occurrence of `oldText`.
