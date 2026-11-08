@@ -33,13 +33,14 @@ describe('conversation', () => {
     expect(run).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the failed turn in history with a stopped marker', async () => {
+  it('shows the failure as the final answer', async () => {
     const state = initial();
     state.messages = [{ role: 'assistant', content: 'Earlier' }];
     expect(await sendMessage(state, async () => { throw new Error('Offline'); })).toBe(false);
-    expect(state.error).toBe('Offline');
+    expect(state.error).toBe('');
     expect(state.busy).toBe(false);
-    expect(state.messages.map((message) => message.content)).toEqual(['Earlier', 'Hello', 'The agent stopped before completing this turn.']);
+    expect(state.messages.map((message) => message.content)).toEqual(['Earlier', 'Hello', 'Error: Offline']);
+    expect(state.messages[2].error).toBe(true);
   });
 
   it('updates live executions and retains them in the answer', async () => {
@@ -61,7 +62,7 @@ describe('conversation', () => {
     await sendMessage(state, async () => ({ content: '', executions: [execution], error: 'Offline' }));
     expect(state.messages).toHaveLength(2);
     expect(state.messages[1].executions).toEqual([execution]);
-    expect(state.error).toBe('Offline');
+    expect(state.messages[1].content).toBe('Error: Offline');
   });
 
   it('keeps the turn summary on the final answer', async () => {
@@ -78,7 +79,7 @@ describe('conversation', () => {
     const state = initial();
     await sendMessage(state, async () => answer(''));
     expect(state.draft).toBe('');
-    expect(state.error).toContain('empty response');
+    expect(state.messages.at(-1)?.content).toContain('empty response');
   });
 });
 

@@ -1,7 +1,6 @@
 <script lang="ts">
   import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
-  import Hotkey from './Hotkey.svelte';
   import type { SessionAction } from './session-actions';
   let { busy = false, hasMessages = false, back = false, onclose, ondismiss, onaction }: {
     busy?: boolean; hasMessages?: boolean; back?: boolean;

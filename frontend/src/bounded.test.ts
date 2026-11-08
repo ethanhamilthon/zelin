@@ -39,12 +39,13 @@ it('renders short histories in full without a button', () => {
 it('bounds execution blocks per message and keeps full source reachable', async () => {
   const messages: Message[] = [{ role: 'assistant', content: 'done', executions: Array.from({ length: 80 }, (_, i) => step(i)) }];
   show(messages);
-  expect(document.querySelectorAll('[aria-label="JavaScript execution"]').length).toBe(30);
+  const count = () => document.querySelectorAll('[aria-label="JavaScript execution"]').length;
+  expect(count()).toBe(10);
   expect(document.body.textContent).toContain('step_79()');
-  expect(document.body.textContent).not.toContain('step_49()');
-  more()!.click(); await tick(); await tick();
-  expect(document.querySelectorAll('[aria-label="JavaScript execution"]').length).toBe(60);
-  more()!.click(); await tick(); await tick();
-  expect(document.querySelectorAll('[aria-label="JavaScript execution"]').length).toBe(80);
+  expect(document.body.textContent).not.toContain('step_69()');
+  expect(more()?.textContent).toBe('Show 10 earlier steps');
+  for (let i = 0; i < 7; i++) { more()!.click(); await tick(); await tick(); }
+  expect(count()).toBe(80);
+  expect(more()).toBeUndefined();
   expect(document.body.textContent).toContain('step_0()');
 });

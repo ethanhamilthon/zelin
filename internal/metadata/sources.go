@@ -70,12 +70,12 @@ func liteLLM(ctx context.Context, client *http.Client, url string, entries map[s
 		for _, id := range slices.Sorted(maps.Keys(data)) {
 			raw := data[id]
 			var model struct {
-				Input     int      `json:"max_input_tokens"`
-				Prompt    *float64 `json:"input_cost_per_token"`
+				Input      int      `json:"max_input_tokens"`
+				Prompt     *float64 `json:"input_cost_per_token"`
 				Completion *float64 `json:"output_cost_per_token"`
-				CacheRead *float64 `json:"cache_read_input_token_cost"`
+				CacheRead  *float64 `json:"cache_read_input_token_cost"`
 				CacheWrite *float64 `json:"cache_creation_input_token_cost"`
-				Reasoning *bool    `json:"supports_reasoning"`
+				Reasoning  *bool    `json:"supports_reasoning"`
 			}
 			key := Key(id)
 			if _, exists := entries[key]; exists || direct == strings.Contains(id, "/") || json.Unmarshal(raw, &model) != nil || model.Input == 0 {

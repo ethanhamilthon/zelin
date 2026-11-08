@@ -18,12 +18,25 @@ it('routes Markdown, images, and other files to their respective viewers', async
  await openAttachment({ name: 'PDF', path: '/tmp/report.pdf' }, edit, image);
  expect(openFile).toHaveBeenCalledWith('/tmp/report.pdf');
 });
+it('shows image previews and file type icons', async () => {
+ vi.mocked(call).mockResolvedValue('data:image/png;base64,a');
+ const { tick } = await import('svelte');
+ const app = mount(History, { target: document.body, props: { messages: [{ role: 'assistant', content: 'Files', files: [{ name: 'Shot', path: '/tmp/a.png' }, { name: 'Code', path: '/tmp/a.go' }] }] } });
+ try {
+  await new Promise((resolve) => setTimeout(resolve, 0)); await tick();
+  const buttons = document.querySelectorAll('[aria-label="Attached files"] button');
+  expect(buttons[0].querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,a');
+  expect(buttons[1].querySelector('svg')).not.toBeNull();
+  expect(call).toHaveBeenCalledTimes(1);
+ } finally { await unmount(app); }
+});
 it('renders clickable named attachments after an assistant answer', async () => {
  const edit = vi.fn();
  const app = mount(History, { target: document.body, props: { messages: [{ role: 'assistant', content: 'Your report', files: [{ name: 'Download report', path: '/tmp/report.md' }] }], ondocument: edit } });
  try {
   const button = document.querySelector<HTMLButtonElement>('[aria-label="Attached files"] button')!;
-  expect(button.textContent).toBe('Download report');
+  expect(button.textContent?.trim()).toBe('Download report');
+  expect(button.querySelector('svg')).not.toBeNull();
   button.click();
   expect(edit).toHaveBeenCalledWith(expect.objectContaining({ title: '/tmp/report.md' }));
  } finally { await unmount(app); }

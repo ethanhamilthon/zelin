@@ -2,7 +2,7 @@ import type { Turn } from './turn';
 
 export type Execution = {
   id: string;
-  kind?: 'thinking';
+  kind?: 'thinking' | 'message';
   code: string;
   output: string;
   state: 'running' | 'complete';
@@ -25,6 +25,7 @@ export type AgentEvent =
   | { kind: 'activity'; activity: string }
   | { kind: 'execution'; execution: Execution }
   | { kind: 'usage'; usage: Usage }
+  | { kind: 'stream'; message: { content: string } }
   | { kind: 'compact_error'; activity: string };
 
 export type Pricing = { prompt: number | null; completion: number | null; cacheRead: number | null; cacheWrite: number | null };

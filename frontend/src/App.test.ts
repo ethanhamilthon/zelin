@@ -71,7 +71,7 @@ describe('agent UI', () => {
     expect($('.cm-content')?.textContent).toBe('Next draft');
     expect($('footer')?.textContent).toContain('Test Model');
     expect($('footer')?.textContent).toContain('medium');
-    expect($('footer .right button')?.textContent).toBe('Commands Ctrl+K');
+    expect($('footer .right button')?.textContent).toBe('Commands');
     expect($('footer [role="status"]')).toBeNull();
     expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '**Done** with `code`' })]), 'Next draft', []);
   });
@@ -80,7 +80,7 @@ describe('agent UI', () => {
     let fail!: (reason: Error) => void;
     vi.mocked(runAgent).mockImplementation(() => new Promise((_, reject) => { fail = reject; }));
     await start(); submit(); await wait(); draft('Keep this'); fail(new Error('Offline')); await wait();
-    expect($('[role="alert"]')?.textContent).toBe('Offline');
+    expect([...document.querySelectorAll('article')].at(-1)?.textContent).toContain('Error: Offline');
     expect($('.cm-content')?.textContent).toBe('Keep this');
   });
 
@@ -124,7 +124,7 @@ describe('agent UI', () => {
     await start(); key('k', 'KeyK', { ctrlKey: true }); await tick();
     button('Instructions').click(); await tick();
     button('System Prompt').click(); await wait();
-    expect($('footer[aria-label="System Prompt"]')?.textContent).toContain('Save Ctrl+S');
+    expect($('footer[aria-label="System Prompt"]')?.textContent).not.toContain('Ctrl+S');
     const editor = [...document.querySelectorAll<HTMLElement>('.cm-content')].find((item) => item.getAttribute('aria-label') === 'System Prompt')!;
     expect(editor.textContent).toBe('You are Zelin.');
     const view = EditorView.findFromDOM(editor.parentElement!.parentElement!)!;

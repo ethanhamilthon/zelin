@@ -3,14 +3,12 @@ import { flushSync, mount, tick, unmount } from 'svelte';
 import History from './History.svelte';
 import Onboarding from './Onboarding.svelte';
 import { links } from './links';
-import { live } from './turn';
+import type { Message } from './conversation';
 import { call } from './bridge';
-import type { Usage } from './agent-types';
 
 vi.mock('./bridge', () => ({ call: vi.fn(), desktop: () => true, listen: vi.fn(async () => () => {}) }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
 let app: ReturnType<typeof mount> | undefined;
-const usage = (requests: number, cost: number, context: number): Usage => ({ requests, unpriced: 0, context, input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost, estimated: false });
 const wait = async () => { for (let i = 0; i < 5; i++) { await new Promise((resolve) => setTimeout(resolve, 0)); await tick(); } };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -22,26 +20,25 @@ beforeEach(() => {
 });
 afterEach(async () => { vi.useRealTimers(); if (app) await unmount(app); app = undefined; document.body.replaceChildren(); });
 
-it('computes live turn values relative to the turn start', () => {
-  const turn = live(1000, 6000, usage(3, 0.75, 5000), usage(1, 0.25, 900), 10000);
-  expect(turn).toMatchObject({ duration: 5000, cost: 0.5, context: 5000, window: 10000 });
-  expect(live(1000, 1000, null, null, 0)).toMatchObject({ cost: null, context: null });
-});
-
-it('shows the live divider while busy and ticks every second', async () => {
+it('shows steps, elapsed time and streamed text while busy, then the turn time', async () => {
   vi.useFakeTimers({ now: 10_000 });
-  const props = $state({ messages: [{ role: 'user' as const, content: 'Hi' }], busy: true, started: 10_000, usage: null as Usage | null, window: 2000 });
+  const execution = { id: 'a', code: 'bash("ls")', output: '', state: 'running' as const };
+  const props = $state({ messages: [{ role: 'user' as const, content: 'Hi' }] as Message[], busy: true, started: 10_000, executions: [execution], streaming: '' });
   app = mount(History, { target: document.body, props });
   flushSync();
-  const divider = () => document.querySelector('[aria-label="Current turn"]')?.textContent ?? '';
-  expect(divider()).toContain('0s');
+  const row = () => document.querySelector('.toggle')?.textContent ?? '';
+  expect(row()).toMatch(/1 step\s*\|\s*0s\s*\|\s*bash\("ls"\)/);
+  expect(document.querySelector('.spinner')).not.toBeNull();
   vi.advanceTimersByTime(3000); flushSync();
-  expect(divider()).toContain('3s');
-  props.usage = usage(1, 0.02, 1500); flushSync();
-  expect(divider()).toContain('$0.02');
-  expect(divider()).toContain('1.5K / 2K');
-  props.busy = false; flushSync();
-  expect(document.querySelector('[aria-label="Current turn"]')).toBeNull();
+  expect(row()).toContain('3s');
+  props.streaming = 'Partial **answer**'; flushSync();
+  expect(document.querySelector('[aria-label="Streaming answer"]')?.textContent).toContain('Partial answer');
+  props.busy = false;
+  props.messages = [...props.messages, { role: 'assistant', content: 'Done', turn: { finished: '', duration: 46000, cost: null, context: null, window: 0 } }];
+  flushSync();
+  expect(document.querySelector('[aria-label="Streaming answer"]')).toBeNull();
+  expect(document.querySelector('[aria-label="Turn time"]')?.textContent).toBe('46s');
+  expect(document.querySelector('[role="separator"]')).toBeNull();
 });
 
 it('routes link clicks to the handler', () => {

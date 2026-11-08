@@ -4,10 +4,9 @@
   import { createEditor } from './editor';
   import type { Editor } from './editor';
   import BottomBar from './BottomBar.svelte';
-  import Hotkey from './Hotkey.svelte';
-  let { title, save, load, saveKey, closeKey = 'Esc', onclose }: {
+  let { title, save, load, onclose }: {
     title: string; load: () => Promise<string>; save: (text: string) => Promise<void>;
-    saveKey: string; closeKey?: string; onclose: () => void;
+    onclose: () => void;
   } = $props();
   let container: HTMLDivElement;
   let editor: Editor | undefined;
@@ -38,8 +37,8 @@
     <span title={title}>{title}{text !== saved ? ' •' : ''}</span>
     {#if status}<span class="status" role="status">{status}</span>{/if}
     {#snippet actions()}
-      <Button data-ui="ui-documenteditor" onclick={onclose} title="Close editor">Close <Hotkey value={closeKey} /></Button>
-      <Button data-ui="ui-documenteditor" onclick={() => { void commit(); }}>Save <Hotkey value={saveKey} /></Button>
+      <Button data-ui="ui-documenteditor" onclick={onclose} title="Close editor">Close</Button>
+      <Button data-ui="ui-documenteditor" onclick={() => { void commit(); }}>Save</Button>
     {/snippet}
   </BottomBar>
 </div>

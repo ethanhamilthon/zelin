@@ -12,5 +12,6 @@ export async function listWorkspaces(): Promise<Workspace[]> {
 }
 export const createWorkspace = (name: string, icon: string, dir: string) => call<Workspace>('WorkspaceService.Create', name, icon, dir);
 export const updateWorkspace = (id: string, name: string, icon: string, dir: string) => call<Workspace>('WorkspaceService.Update', id, name, icon, dir);
+export const deleteWorkspace = (id: string) => call<void>('WorkspaceService.Delete', id);
 export const workspaceSession = (id: string) => call<Session>('WorkspaceService.NewSession', id);
 export const agentsFile = (id: string) => call<AgentsFile>('WorkspaceService.Agents', id);

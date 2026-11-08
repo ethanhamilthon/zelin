@@ -4,7 +4,9 @@ import type { AgentEvent, AgentResult, Execution, Usage } from './agent-types';
 import type { Turn } from './turn';
 import { usedRefs, type Ref } from './refs';
 
-export type Message = { role: 'user' | 'assistant'; content: string; files?: FileAttachment[]; images?: string[]; executions?: Execution[]; turn?: Turn; refs?: Ref[] };
+export const failure = (reason: string) => reason === 'Stopped' ? 'Stopped by user.' : `Error: ${reason}`;
+
+export type Message = { role: 'user' | 'assistant'; content: string; files?: FileAttachment[]; images?: string[]; executions?: Execution[]; turn?: Turn; refs?: Ref[]; error?: boolean };
 export type Conversation = {
   messages: Message[];
   draft: string;
@@ -15,6 +17,7 @@ export type Conversation = {
   error: string;
   activity: string;
   executions: Execution[];
+  streaming?: string;
   usage: Usage | null;
   started?: number;
   baseline?: Usage | null;
@@ -43,6 +46,7 @@ export async function sendMessage(
   state.error = '';
   state.activity = 'Thinking';
   state.executions = [];
+  state.streaming = '';
   state.started = Date.now();
   state.baseline = state.usage;
   const observe = (event: AgentEvent) => observeEvent(state, event);
@@ -60,15 +64,16 @@ export async function sendMessage(
     }];
     return true;
   } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
     state.messages = [...state.messages, {
-      role: 'assistant', content: 'The agent stopped before completing this turn.', executions: state.executions, ...(turn && { turn }),
+      role: 'assistant', content: failure(reason), error: true, executions: state.executions, ...(turn && { turn }),
     }];
-    state.error = error instanceof Error ? error.message : String(error);
     return false;
   } finally {
     state.executions = [];
+    state.streaming = '';
     state.started = undefined;
-    state.activity = state.error ? 'Error' : 'Ready';
+    state.activity = state.messages.at(-1)?.error ? 'Error' : 'Ready';
     state.busy = false;
     state.steering = false;
   }

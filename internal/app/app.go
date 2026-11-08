@@ -8,6 +8,7 @@ import (
 	"zelin/internal/agent"
 	"zelin/internal/home"
 	"zelin/internal/instructions"
+	"zelin/internal/jsruntime"
 	"zelin/internal/metadata"
 	"zelin/internal/provider"
 	"zelin/internal/sessions"
@@ -52,6 +53,9 @@ func Run(assets fs.FS) {
 	}
 	sessionService := &SessionService{store: store}
 	workspaces := &WorkspaceService{store: store}
+	mcpService := &MCPService{store: store}
+	mcpService.attach()
+	defer jsruntime.MCP.Reset()
 	app := application.New(application.Options{
 		SingleInstance: &application.SingleInstanceOptions{UniqueID: "dev.zelin." + home.Name, OnSecondInstanceLaunch: func(application.SecondInstanceData) { openWindow(application.Get()) }},
 		Name:           version.Name,
@@ -60,6 +64,7 @@ func Run(assets fs.FS) {
 			application.NewService(service),
 			application.NewService(sessionService),
 			application.NewService(workspaces),
+			application.NewService(mcpService),
 			application.NewService(&AboutService{}),
 			application.NewService(&SettingsService{store: store, instructions: docs, notify: func(name string, data any) { application.Get().Event.Emit(name, data) }}),
 			application.NewService(&FileService{}),

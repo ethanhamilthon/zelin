@@ -104,7 +104,8 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 		messages = compacted
 		sync()
 		emit(Event{Kind: "activity", Activity: "Thinking"})
-		reply, usage, err := a.client.Complete(ctx, provider.Request{Messages: messages, Tools: []provider.Tool{Tool}})
+		thinkingID := fmt.Sprintf("thinking-%d-%d", time.Now().UnixNano(), step)
+		reply, usage, err := a.stream(ctx, messages, emit, thinkingID)
 		if err != nil {
 			return "", err
 		}
@@ -119,10 +120,7 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 		}
 		totals := a.usage
 		emit(Event{Kind: "usage", Usage: &totals})
-		if thinking := strings.TrimSpace(reply.Thinking()); thinking != "" {
-			id := fmt.Sprintf("thinking-%d-%d", time.Now().UnixNano(), step)
-			emit(Event{Kind: "execution", Execution: &Execution{ID: id, Kind: "thinking", Code: thinking, State: "complete"}})
-		}
+		emitSteps(emit, reply, thinkingID)
 		reply.Role = "assistant"
 		if len(reply.ToolCalls) == 0 {
 			if strings.TrimSpace(reply.Content) == "" {

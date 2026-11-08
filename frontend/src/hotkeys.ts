@@ -1,4 +1,4 @@
-export type Action = 'commands' | 'models' | 'sessions' | 'actions' | 'files' | 'newSession' | 'stop' | 'send' | 'newline' | 'save';
+export type Action = 'commands' | 'models' | 'sessions' | 'actions' | 'files' | 'newSession' | 'stop' | 'send' | 'newline' | 'save' | 'zoomIn' | 'zoomOut';
 
 export const actions: { id: Action; label: string }[] = [
   { id: 'commands', label: 'Open commands' },
@@ -11,11 +11,13 @@ export const actions: { id: Action; label: string }[] = [
   { id: 'send', label: 'Send message' },
   { id: 'newline', label: 'Insert new line' },
   { id: 'save', label: 'Save in editor' },
+  { id: 'zoomIn', label: 'Zoom in chat' },
+  { id: 'zoomOut', label: 'Zoom out chat' },
 ];
 
 export const defaultHotkeys: Record<Action, string> = {
   commands: 'Ctrl+K', models: 'Ctrl+M', sessions: 'Ctrl+S', actions: 'Ctrl+E', files: 'Ctrl+F', newSession: 'Ctrl+N', stop: 'Ctrl+C',
-  send: 'Enter', newline: 'Shift+Enter', save: 'Ctrl+S',
+  send: 'Enter', newline: 'Shift+Enter', save: 'Ctrl+S', zoomIn: 'Ctrl+Equal', zoomOut: 'Ctrl+Minus',
 };
 
 const modifiers = ['Control', 'Shift', 'Alt', 'Meta'];

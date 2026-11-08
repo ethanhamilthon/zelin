@@ -1,6 +1,6 @@
 :root {
   --mono: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-  --background: #111111;
+  --background: #0a0a0a;
   --foreground: #e0e0e0;
   --muted: #b0b0b0;
   --dim: #737373;
@@ -16,6 +16,7 @@
   --code-bg: #171717;
   --thinking-bg: #0b0b0b;
   --font-size: 16px;
+  --icon-x: -22px;
   font-size: var(--font-size);
   font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--foreground);
@@ -25,6 +26,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
+
+.icon-slot { position: absolute; left: var(--icon-x); top: calc((var(--font-size) * 1.8 - 16px) / 2); width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; }
+.icon-slot svg { display: block; }
 
 * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
 [aria-label="Conversation"] .message *, [aria-label="Conversation"] pre, [aria-label="Conversation"] pre *, [aria-label="Conversation"] .thinking p, .cm-content, .cm-content *, input, textarea { -webkit-user-select: text; user-select: text; }

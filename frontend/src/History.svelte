@@ -5,19 +5,17 @@
   import { openAttachment } from './attachments';
   import type { Document } from './documents';
   import type { FileAttachment } from './agent-types';
-  import Steps from './Steps.svelte';
+  import Timeline from './Timeline.svelte';
   import MessageIcon from './MessageIcon.svelte';
   import MessageText from './MessageText.svelte';
-  import TurnSummary from './TurnSummary.svelte';
-  import LiveTurn from './LiveTurn.svelte';
-  import type { Usage } from './agent-types';
+  import TurnTime from './TurnTime.svelte';
   import type { Ref } from './refs';
   import MoreButton from './MoreButton.svelte';
   import { earlier, first, more as count } from './bounded';
   import { keepScroll } from './scroll-anchor';
-  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, usage = null, baseline = null, window = 0, onimage, onref, ondocument }: {
+  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, activity = '', streaming = '', onimage, onref, ondocument }: {
     messages: Message[]; executions?: Execution[]; busy?: boolean; showCode?: boolean; foldCode?: boolean; stack?: boolean;
-    started?: number; usage?: Usage | null; baseline?: Usage | null; window?: number;
+    started?: number; activity?: string; streaming?: string;
     onimage?: (url: string, number: number) => void; onref?: (ref: Ref) => void; ondocument?: (doc: Document) => void;
   } = $props();
 
@@ -32,9 +30,10 @@
   };
 
   function icon(message: Message, index: number) {
+    if (message.error) return 'error';
     if (message.role === 'assistant') return 'assistant';
     if (busy && index === messages.length - 1) return 'loading';
-    return messages[index + 1]?.role === 'assistant' ? 'done' : 'user';
+    return 'done';
   }
 </script>
 
@@ -43,18 +42,18 @@
   {#each messages.slice(from) as message, offset (from + offset)}
     {@const index = from + offset}
     <article class:assistant={message.role === 'assistant'} aria-label={message.role === 'user' ? 'User message' : 'Assistant message'}>
-      <Steps executions={message.executions ?? []} {showCode} {foldCode} {stack} />
+      <Timeline executions={message.executions ?? []} {showCode} {foldCode} {stack} />
       <div class="message">
         <MessageIcon kind={icon(message, index)} />
         <MessageText content={message.content} markdown={message.role === 'assistant'} images={message.images} refs={message.refs} {onimage} {onref} />
       </div>
       {#if message.files?.length}<Attachments files={message.files} onopen={open} />{/if}
-      {#if message.turn}<TurnSummary turn={message.turn} />{/if}
+      {#if message.turn}<TurnTime duration={message.turn.duration} />{/if}
     </article>
   {/each}
   {#if error}<p role="alert">{error}</p>{/if}
-  <Steps {executions} running={busy} {showCode} {foldCode} {stack} />
-  {#if busy && started}<LiveTurn {started} {usage} {baseline} {window} />{/if}
+  {#if busy}<Timeline {executions} running {showCode} {foldCode} {stack} {started} {activity} />{/if}
+  {#if busy && streaming}<div class="message streaming" aria-label="Streaming answer"><MessageText content={streaming} markdown /></div>{/if}
 </section>
 
 <style>
@@ -62,6 +61,7 @@
   article:last-child { margin-bottom: 0; }
   article { min-width: 0; margin-bottom: 16px; overflow-wrap: anywhere; color: var(--foreground); animation: appear 180ms ease-out; }
   .message { position: relative; }
-  .assistant { color: var(--muted); }
+  .assistant, .streaming { color: var(--muted); }
+  .streaming { margin-top: 8px; }
   @keyframes appear { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 </style>

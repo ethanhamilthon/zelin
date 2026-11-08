@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  export type ModalName = 'commands' | 'sessions' | 'about' | 'workspace' | 'actions' | 'rename' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions';
+  export type ModalName = 'commands' | 'sessions' | 'about' | 'workspace' | 'actions' | 'rename' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions' | 'mcp';
 </script>
 
 <script lang="ts">
@@ -12,6 +12,7 @@
   import RenameSession from './RenameSession.svelte';
   import WorkspaceForm from './WorkspaceForm.svelte';
   import About from './About.svelte';
+  import MCPServers from './MCPServers.svelte';
   import type { createWorkspaces } from './workspace-controller.svelte';
   import type { SessionAction } from './session-actions';
   import SessionList from './SessionList.svelte';
@@ -39,7 +40,7 @@
 {#if image}
   <Modal title={`Image #${image.number}`} {onclose} {ondismiss}><img src={image.url} alt={`Attachment ${image.number}`} /></Modal>
 {:else if modal === 'commands'}
-  <Commands hotkeys={settings.state.hotkeys} {back} {onclose} {ondismiss} onopen={open} />
+  <Commands {back} {onclose} {ondismiss} onopen={open} />
 {:else if modal === 'actions'}
   <SessionActions busy={subject?.busy} hasMessages={!!subject?.messages.length} {back} {onclose} {ondismiss} {onaction} />
 {:else if modal === 'rename'}
@@ -49,10 +50,13 @@
     onworkspacenew={(id) => { workspaces.follow(id); onnew(); }} workspaces={workspaces.state.items} selected={workspaces.state.selected}
     onworkspace={(id) => workspaces.follow(id)} onsettings={(id) => { void workspaces.edit(id).then(() => open('workspace')); }}
     oncreate={() => { void workspaces.edit(null).then(() => open('workspace')); }} />
+{:else if modal === 'mcp'}
+  <MCPServers {back} {onclose} {ondismiss} />
 {:else if modal === 'about'}
   <About {back} {onclose} {ondismiss} />
 {:else if modal === 'workspace'}
-  <WorkspaceForm workspace={workspaces.current} agents={workspaces.state.agents} {back} {onclose} {ondismiss} onsave={async (name, icon, dir) => { const error = await workspaces.save(name, icon, dir); if (!error) onclose(); return error; }} {onagents} />
+  <WorkspaceForm workspace={workspaces.current} agents={workspaces.state.agents} {back} {onclose} {ondismiss} onsave={async (name, icon, dir) => { const error = await workspaces.save(name, icon, dir); if (!error) onclose(); return error; }} {onagents}
+    ondelete={async () => { const error = await workspaces.remove(); if (!error) onclose(); return error; }} />
 {:else if modal === 'models'}
   <ModelList models={models.state.models} active={info.model} hidden={settings.state.hiddenModels} loading={models.state.loading} error={models.state.error} {back} {onclose} {ondismiss} onselect={(id) => { void apply(models.select(id)); }} />
 {:else if modal === 'manager'}

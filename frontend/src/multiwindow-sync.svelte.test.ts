@@ -29,6 +29,24 @@ it('propagates a saved draft between two independent window controllers', async 
  second.current.draft = 'unsaved'; draft = 'remote'; await second.sync();
  expect(second.current.draft).toBe('unsaved');
 });
+it('keeps typed text when a save finishes while a stale remote draft is loading', async () => {
+ const window = createSessionController();
+ await window.start();
+ let release!: () => void;
+ vi.mocked(call).mockImplementation(async (method) => {
+  if (method === 'AgentService.Activity') return {};
+  if (method === 'SessionService.Get') { const stale = { ...record, draft: 'hel' }; await new Promise<void>((resolve) => { release = resolve; }); return stale; }
+  if (method === 'AgentService.Active') return null;
+  throw new Error(method);
+ });
+ window.current.draft = 'hello';
+ const syncing = window.sync();
+ await new Promise((resolve) => setTimeout(resolve, 0));
+ await window.flush();
+ release();
+ await syncing;
+ expect(window.current.draft).toBe('hello');
+});
 it('counts backend runs and unread completions without opening their sessions', async () => {
  const first = createSessionController(), second = createSessionController();
  await first.start(); await second.start();

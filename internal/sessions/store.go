@@ -23,6 +23,7 @@ type Message struct {
 	Executions []agent.Execution  `json:"executions,omitempty"`
 	Turn       *Turn              `json:"turn,omitempty"`
 	Refs       []tagged.Ref       `json:"refs,omitempty"`
+	Error      bool               `json:"error,omitempty"`
 }
 
 type Session struct {

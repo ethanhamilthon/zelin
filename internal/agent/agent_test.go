@@ -39,7 +39,11 @@ func TestToolLoop(t *testing.T) {
 	}}
 	a := New(client)
 	var events []Event
-	result, err := a.Run(context.Background(), []provider.Message{{Role: "user", Content: "Run a command"}}, func(event Event) { events = append(events, event) })
+	result, err := a.Run(context.Background(), []provider.Message{{Role: "user", Content: "Run a command"}}, func(event Event) {
+		if event.Kind != "stream" {
+			events = append(events, event)
+		}
+	})
 	if err != nil || result != "**hello**" {
 		t.Fatalf("%s %v", result, err)
 	}

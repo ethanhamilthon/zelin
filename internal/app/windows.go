@@ -6,5 +6,5 @@ import (
 )
 
 func openWindow(app *application.App) {
-	app.Window.NewWithOptions(application.WebviewWindowOptions{Title: version.Name, Width: 1100, Height: 760, MinWidth: 360, MinHeight: 240, BackgroundColour: application.NewRGB(17, 17, 17), URL: "/"})
+	app.Window.NewWithOptions(application.WebviewWindowOptions{Title: version.Name, Width: 1100, Height: 760, MinWidth: 360, MinHeight: 240, BackgroundColour: application.NewRGB(10, 10, 10), URL: "/"})
 }

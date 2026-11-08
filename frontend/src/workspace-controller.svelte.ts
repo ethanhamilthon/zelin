@@ -1,4 +1,4 @@
-import { agentsFile, createWorkspace, listWorkspaces, updateWorkspace } from './workspaces';
+import { agentsFile, createWorkspace, deleteWorkspace, listWorkspaces, updateWorkspace } from './workspaces';
 import type { AgentsFile, Workspace } from './workspaces';
 
 const reason = (error: unknown) => String(error).replace(/^Error: /, '');
@@ -22,10 +22,17 @@ export function createWorkspaces() {
     } catch (error) { return reason(error); }
   }
 
+  async function remove(): Promise<string | null> {
+    if (!state.editing) return null;
+    try { await deleteWorkspace(state.editing); state.editing = null; await load(); return null; }
+    catch (error) { return reason(error); }
+  }
+
   return {
     state,
     load,
     save,
+    remove,
     get current() { return state.items.find((item) => item.id === state.editing) ?? null; },
     follow(id?: string) { if (id && state.items.some((item) => item.id === id)) state.selected = id; },
     async edit(id: string | null) {

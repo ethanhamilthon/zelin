@@ -1,9 +1,5 @@
-.tools/
 node_modules/
 frontend/dist/
-frontend/wailsjs/
-build/bin/
 bin/
 *.log
 .task/
-/zash

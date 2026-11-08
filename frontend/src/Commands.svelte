@@ -1,23 +1,22 @@
 <script lang="ts">
   import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
-  import Hotkey from './Hotkey.svelte';
   import SearchInput from './SearchInput.svelte';
-  import type { Action } from './hotkeys';
-  export type Panel = 'sessions' | 'actions' | 'about' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions';
-  let { hotkeys, back = false, onclose, ondismiss, onopen }: {
-    back?: boolean; hotkeys: Record<Action, string>; onclose: () => void; ondismiss?: () => void; onopen: (name: Panel) => void;
+  export type Panel = 'sessions' | 'actions' | 'about' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions' | 'mcp';
+  let { back = false, onclose, ondismiss, onopen }: {
+    back?: boolean; onclose: () => void; ondismiss?: () => void; onopen: (name: Panel) => void;
   } = $props();
   let query = $state('');
-  const commands: { panel: Panel; label: string; hint: string; key?: Action }[] = [
-    { panel: 'actions', label: 'Session actions', hint: '', key: 'actions' },
+  const commands: { panel: Panel; label: string; hint: string }[] = [
+    { panel: 'actions', label: 'Session actions', hint: 'Compact, handoff, export' },
     { panel: 'manager', label: 'Models', hint: 'Visibility and utility model' },
     { panel: 'instructions', label: 'Instructions', hint: 'System prompt' },
-    { panel: 'settings', label: 'Settings', hint: 'Theme, toasts, code' },
+    { panel: 'settings', label: 'Settings', hint: 'Toasts, code, compaction' },
     { panel: 'hotkeys', label: 'Hotkeys', hint: 'Keyboard' },
     { panel: 'usage', label: 'Context and usage', hint: 'Usage' },
+    { panel: 'mcp', label: 'MCP servers', hint: 'Add and remove tools' },
     { panel: 'about', label: 'About', hint: 'Version and licenses' },
-    { panel: 'sessions', label: 'Switch session', hint: '', key: 'sessions' },
+    { panel: 'sessions', label: 'Switch session', hint: 'Sessions and workspaces' },
   ];
   const matches = $derived(commands.filter(({ label, hint }) => `${label} ${hint}`.toLowerCase().includes(query.trim().toLowerCase())));
 </script>
@@ -29,7 +28,7 @@
     }} />
   {/snippet}
   {#each matches as command (command.panel)}
-    <Button data-ui="ui-commands" onclick={() => onopen(command.panel)}>{command.label} <span>{#if command.key}<Hotkey value={hotkeys[command.key]} />{:else}{command.hint}{/if}</span></Button>
+    <Button data-ui="ui-commands" onclick={() => onopen(command.panel)}>{command.label} <span>{command.hint}</span></Button>
   {:else}
     <p>No commands found</p>
   {/each}

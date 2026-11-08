@@ -44,7 +44,7 @@ it('opens model selector with Ctrl+M and navigates back step-by-step with Escape
   press('k', 'KeyK', { ctrlKey: true }); await tick();
   [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('Instructions'))!.click(); await tick();
   expect(q('[role="dialog"]')?.getAttribute('aria-label')).toBe('Instructions');
-  expect(q('.title')?.textContent).toContain('Back Esc');
+  expect(q('.title')?.textContent).not.toContain('Esc');
   [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('System Prompt'))!.click(); await wait();
   expect(q('footer[aria-label="System Prompt"]')).not.toBeNull();
   press('Escape', 'Escape'); await tick();

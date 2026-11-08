@@ -4,6 +4,7 @@
   import { highlightJavaScript } from './highlight';
   import { oneLine } from './preview';
   import { fade } from 'svelte/transition';
+  import Spinner from './Spinner.svelte';
   let { execution, folded: initial = false }: { execution: Execution; folded?: boolean } = $props();
   let expanded = $state(false);
   let folded = $state(false);
@@ -12,9 +13,10 @@
 </script>
 
 <div class="execution" aria-label="JavaScript execution" aria-busy={execution.state === 'running'}>
-  <Button data-ui="ui-executionblock" variant="icon" class={["fold", { folded }]} onclick={() => { folded = !folded; }} aria-expanded={!folded} aria-label={folded ? 'Unfold code' : 'Fold code'}>
+  {#if execution.state === 'running'}<span class="icon-slot"><Spinner /></span>{:else}
+  <Button data-ui="ui-executionblock" variant="icon" class={["fold", "icon-slot", { folded }]} onclick={() => { folded = !folded; }} aria-expanded={!folded} aria-label={folded ? 'Unfold code' : 'Fold code'}>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-  </Button>
+  </Button>{/if}
   <Button data-ui="ui-executionblock" class={["source", { folded }]} onclick={() => { if (!window.getSelection()?.toString()) expanded = !expanded; }} aria-expanded={expanded && !folded} aria-label="Toggle execution output">
     <pre><code>{@html highlightJavaScript(code)}</code></pre>
   </Button>
@@ -25,7 +27,7 @@
 
 <style>
   :global(.execution) { position: relative; margin: 0 0 8px; }
-  :global(.fold) { position: absolute; left: -30px; top: 6px; display: inline-flex; min-height: 0; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; transition: transform 160ms, color 140ms; }
+  :global(.fold) { min-width: 0; min-height: 0; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; transition: transform 160ms, color 140ms; }
   :global(.fold):hover, :global(.fold):focus-visible { color: var(--foreground); outline: none; }
   :global(.fold.folded) { transform: rotate(-90deg); }
   :global(.source) { display: block; width: 100%; min-height: 0; text-align: left; color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }

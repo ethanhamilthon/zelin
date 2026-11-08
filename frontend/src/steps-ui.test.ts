@@ -3,7 +3,9 @@ import { flushSync, mount, unmount } from 'svelte';
 import Steps from './Steps.svelte';
 import History from './History.svelte';
 import SessionList from './SessionList.svelte';
-import { elapsed, summary } from './turn';
+import { elapsed } from './turn';
+import Timeline from './Timeline.svelte';
+import { segments } from './segments';
 import type { Execution } from './agent-types';
 
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
@@ -39,22 +41,26 @@ it('renders steps flat when stacking is off or there is one step', () => {
   expect($$('.execution, .thinking')).toHaveLength(2);
 });
 
-it('formats the turn summary', () => {
+it('renders interim assistant text as a regular answer between step groups', () => {
+  const step = (id: string) => ({ id, code: id, output: '', state: 'complete' as const });
+  app = mount(Timeline, { target: document.body, props: { stack: true, executions: [step('a'), step('b'), { id: 'n', kind: 'message', code: 'Checking **files**', output: '', state: 'complete' }, step('c'), step('d')] } });
+  flushSync();
+  const note = document.querySelector('.note')!;
+  expect(note.textContent).toContain('Checking files');
+  expect(note.querySelector('.icon-slot')).not.toBeNull();
+  expect(note.closest('.items')).toBeNull();
+  expect([...document.querySelectorAll('.toggle .count')].map((item) => item.textContent)).toEqual(['2 steps', '2 steps']);
+});
+
+it('splits executions into segments around messages', () => {
+  const step = (id: string, kind?: 'message') => ({ id, kind, code: id, output: '', state: 'complete' as const });
+  expect(segments([step('a'), step('n', 'message'), step('b')]).map((part) => part.note ? 'note' : part.steps.length)).toEqual([1, 'note', 1]);
+});
+
+it('formats elapsed time', () => {
   expect(elapsed(4400)).toBe('4s');
   expect(elapsed(125000)).toBe('2m 05s');
   expect(elapsed(3720000)).toBe('1h 02m');
-  const finished = new Date(2026, 10, 8, 4, 42).toISOString();
-  expect(summary({ finished, duration: 65000, cost: 0.0123, context: 42000, window: 200000 })).toBe('04:42 · 1m 05s · $0.01 · 42K / 200K');
-  expect(summary({ finished, duration: 1000, cost: null, context: null, window: 0 })).toBe('04:42 · 1s');
-});
-
-it('shows a summary divider after the final answer', () => {
-  const turn = { finished: new Date().toISOString(), duration: 3000, cost: 0.5, context: 1000, window: 2000 };
-  app = mount(History, { target: document.body, props: { messages: [{ role: 'user', content: 'Hi' }, { role: 'assistant', content: 'Done', turn }] } });
-  flushSync();
-  const divider = document.querySelector('[aria-label="Turn summary"]');
-  expect(divider?.textContent).toContain('3s · $0.50 · 1K / 2K');
-  expect(divider?.closest('article')?.getAttribute('aria-label')).toBe('Assistant message');
 });
 
 it('titles the list Workspaces with a new workspace button', () => {

@@ -7,7 +7,6 @@ import ExecutionBlock from './ExecutionBlock.svelte';
 import Settings from './Settings.svelte';
 import { defaultSettings } from './settings.svelte';
 import { fontFamily } from './appearance';
-import { defaultHotkeys } from './hotkeys';
 import { placeholderInfo } from './agent-types';
 import { modelName, search } from './models';
 
@@ -17,14 +16,14 @@ afterEach(async () => { if (app) await unmount(app); app = undefined; document.b
 
 it('focuses command search and removes redundant actions', () => {
   const onopen = vi.fn();
-  app = mount(Commands, { target: document.body, props: { hotkeys: defaultHotkeys, onopen, onclose: vi.fn() } });
+  app = mount(Commands, { target: document.body, props: { onopen, onclose: vi.fn() } });
   flushSync();
   const input = document.querySelector('input')!;
   expect(document.activeElement).toBe(input);
   const labels = [...document.querySelectorAll('button')].map((button) => button.textContent);
-  expect(labels).toHaveLength(8);
+  expect(labels).toHaveLength(9);
   expect(labels[0]).toContain('Session actions');
-  expect(labels.join(' ')).not.toMatch(/Compact|Handoff/);
+  expect(labels.join(' ')).not.toMatch(/Ctrl\+|Esc/);
   expect(labels.at(-1)).toContain('Switch session');
   expect(labels.join(' ')).not.toMatch(/New session|Stop|Attach image|Focus|Scroll|Select model|Select reasoning/);
   input.value = 'system';

@@ -53,7 +53,7 @@ it('queues steering, cancels on edit, retains text, and clears it on consumption
 it('shows Stop before Commands only when busy; selection keeps Ctrl+C for copying', async () => {
   expect($('footer')?.textContent).not.toContain('Stop');
   send(); await wait();
-  expect([...document.querySelectorAll('footer .right button')].map((b) => b.textContent)).toEqual(['Stop Ctrl+C', 'Commands Ctrl+K']);
+  expect([...document.querySelectorAll('footer .right button')].map((b) => b.textContent)).toEqual(['Stop', 'Commands']);
   const range = document.createRange(); range.selectNodeContents($('article .text')!);
   window.getSelection()!.removeAllRanges(); window.getSelection()!.addRange(range); key(); expect(stopAgent).not.toHaveBeenCalled();
   window.getSelection()!.removeAllRanges(); key(); expect(stopAgent).toHaveBeenCalledWith('one');

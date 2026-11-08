@@ -29,6 +29,7 @@ type Request struct {
 	Effort   string
 	Messages []Message
 	Tools    []Tool
+	OnDelta  func(Delta)
 }
 
 type Client struct {
@@ -88,6 +89,10 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 	if effort != "" && effort != "none" && (meta.Reasoning == nil || *meta.Reasoning) {
 		payload["reasoning_effort"] = effort
 	}
+	if request.OnDelta != nil {
+		payload["stream"] = true
+		payload["stream_options"] = map[string]any{"include_usage": true}
+	}
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return Message{}, Usage{}, err
@@ -109,6 +114,10 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 			return Message{}, Usage{}, retryable{err}
 		}
 		return Message{}, Usage{}, err
+	}
+	if request.OnDelta != nil {
+		message, raw, err := readStream(res.Body, request.OnDelta)
+		return message, raw.usage(meta.Pricing), err
 	}
 	var data struct {
 		Choices []struct {

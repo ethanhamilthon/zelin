@@ -1,0 +1,25 @@
+<script lang="ts">
+  import type { Execution } from './agent-types';
+  import Steps from './Steps.svelte';
+  import MessageIcon from './MessageIcon.svelte';
+  import MessageText from './MessageText.svelte';
+  import { segments } from './segments';
+  let { executions, running = false, showCode = true, foldCode = false, stack = false, started, activity = '' }: {
+    executions: Execution[]; running?: boolean; showCode?: boolean; foldCode?: boolean; stack?: boolean; started?: number; activity?: string;
+  } = $props();
+  const parts = $derived(segments(executions));
+  const last = $derived(parts.at(-1));
+</script>
+
+{#each parts as part (part.id)}
+  {#if part.note}
+    <div class="message note"><MessageIcon kind="assistant" /><MessageText content={part.note.code} markdown /></div>
+  {:else}
+    <Steps executions={part.steps} running={running && part === last} {showCode} {foldCode} {stack} {started} {activity} />
+  {/if}
+{/each}
+{#if running && (!last || last.note)}<Steps executions={[]} running {showCode} {foldCode} {stack} {started} {activity} />{/if}
+
+<style>
+  .note { position: relative; margin: 0 0 16px; color: var(--muted); }
+</style>

@@ -61,6 +61,14 @@ func (w *WorkspaceService) Update(id, name, icon, dir string) (sessions.Workspac
 	return item, err
 }
 
+func (w *WorkspaceService) Delete(id string) error {
+	err := w.store.DeleteWorkspace(id)
+	if err == nil {
+		w.changed()
+	}
+	return err
+}
+
 func (w *WorkspaceService) NewSession(id string) (sessions.Session, error) {
 	if _, err := w.store.Workspace(id); err != nil {
 		return sessions.Session{}, err

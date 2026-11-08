@@ -44,7 +44,11 @@ func TestServicePreservesExecutionsOnFailure(t *testing.T) {
 	service := &AgentService{
 		store:  store,
 		agents: map[string]*agent.Agent{session.ID: agent.New(&serviceClient{})},
-		emit:   func(event agent.Event) { events = append(events, event) },
+		emit: func(event agent.Event) {
+			if event.Kind != "stream" {
+				events = append(events, event)
+			}
+		},
 	}
 	result, err := service.Run(context.Background(), session.ID, []provider.Message{{Role: "user", Content: "Calculate"}}, nil)
 	if err != nil || result.Error != "Provider disconnected" || len(result.Executions) != 1 {
@@ -53,7 +57,11 @@ func TestServicePreservesExecutionsOnFailure(t *testing.T) {
 	if result.Executions[0].Output != "2" || len(events) != 6 {
 		t.Fatalf("%+v", result)
 	}
-	if saved, err := store.Get(session.ID); err != nil || saved.Usage.Requests != 1 {
+	saved, err := store.Get(session.ID)
+	if err != nil || saved.Usage.Requests != 1 {
 		t.Fatalf("Usage was not saved: %+v %v", saved.Usage, err)
+	}
+	if last := saved.Messages[len(saved.Messages)-1]; !last.Error || last.Content != "Error: Provider disconnected" {
+		t.Fatalf("%+v", last)
 	}
 }

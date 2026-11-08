@@ -5,10 +5,9 @@
   import ContextIndicator from './ContextIndicator.svelte';
   import { modelName } from './models';
   import BottomBar from './BottomBar.svelte';
-  import Hotkey from './Hotkey.svelte';
   import ActivitySummary from './ActivitySummary.svelte';
-  let { info, context = null, commands, stop = 'Ctrl+C', busy = false, working = 0, done = 0, workspace = '', workspaceIcon = '', onstop = () => {}, onopen }: {
-    workspaceIcon?: string; workspace?: string; info: AgentInfo; context?: number | null; commands: string; stop?: string; busy?: boolean; working?: number; done?: number; onstop?: () => void;
+  let { info, context = null, busy = false, working = 0, done = 0, workspace = '', workspaceIcon = '', onstop = () => {}, onopen }: {
+    workspaceIcon?: string; workspace?: string; info: AgentInfo; context?: number | null; busy?: boolean; working?: number; done?: number; onstop?: () => void;
     onopen: (name: 'models' | 'efforts' | 'usage' | 'commands') => void;
   } = $props();
 </script>
@@ -19,8 +18,8 @@
   <Button data-ui="ui-statusbar" class="model" onclick={() => onopen('models')} title={'Select model (' + info.model + ')'}>{modelName(info.name)}</Button>
   {#if info.efforts.length}<Button data-ui="ui-statusbar" class="effort" onclick={() => onopen('efforts')} title="Select reasoning effort">{info.effort}</Button>{/if}
   {#snippet actions()}
-    {#if busy}<Button data-ui="ui-statusbar" onclick={onstop}>Stop <Hotkey value={stop} /></Button>{/if}
-    <Button data-ui="ui-statusbar" onclick={() => onopen('commands')}>Commands <Hotkey value={commands} /></Button>
+    {#if busy}<Button data-ui="ui-statusbar" onclick={onstop}>Stop</Button>{/if}
+    <Button data-ui="ui-statusbar" onclick={() => onopen('commands')}>Commands</Button>
   {/snippet}
 </BottomBar>
 

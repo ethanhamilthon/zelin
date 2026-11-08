@@ -63,6 +63,7 @@ func (r *Runtime) Run(ctx context.Context, code string) string {
 		result := host.BashIn(ctx, r.cwd, command, timeout)
 		return map[string]any{"stdout": result.Stdout, "stderr": result.Stderr, "exitCode": result.ExitCode, "timedOut": result.TimedOut}
 	})
+	r.bindMCP(ctx)
 	done := make(chan struct{})
 	stop := context.AfterFunc(ctx, func() {
 		r.vm.Interrupt("JavaScript execution timed out or was cancelled")

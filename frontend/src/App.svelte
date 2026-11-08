@@ -24,11 +24,9 @@
   import { createWorkspaces } from './workspace-controller.svelte';
   import { follow, links, type Target } from './links';
   import History from './History.svelte';
-  import StatusBar from './StatusBar.svelte';
-  import Panels, { type ModalName } from './Panels.svelte';
-  import Toasts from './Toasts.svelte';
-  import Notices from './Notices.svelte';
-  import DocumentEditor from './DocumentEditor.svelte';
+  import { zoomed } from './zoom';
+  import StatusBar from './StatusBar.svelte'; import Toasts from './Toasts.svelte'; import Notices from './Notices.svelte';
+  import Panels, { type ModalName } from './Panels.svelte'; import DocumentEditor from './DocumentEditor.svelte';
   let container: HTMLDivElement, scroller: HTMLElement, picker: ImagePicker; let editor = $state.raw<Editor>();
   let documentEditor = $state<DocumentEditor>();
   let image = $state<{ url: string; number: number } | null>(null);
@@ -80,6 +78,7 @@
     keys: () => keys, blocked: () => !!(modal || image || doc || files.state.browsing), doc: () => !!doc, stepBack: () => stepBack(),
     commit: () => { void documentEditor?.commit(); }, toggle: (name) => toggle(name), files: () => files.toggle(),
     create: () => { void selectSession(); }, stop: () => stop(), hasFiles: () => !!files.root,
+    zoom: (step) => settings.update({ zoom: zoomed(settings.state.zoom, step) }),
   });
   async function submit() {
     const current = sessions.current;
@@ -115,10 +114,10 @@
 </script>
 <svelte:window onkeydown={keyboard} />
 <div class={["app", { hidden: !!doc }]}>
-  <main bind:this={scroller} use:links={openLink}>
+  <main bind:this={scroller} use:links={openLink} style:--font-size={`${settings.state.zoom || 16}px`}>
     {#if shown}
       {#key sessions.state.id}<History messages={conversation.messages} executions={conversation.executions} busy={conversation.busy}
-        started={conversation.started} usage={conversation.usage} baseline={conversation.baseline} window={models.state.info.contextWindow}
+        started={conversation.started} activity={conversation.activity} streaming={conversation.streaming}
         showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={showImage} onref={files.openRef} ondocument={(next) => { doc = next; }} />{/key}
     {/if}
     <div class="input-wrap">
@@ -128,10 +127,10 @@
     <Notices {conversation} error={sessions.state.error} onretry={() => { void contextAction(sessions, 'compact'); }} />
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar workspaceIcon={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.icon ?? ''} workspace={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.name ?? ''} working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} stop={keys.stop} busy={conversation.busy} onstop={() => chat.stop()} onopen={(name) => { modals.clear(); open(name); }} />
+  <StatusBar workspaceIcon={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.icon ?? ''} workspace={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.name ?? ''} working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} busy={conversation.busy} onstop={() => chat.stop()} onopen={(name) => { modals.clear(); open(name); }} />
 </div>
 {#if doc}
-  {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} saveKey={keys.save} onclose={stepBack} />{/key}
+  {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} onclose={stepBack} />{/key}
 {/if}
 <FileOverlays {files} {mentions} workspace={workspaces.state.selected} hidden={!!doc} />
 <ImagePicker bind:this={picker} onpick={(url) => { editor?.insert(files.image(url)); editor?.focus(); }} />
@@ -144,10 +143,8 @@
 <style>
   .app { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .hidden { display: none; }
-  main { min-height: 0; overflow-x: hidden; overflow-y: auto; }
+  main { min-height: 0; overflow-x: hidden; overflow-y: auto; font-size: var(--font-size); }
   .input-wrap { position: relative; }
-  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) - 30px); top: 32px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; }
-  .editor { min-height: 180px; }
-  .empty { min-height: calc(100vh - 44px); }
-  .scroll-space { height: 50vh; }
+  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) + var(--icon-x)); top: 16px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; }
+  .editor { min-height: 180px; } .editor:not(.empty) :global(.cm-content) { padding-top: 16px; } .empty { min-height: calc(100vh - 44px); } .scroll-space { height: 50vh; }
 </style>

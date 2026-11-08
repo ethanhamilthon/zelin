@@ -1,6 +1,5 @@
 <script lang="ts">
  import Dialog from './lib/ui/dialog.svelte';
- import Hotkey from './Hotkey.svelte';
  import type { Snippet } from 'svelte';
  let { title, hint, back = false, onclose, ondismiss, top, children, actions }: {
   title: string; hint?: string; back?: boolean; onclose: () => void; ondismiss?: () => void;
@@ -9,7 +8,7 @@
 </script>
 <Dialog {title} {onclose} {ondismiss} {top}>
  {#snippet header()}
-  <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else}<span>{#if hint}{hint}{:else}{back ? 'Back' : 'Close'} <Hotkey value="Esc" />{/if}</span>{/if}</div>
+  <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else if hint}<span>{hint}</span>{/if}</div>
  {/snippet}
  {@render children()}
 </Dialog>

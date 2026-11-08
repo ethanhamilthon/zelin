@@ -26,11 +26,13 @@ export function updateRemote(target: Conversation, session: Session, live: Live,
   target.started = live?.started;
   if (live) {
     target.executions = [];
+    target.streaming = '';
     target.activity = 'Thinking';
     for (const event of live.events) observeEvent(target, event);
   } else if (wasBusy) {
     target.activity = 'Done';
     target.executions = [];
+    target.streaming = '';
     target.unread = true;
   }
 }

@@ -14,6 +14,7 @@ export function observeEvent(state: Conversation, event: AgentEvent) {
     else if (event.kind === 'activity') state.activity = event.activity;
     else if (event.kind === 'compact_error') { state.error = event.activity; state.compactFailed = true; }
     else if (event.kind === 'usage') state.usage = event.usage;
+    else if (event.kind === 'stream') state.streaming = event.message.content;
     else if (event.kind === 'execution') {
       const execution = event.execution;
       const index = state.executions.findIndex((item) => item.id === execution.id);
