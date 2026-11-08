@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"zash/internal/provider"
+	"zelin/internal/provider"
 )
 
 type contextClient struct {
@@ -111,7 +111,7 @@ func TestSteerCancellation(t *testing.T) {
 	a := New(&contextClient{})
 	a.Steer(provider.Message{Role: "user", Content: "queued"})
 	a.Steer(provider.Message{})
-	if a.takeSteer(func(Event) { t.Fatal("unexpected event") }) != nil {
+	if message, _ := a.takeSteer(func(Event) { t.Fatal("unexpected event") }); message != nil {
 		t.Fatal("steer was not removed")
 	}
 }

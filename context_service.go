@@ -6,10 +6,22 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"zash/internal/agent"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+
+	"zelin/internal/agent"
+	"zelin/internal/prompts"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
+
+func (s *AgentService) utilityWindow() int {
+	if s.client == nil {
+		return 0
+	}
+	if model, err := s.client.Lookup(context.Background(), s.utilityModel()); err == nil {
+		return model.ContextWindow
+	}
+	return 0
+}
 
 func (s *AgentService) compactionSettings(id string) (bool, int, int) {
 	if s.client == nil {
@@ -71,12 +83,10 @@ func (s *AgentService) Handoff(ctx context.Context, id string) (sessions.Session
 	if err != nil {
 		return sessions.Session{}, err
 	}
-	model, _ := s.store.Setting("titleModel")
-	if model == "" {
-		model, _ = s.client.Selection()
-	}
-	reply, _, err := s.client.Complete(ctx, provider.Request{Model: model, Effort: "low", Messages: []provider.Message{
-		{Role: "system", Content: agent.CompactPrompt + " This is a handoff to a NEW session: include all information needed to resume without the original history. JavaScript bindings will be reset."},
+	reqCtx, reqCancel := context.WithTimeout(ctx, 90*time.Second)
+	defer reqCancel()
+	reply, _, err := s.client.Complete(reqCtx, provider.Request{Model: s.utilityModel(), Messages: []provider.Message{
+		{Role: "system", Content: prompts.Handoff},
 		{Role: "user", Content: string(data)},
 	}})
 	if err != nil {
@@ -85,7 +95,7 @@ func (s *AgentService) Handoff(ctx context.Context, id string) (sessions.Session
 	if strings.TrimSpace(reply.Content) == "" {
 		return sessions.Session{}, fmt.Errorf("Handoff returned an empty summary")
 	}
-	session, err := s.store.Create()
+	session, err := s.store.CreateIn(record.WorkspaceID)
 	if err != nil {
 		return session, err
 	}

@@ -9,7 +9,9 @@ import (
 
 const readLimit = 2000
 
-func Resolve(path string) (string, error) {
+func Resolve(path string) (string, error) { return ResolveIn("", path) }
+
+func ResolveIn(base, path string) (string, error) {
 	if path == "" {
 		return "", fmt.Errorf("Path is required")
 	}
@@ -19,6 +21,9 @@ func Resolve(path string) (string, error) {
 			return "", err
 		}
 		path = filepath.Join(home, path[1:])
+	}
+	if base != "" && !filepath.IsAbs(path) {
+		path = filepath.Join(base, path)
 	}
 	return filepath.Abs(path)
 }

@@ -85,3 +85,17 @@ func TestGrepSkipsIgnoredDirectories(t *testing.T) {
 		t.Fatal(results, err)
 	}
 }
+
+func TestLocateFindsUniqueNestedRelativeFile(t *testing.T) {
+	dir := t.TempDir()
+	nested := filepath.Join(dir, "internal", "prompts", "default_system.md")
+	_ = os.MkdirAll(filepath.Dir(nested), 0755)
+	_ = os.WriteFile(nested, []byte("prompt"), 0600)
+	prev, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer os.Chdir(prev)
+	got, err := Locate("default_system.md")
+	if err != nil || got != nested {
+		t.Fatalf("got=%q err=%v", got, err)
+	}
+}

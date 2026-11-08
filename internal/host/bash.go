@@ -3,6 +3,7 @@ package host
 import (
 	"context"
 	"errors"
+	"os"
 	"os/exec"
 	"sync"
 	"syscall"
@@ -35,12 +36,20 @@ func (b *output) Write(p []byte) (int, error) {
 }
 
 func Bash(parent context.Context, command string, timeout float64) Result {
+	return BashIn(parent, "", command, timeout)
+}
+
+func BashIn(parent context.Context, dir, command string, timeout float64) Result {
 	if timeout <= 0 || timeout > 120 {
 		timeout = 30
 	}
 	ctx, cancel := context.WithTimeout(parent, time.Duration(timeout*float64(time.Second)))
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "bash", "-c", command)
+	if dir != "" {
+		cmd.Dir = dir
+		cmd.Env = append(os.Environ(), "PWD="+dir)
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
 	cmd.WaitDelay = time.Second

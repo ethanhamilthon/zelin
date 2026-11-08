@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"zash/internal/metadata"
+	"zelin/internal/metadata"
 )
 
 var Efforts = []string{"none", "low", "medium", "high", "xhigh", "max"}
@@ -76,6 +76,7 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 	if request.Model != "" {
 		model, effort = request.Model, request.Effort
 	}
+	meta := c.metadata(ctx, model)
 	payload := map[string]any{"model": model, "messages": wire(request.Messages)}
 	if len(request.Tools) > 0 {
 		tools := make([]map[string]any, len(request.Tools))
@@ -84,7 +85,7 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 		}
 		payload["tools"] = tools
 	}
-	if effort != "" {
+	if effort != "" && effort != "none" && (meta.Reasoning == nil || *meta.Reasoning) {
 		payload["reasoning_effort"] = effort
 	}
 	body, err := json.Marshal(payload)
@@ -103,7 +104,7 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		err := fmt.Errorf("Provider returned HTTP %d", res.StatusCode)
+		err := httpError(res.StatusCode, res.Body, key)
 		if res.StatusCode == 408 || res.StatusCode == 429 || res.StatusCode >= 500 {
 			return Message{}, Usage{}, retryable{err}
 		}
@@ -121,5 +122,5 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 	if len(data.Choices) == 0 {
 		return Message{}, Usage{}, fmt.Errorf("Provider returned no choices")
 	}
-	return data.Choices[0].Message, data.Usage.usage(c.metadata(ctx, model).Pricing), nil
+	return data.Choices[0].Message, data.Usage.usage(meta.Pricing), nil
 }

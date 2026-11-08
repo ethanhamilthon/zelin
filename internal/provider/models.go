@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"zash/internal/metadata"
+	"zelin/internal/metadata"
 )
 
 type Pricing = metadata.Pricing

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"zash/internal/metadata"
+	"zelin/internal/metadata"
 )
 
 func TestModelsUseMetadataCatalog(t *testing.T) {

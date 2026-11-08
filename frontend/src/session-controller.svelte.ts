@@ -1,42 +1,90 @@
 import type { Conversation } from './conversation';
-import { currentSession, createSession, openSession, listSessions, saveSession } from './sessions';
+import { currentSession, createSession, openSession, listSessions, saveSession, saveDraft, saveAttachments, saveRefs } from './sessions';
 import type { Session } from './sessions';
+import { evictable, stale } from './retention';
+import { workspaceSession } from './workspaces';
 
 export type SessionStatus = 'running' | 'unread' | 'error' | '';
 
 export const blank = (): Conversation => ({
-  messages: [], draft: '', attachments: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null,
+  messages: [], draft: '', attachments: [], refs: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null,
 });
+
+const same = (a: string[], b: string[]) => a.length === b.length && a.every((item, index) => item === b[index]);
 
 export function createSessionController() {
   const state = $state({ id: '', items: [] as Session[], loading: true, error: '' });
   const conversations = $state<Record<string, Conversation>>({});
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  const saved = new Map<string, { draft: string; attachments: string[]; refs: string }>();
+  const order: string[] = [];
   let queue = Promise.resolve();
+
+  function retain() {
+    for (const id of stale(order, state.id, (item) => evictable(conversations[item], saved.get(item)))) {
+      delete conversations[id]; saved.delete(id); order.splice(order.indexOf(id), 1);
+    }
+  }
+
+  function enqueue(write: () => Promise<void>) {
+    const run = queue.catch(() => {}).then(write);
+    queue = run;
+    return run.then(() => { state.error = ''; }, (error) => {
+      state.error = `Could not save session: ${String(error)}`;
+      throw error;
+    });
+  }
 
   function apply(session: Session) {
     conversations[session.id] ??= {
       ...blank(), messages: session.messages ?? [], draft: session.draft,
-      attachments: session.attachments ?? [], usage: session.usage ?? null,
+      attachments: session.attachments ?? [], refs: session.refs ?? [], usage: session.usage ?? null,
     };
+    conversations[session.id].workspaceId = session.workspaceId;
+    saved.set(session.id, { draft: session.draft, attachments: [...(session.attachments ?? [])], refs: JSON.stringify(session.refs ?? []) });
     state.id = session.id;
     conversations[session.id].unread = false;
+    const known = order.indexOf(session.id);
+    if (known >= 0) order.splice(known, 1);
+    order.push(session.id);
+    retain();
   }
 
   async function save(id = state.id) {
     clearTimeout(timers.get(id));
     const conversation = conversations[id];
     if (!conversation) return;
-    const snapshot = JSON.parse(JSON.stringify([conversation.messages, conversation.attachments]));
+    const snapshot = JSON.parse(JSON.stringify([conversation.messages, conversation.attachments, conversation.refs]));
     const draft = conversation.draft;
-    queue = queue.catch(() => {}).then(() => saveSession(id, snapshot[0], draft, snapshot[1]));
-    try { await queue; state.error = ''; }
-    catch (error) { state.error = `Could not save session: ${String(error)}`; throw error; }
+    await enqueue(() => saveSession(id, snapshot[0], draft, snapshot[1]));
+    await enqueue(() => saveRefs(id, snapshot[2]));
+    saved.set(id, { draft, attachments: [...snapshot[1]], refs: JSON.stringify(snapshot[2]) });
+  }
+
+  async function flush(id = state.id) {
+    clearTimeout(timers.get(id));
+    const conversation = conversations[id];
+    if (!conversation) return;
+    const previous = saved.get(id) ?? { draft: '', attachments: [], refs: '[]' };
+    const draft = conversation.draft, attachments = [...conversation.attachments];
+    if (draft !== previous.draft) {
+      await enqueue(() => saveDraft(id, draft));
+      saved.set(id, { ...(saved.get(id) ?? previous), draft });
+    }
+    if (!same(attachments, previous.attachments)) {
+      await enqueue(() => saveAttachments(id, attachments));
+      saved.set(id, { ...(saved.get(id) ?? previous), attachments });
+    }
+    const refs = JSON.stringify(conversation.refs);
+    if (refs !== previous.refs) {
+      await enqueue(() => saveRefs(id, JSON.parse(refs)));
+      saved.set(id, { ...(saved.get(id) ?? previous), refs });
+    }
   }
 
   function schedule(id = state.id) {
     clearTimeout(timers.get(id));
-    if (!conversations[id]?.busy) timers.set(id, setTimeout(() => { void save(id).catch(() => {}); }, 250));
+    if (!conversations[id]?.busy) timers.set(id, setTimeout(() => { void flush(id).catch(() => {}); }, 250));
   }
 
   return {
@@ -44,10 +92,22 @@ export function createSessionController() {
     conversations,
     get current() { return conversations[state.id]; },
     save,
+    flush,
     status(id: string): SessionStatus {
       const conversation = conversations[id];
       if (!conversation) return '';
       return conversation.busy ? 'running' : conversation.unread ? 'unread' : conversation.error ? 'error' : '';
+    },
+    get activity() {
+      let working = 0, done = 0;
+      for (const item of Object.values(conversations)) {
+        if (item.busy) working++;
+        else if (item.unread && !item.error) done++;
+      }
+      return { working, done };
+    },
+    steps(id: string): number {
+      return conversations[id]?.executions.length ?? 0;
     },
     schedule,
     attach: (url: string) => {
@@ -69,12 +129,12 @@ export function createSessionController() {
       try { state.items = await listSessions(); }
       catch (error) { state.error = `Could not list sessions: ${String(error)}`; }
     },
-    async select(id?: string) {
+    async select(id?: string, workspace = '') {
       if (state.loading) return false;
       state.loading = true;
       try {
-        if (state.id && !conversations[state.id]?.busy) await save();
-        apply(id ? await openSession(id) : await createSession());
+        if (state.id && !conversations[state.id]?.busy) await flush();
+        apply(id ? await openSession(id) : workspace ? await workspaceSession(workspace) : await createSession());
         return true;
       } catch (error) { state.error = `Could not open session: ${String(error)}`; return false; }
       finally { state.loading = false; }

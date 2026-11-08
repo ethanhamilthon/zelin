@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
-	"zash/internal/sessions"
+	"zelin/internal/sessions"
 
-	"zash/internal/agent"
-	"zash/internal/provider"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
 )
 
 type serviceClient struct {
@@ -46,7 +46,7 @@ func TestServicePreservesExecutionsOnFailure(t *testing.T) {
 		agents: map[string]*agent.Agent{session.ID: agent.New(&serviceClient{})},
 		emit:   func(event agent.Event) { events = append(events, event) },
 	}
-	result, err := service.Run(context.Background(), session.ID, []provider.Message{{Role: "user", Content: "Calculate"}})
+	result, err := service.Run(context.Background(), session.ID, []provider.Message{{Role: "user", Content: "Calculate"}}, nil)
 	if err != nil || result.Error != "Provider disconnected" || len(result.Executions) != 1 {
 		t.Fatalf("%+v %v", result, err)
 	}

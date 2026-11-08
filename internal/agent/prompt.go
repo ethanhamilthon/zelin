@@ -1,9 +1,17 @@
 package agent
 
-const DefaultPrompt = `You are Zash, a helpful coding agent. Reply in Markdown.
+import (
+	"strings"
 
-Use the js_repl tool to inspect files, run commands, and verify your work.
+	"zelin/internal/prompts"
+)
 
-Never claim success without checking command results.
-Do not run destructive commands unless the user explicitly requests them.
-`
+var DefaultPrompt = prompts.DefaultSystem
+
+func SystemPrompt(base string) string {
+	trimmed := strings.TrimSpace(base)
+	if trimmed == "" {
+		return prompts.JSDocs
+	}
+	return trimmed + "\n\n" + prompts.JSDocs
+}

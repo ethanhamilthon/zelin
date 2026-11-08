@@ -7,10 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"zash/internal/agent"
-	"zash/internal/instructions"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/agent"
+	"zelin/internal/instructions"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
+	"zelin/internal/tagged"
 )
 
 type AgentService struct {
@@ -22,6 +23,7 @@ type AgentService struct {
 	instructions *instructions.Store
 	emit         func(agent.Event)
 	notify       func(name string, data any)
+	steerRefs    map[string][]tagged.Ref
 }
 
 type AgentResult struct {
@@ -46,10 +48,13 @@ func (s *AgentService) start(ctx context.Context, id string) (*agent.Agent, cont
 		if err != nil {
 			return nil, nil, err
 		}
-		current = agent.New(sessionClient{s, id})
+		current = agent.NewIn(sessionClient{s, id}, s.workspaceDir(record.WorkspaceID))
 		current.Restore(record.State)
 		s.agents[id] = current
 	}
+	current.Extra = func() (string, error) { return s.workspaceInstructions(id) }
+	current.UtilityModel = s.utilityModel
+	current.UtilityWindow = s.utilityWindow
 	if s.instructions != nil {
 		current.Prompt = func() string { text, _ := s.instructions.Read("system"); return text }
 	}
@@ -80,7 +85,7 @@ func (s *AgentService) Stop(id string) bool {
 	return false
 }
 
-func (s *AgentService) Run(ctx context.Context, id string, history []provider.Message) (AgentResult, error) {
+func (s *AgentService) Run(ctx context.Context, id string, history []provider.Message, refs []tagged.Ref) (AgentResult, error) {
 	current, ctx, err := s.start(ctx, id)
 	if err != nil {
 		return AgentResult{}, err
@@ -91,15 +96,20 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 			return AgentResult{}, err
 		}
 	}
-	if len(history) == 1 && s.client != nil {
-		go s.title(id, history[0].Content)
+	if s.client != nil && shouldTitle(history) {
+		titled := append([]provider.Message{}, history...)
+		for i := range titled {
+			titled[i].Content = tagged.Plain(titled[i].Content)
+		}
+		go s.title(id, titled)
 	}
+	current.Expand = s.expander(id, refs)
 	current.AutoCompact = func() (bool, int, int) { return s.compactionSettings(id) }
 	started, before := time.Now(), current.State().Usage
 	result := AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
 		if event.Kind == "steer" && event.Message != nil {
-			if err := s.store.Finish(id, sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images}, current.State()); err != nil {
+			if err := s.store.Finish(id, sessions.Message{Role: "user", Content: event.Message.Content, Images: event.Message.Images, Refs: s.takeRefs(id)}, current.State()); err != nil {
 				result.Error = err.Error()
 				s.Stop(id)
 			}
@@ -122,7 +132,7 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	var saveErr error
 	if content != "" || len(result.Executions) > 0 {
 		if content == "" {
-			content = "The agent stopped before completing this turn."
+			content = agent.StoppedMessage
 		}
 		saveErr = s.store.Finish(id, sessions.Message{Role: "assistant", Content: content, Executions: result.Executions, Turn: result.Turn}, current.State())
 	} else {

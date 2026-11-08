@@ -52,12 +52,12 @@
     {#if setup.picking}<ModelPicker models={setup.options} active={setup.state.active} onhover={(index) => { setup.state.active = index; }} onpick={(id) => act(() => setup.pick(id))} />{/if}
   </main>
   <BottomBar hint={`Setup ${setup.number}/${total}`} label="Setup">
-    <span>Welcome to Zash</span>
+    <span>Welcome to Zelin</span>
   </BottomBar>
 </div>
 
 <style>
-  .app { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+  .app { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   main { --gutter: clamp(48px, 6vw, 80px); min-height: 0; overflow-x: hidden; overflow-y: auto; }
   .editor { min-height: 60px; }
   .secret :global(.cm-line) { -webkit-text-security: disc; }

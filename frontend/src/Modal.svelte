@@ -3,9 +3,12 @@
   import Hotkey from './Hotkey.svelte';
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  let { title, hint = 'Close Esc', onclose, children, actions }: { title: string; hint?: string; onclose: () => void; children: Snippet; actions?: Snippet } = $props();
+  let { title, hint, back = false, onclose, ondismiss, top, children, actions }: {
+    title: string; hint?: string; back?: boolean; onclose: () => void; ondismiss?: () => void;
+    top?: Snippet; children: Snippet; actions?: Snippet;
+  } = $props();
   let panel: HTMLDivElement;
-  onMount(() => { if (!panel.contains(document.activeElement)) (panel.querySelector<HTMLButtonElement>('input:not(:disabled), textarea:not(:disabled), select:not(:disabled), button:not(:disabled)') ?? panel).focus(); });
+  onMount(() => { if (!panel.contains(document.activeElement)) (panel.querySelector<HTMLElement>('input:not(:disabled), textarea:not(:disabled), select:not(:disabled), button:not(:disabled)') ?? panel).focus(); });
 
   function navigate(event: KeyboardEvent) {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onclose(); return; }
@@ -20,17 +23,20 @@
   }
 </script>
 
-<div class="overlay" role="presentation" onclick={(event) => { if (event.target === event.currentTarget) onclose(); }} transition:fade={{ duration: 120 }}>
+<div class="overlay" role="presentation" onclick={(event) => { if (event.target === event.currentTarget) (ondismiss ?? onclose)(); }} transition:fade={{ duration: 120 }}>
   <div class="panel" role="dialog" aria-modal="true" aria-label={title} tabindex="-1" bind:this={panel} onkeydown={navigate} transition:fly={{ y: -6, duration: 160 }}>
-    <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else}<span>{#if hint === 'Close Esc'}Close <Hotkey value="Esc" />{:else}{hint}{/if}</span>{/if}</div>
-    {@render children()}
+    <div class="title"><span class="heading">{title}</span>{#if actions}{@render actions()}{:else}<span>{#if hint}{hint}{:else}{back ? 'Back' : 'Close'} <Hotkey value="Esc" />{/if}</span>{/if}</div>
+    {#if top}<div class="top">{@render top()}</div>{/if}
+    <div class="body">{@render children()}</div>
   </div>
 </div>
 
 <style>
   .overlay { position: fixed; inset: 0; background: color-mix(in srgb, #000 50%, transparent); z-index: 10; padding: min(20vh, 120px) 20px 20px; }
-  .panel { max-width: 640px; max-height: 65vh; overflow-y: auto; margin: auto; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--foreground) 5%, var(--background)); padding: 8px; box-shadow: 0 20px 80px color-mix(in srgb, #000 40%, transparent); outline: none; }
-  .title { padding: 10px 12px 16px; color: var(--muted); font: var(--font-size)/1.5 var(--mono); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .panel { display: flex; flex-direction: column; max-width: 640px; max-height: 65vh; margin: auto; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--foreground) 5%, var(--background)); padding: 8px; box-shadow: 0 20px 80px color-mix(in srgb, #000 40%, transparent); outline: none; }
+  .title { flex-shrink: 0; padding: 10px 12px 16px; color: var(--muted); font: var(--font-size)/1.5 var(--mono); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .top { flex-shrink: 0; }
+  .body { min-height: 0; overflow-y: auto; }
   .title .heading { color: var(--muted); }
   .title span { color: var(--faint); font-size: var(--font-size); }
   .panel :global(button) { width: 100%; display: flex; justify-content: space-between; gap: 16px; padding: 12px; border: 0; border-radius: 4px; color: var(--foreground); background: none; text-align: left; font: var(--font-size)/1.5 var(--mono); cursor: pointer; transition: background 140ms; }

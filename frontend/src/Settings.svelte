@@ -2,11 +2,11 @@
   import Modal from './Modal.svelte';
   import { themes } from './themes';
   import type { Settings } from './settings.svelte';
-  let { settings, onclose, onchange }: { settings: Settings; onclose: () => void; onchange: (change: Partial<Settings>) => void } = $props();
+  let { settings, back = false, onclose, ondismiss, onchange }: { settings: Settings; back?: boolean; onclose: () => void; ondismiss?: () => void; onchange: (change: Partial<Settings>) => void } = $props();
   const state = (value: boolean) => value ? 'On' : 'Off';
 </script>
 
-<Modal title="Settings" {onclose}>
+<Modal title="Settings" {back} {onclose} {ondismiss}>
   <button onclick={() => onchange({ toast: !settings.toast })} aria-pressed={settings.toast}>Toast when a session finishes <span>{state(settings.toast)}</span></button>
   <button onclick={() => onchange({ sound: !settings.sound })} aria-pressed={settings.sound}>Sound when a session finishes <span>{state(settings.sound)}</span></button>
   <button onclick={() => onchange({ showCode: !settings.showCode })} aria-pressed={settings.showCode}>Show code <span>{state(settings.showCode)}</span></button>

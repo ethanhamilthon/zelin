@@ -9,7 +9,7 @@ import type { AgentEvent, AgentResult, Execution } from './agent-types';
 import { placeholderInfo } from './agent-types';
 
 vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn(), setTitleModel: vi.fn(), stopAgent: vi.fn() }));
-vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn() }));
+vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn(), saveDraft: vi.fn(), saveAttachments: vi.fn(), saveRefs: vi.fn() }));
 vi.mock('./bridge', () => ({ call: vi.fn(), desktop: () => false, listen: vi.fn(async () => () => {}) }));
 vi.mock('./sound', () => ({ chime: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
@@ -23,10 +23,7 @@ const $ = (selector: string) => document.querySelector<HTMLElement>(selector);
 beforeEach(() => {
   vi.resetAllMocks();
   Element.prototype.scrollIntoView = vi.fn();
-  Object.defineProperties(Range.prototype, {
-    getClientRects: { configurable: true, value: () => [] },
-    getBoundingClientRect: { configurable: true, value: () => new DOMRect() },
-  });
+  Object.defineProperties(Range.prototype, { getClientRects: { configurable: true, value: () => [] }, getBoundingClientRect: { configurable: true, value: () => new DOMRect() } });
   vi.mocked(currentSession).mockResolvedValue(session());
   vi.mocked(createSession).mockResolvedValue(session('new', 'Second task'));
   vi.mocked(openSession).mockImplementation(async (id) => session(id, ''));
@@ -111,7 +108,7 @@ describe('agent UI', () => {
     expect(runAgent).toHaveBeenCalledTimes(2);
     expect(vi.mocked(runAgent).mock.calls.map((args) => args[2])).toEqual(['first', 'new']);
     key('s', 'KeyS', { ctrlKey: true }); await wait();
-    expect(button('first title').textContent).toContain('Running');
+    expect(button('first title').textContent).toContain('(0 Steps)');
     key('Escape', 'Escape'); await wait();
     runs[0].finish({ content: 'First done', executions: [] }); await wait(); await wait();
     expect($('.toasts button')?.textContent).toBe('first title · finished');
@@ -123,17 +120,17 @@ describe('agent UI', () => {
   });
 
   it('edits the system prompt and saves with Ctrl+S', async () => {
-    vi.mocked(call).mockImplementation(async (method) => method === 'SettingsService.Read' ? 'You are Zash.' : '');
+    vi.mocked(call).mockImplementation(async (method) => method === 'SettingsService.Read' ? 'You are Zelin.' : '');
     await start(); key('k', 'KeyK', { ctrlKey: true }); await tick();
     button('Instructions').click(); await tick();
     button('System Prompt').click(); await wait();
     expect($('footer[aria-label="System Prompt"]')?.textContent).toContain('Save Ctrl+S');
     const editor = [...document.querySelectorAll<HTMLElement>('.cm-content')].find((item) => item.getAttribute('aria-label') === 'System Prompt')!;
-    expect(editor.textContent).toBe('You are Zash.');
+    expect(editor.textContent).toBe('You are Zelin.');
     const view = EditorView.findFromDOM(editor.parentElement!.parentElement!)!;
     view.dispatch({ changes: { from: view.state.doc.length, insert: ' Be brief.' } });
     key('ы', 'KeyS', { ctrlKey: true }); await wait();
-    expect(call).toHaveBeenCalledWith('SettingsService.Write', 'system', 'You are Zash. Be brief.');
+    expect(call).toHaveBeenCalledWith('SettingsService.Write', 'system', 'You are Zelin. Be brief.');
     expect($('[aria-label="System Prompt"] [role="status"]')?.textContent).toBe('Saved');
   });
 

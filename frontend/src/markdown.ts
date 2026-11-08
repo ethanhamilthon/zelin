@@ -1,47 +1,60 @@
-import { escape } from './highlight';
+import { Marked, type Tokens } from 'marked';
+import DOMPurify from 'dompurify';
+import { escape, highlightJavaScript } from './highlight';
+import { anchor, isUrl, linkPaths, localTarget } from './paths';
 
-const token = /(?<!`)`([^`\n]+)`(?!`)|\[([^\]\n]+)\]\(([^)\s]+)\)|\bhttps?:\/\/[^\s<>"'`]+|(?<![\w/.~])~?\/[\w.-]+(?:\/[\w.-]+)*/g;
-const bold = /\*\*(?=\S)([^\n]*?\S)\*\*/g;
-const italic = /(?<![*\w])\*(?=[^\s*])([^*\n]*?[^\s*])\*(?![*\w])|(?<![_\w])_(?=[^\s_])([^_\n]*?[^\s_])_(?![_\w])/g;
-const filename = /^[\w-][\w.-]*\.(md|go|ts|js|svelte|json|ya?ml|txt|css|html|toml|sh|py|rs|mod|sum|lock)$/i;
-const codePath = /^(~|\.{1,2})?\/?[\w.-]+(\/[\w.-]+)*\/?$/;
+export { isPath, isUrl } from './paths';
 
-export const isUrl = (target: string) => /^(https?:\/\/|mailto:)/i.test(target);
+const HIGHLIGHT_LIMIT = 20000;
+const CACHE_LIMIT = 200;
+const languages = new Set(['js', 'javascript', 'ts', 'typescript', 'jsx', 'tsx', 'json']);
+const cache = new Map<string, string>();
+let depth = 0;
 
-export function isPath(text: string) {
-  return codePath.test(text) && (text.includes('/') || filename.test(text)) && !/^\/+$/.test(text);
+function code({ text, lang }: Tokens.Code) {
+  const name = (lang ?? '').trim().split(/\s+/)[0].replace(/[^\w+#.-]/g, '');
+  const body = languages.has(name.toLowerCase()) && text.length <= HIGHLIGHT_LIMIT ? highlightJavaScript(text) : escape(text);
+  const label = name ? `<span class="lang">${escape(name)}</span>` : '';
+  return `<div class="code-block">${label}<pre><code${name ? ` class="language-${escape(name)}"` : ''}>${body}</code></pre></div>`;
 }
 
-function emphasis(text: string) {
-  return escape(text)
-    .replace(bold, '<strong>$1</strong>')
-    .replace(italic, (_, star, underscore) => `<em>${star ?? underscore}</em>`);
-}
+const marked = new Marked({
+  gfm: true,
+  breaks: false,
+  renderer: {
+    html: ({ text }) => escape(text),
+    image: ({ text }) => escape(text),
+    code,
+    codespan(token) {
+      const html = `<code>${escape(token.text)}</code>`;
+      return depth === 0 && localTarget(token.text) ? anchor(token.text, html) : html;
+    },
+    link(token) {
+      depth++;
+      const inner = this.parser.parseInline(token.tokens);
+      depth--;
+      if (isUrl(token.href)) return anchor(token.href, inner);
+      return localTarget(token.href) ? anchor(token.href, inner) : inner;
+    },
+    text(token) {
+      if ('tokens' in token && token.tokens) return this.parser.parseInline(token.tokens);
+      return depth === 0 ? linkPaths(token.text) : token.text;
+    },
+  },
+});
 
-function link(target: string, html: string) {
-  const kind = isUrl(target) ? 'url' : 'path';
-  return `<a href="${escape(target)}" data-${kind}="${escape(target)}">${html}</a>`;
-}
+const config = { ADD_ATTR: ['data-url', 'data-path'], FORBID_TAGS: ['style', 'img', 'form', 'iframe', 'object', 'embed'], FORBID_ATTR: ['style'] };
 
-function trim(text: string) {
-  const end = text.match(/[.,;:!?)\]]+$/)?.[0] ?? '';
-  return [text.slice(0, text.length - end.length), end];
-}
-
-function render(match: RegExpMatchArray) {
-  const [whole, code, label, target] = match;
-  if (code !== undefined) return isPath(code) ? link(code, `<code>${escape(code)}</code>`) : `<code>${escape(code)}</code>`;
-  if (label !== undefined) return link(target, emphasis(label));
-  const [value, rest] = trim(whole);
-  return (value.length > 1 ? link(value, escape(value)) : escape(value)) + escape(rest);
+function build(text: string) {
+  const html = DOMPurify.sanitize(marked.parse(text, { async: false }), config);
+  return html.replace(/<table>/g, '<div class="table-wrap"><table>').replace(/<\/table>/g, '</table></div>').trim();
 }
 
 export function renderMarkdown(text: string): string {
-  let html = '';
-  let last = 0;
-  for (const match of text.matchAll(token)) {
-    html += emphasis(text.slice(last, match.index)) + render(match);
-    last = match.index + match[0].length;
-  }
-  return html + emphasis(text.slice(last));
+  const hit = cache.get(text);
+  if (hit !== undefined) return hit;
+  const html = build(text);
+  if (cache.size >= CACHE_LIMIT) cache.delete(cache.keys().next().value!);
+  cache.set(text, html);
+  return html;
 }

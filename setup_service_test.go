@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 func provide(t *testing.T) *httptest.Server {

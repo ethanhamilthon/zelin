@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"zash/internal/agent"
-	"zash/internal/provider"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
+	"zelin/internal/tagged"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -19,6 +20,7 @@ type Message struct {
 	Images     []string          `json:"images,omitempty"`
 	Executions []agent.Execution `json:"executions,omitempty"`
 	Turn       *Turn             `json:"turn,omitempty"`
+	Refs       []tagged.Ref      `json:"refs,omitempty"`
 }
 
 type Session struct {
@@ -27,7 +29,9 @@ type Session struct {
 	Messages    []Message       `json:"messages"`
 	Draft       string          `json:"draft"`
 	Attachments []string        `json:"attachments"`
+	Refs        []tagged.Ref    `json:"refs"`
 	Updated     string          `json:"updated"`
+	WorkspaceID string          `json:"workspaceId"`
 	Usage       provider.Totals `json:"usage"`
 	State       agent.State     `json:"-"`
 }
@@ -60,6 +64,9 @@ func Open(path string) (*Store, error) {
 			err = nil
 		}
 	}
+	if err == nil {
+		err = migrate(db)
+	}
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -71,9 +78,9 @@ func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) Get(id string) (Session, error) {
 	var session Session
-	var messages, attachments, state string
-	err := s.db.QueryRow("SELECT id,title,messages,draft,attachments,state,updated FROM sessions WHERE id=?", id).
-		Scan(&session.ID, &session.Title, &messages, &session.Draft, &attachments, &state, &session.Updated)
+	var messages, attachments, state, refs string
+	err := s.db.QueryRow("SELECT id,title,messages,draft,attachments,state,updated,workspace_id,refs FROM sessions WHERE id=?", id).
+		Scan(&session.ID, &session.Title, &messages, &session.Draft, &attachments, &state, &session.Updated, &session.WorkspaceID, &refs)
 	if err != nil {
 		return session, err
 	}
@@ -82,6 +89,12 @@ func (s *Store) Get(id string) (Session, error) {
 	}
 	if err = json.Unmarshal([]byte(attachments), &session.Attachments); err != nil {
 		return session, err
+	}
+	if err = json.Unmarshal([]byte(refs), &session.Refs); err != nil {
+		return session, err
+	}
+	if session.Refs == nil {
+		session.Refs = []tagged.Ref{}
 	}
 	err = json.Unmarshal([]byte(state), &session.State)
 	session.Usage = session.State.Usage

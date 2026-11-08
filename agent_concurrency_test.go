@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"zash/internal/agent"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 type blockingClient struct{ started chan struct{} }
@@ -40,12 +40,12 @@ func TestSessionsRunConcurrentlyAndStop(t *testing.T) {
 	}}
 	history := []provider.Message{{Role: "user", Content: "Go"}}
 	done := make(chan AgentResult)
-	go func() { result, _ := service.Run(context.Background(), first.ID, history); done <- result }()
+	go func() { result, _ := service.Run(context.Background(), first.ID, history, nil); done <- result }()
 	<-slow.started
-	if _, err := service.Run(context.Background(), first.ID, history); err == nil {
+	if _, err := service.Run(context.Background(), first.ID, history, nil); err == nil {
 		t.Fatal("Started the same session twice")
 	}
-	result, err := service.Run(context.Background(), second.ID, history)
+	result, err := service.Run(context.Background(), second.ID, history, nil)
 	if err != nil || result.Content != "Done" || len(result.Executions) != 1 || result.Executions[0].Kind != "thinking" {
 		t.Fatalf("%+v %v", result, err)
 	}

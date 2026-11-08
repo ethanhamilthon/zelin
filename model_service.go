@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strconv"
 
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 type ModelInfo struct {

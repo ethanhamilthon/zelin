@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"zash/internal/agent"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 func TestAnswerIsDurableBeforeReturningToUI(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAnswerIsDurableBeforeReturningToUI(t *testing.T) {
 		t.Fatal(err)
 	}
 	service := &AgentService{store: store, agents: map[string]*agent.Agent{session.ID: agent.New(&serviceClient{success: true})}}
-	result, err := service.Run(context.Background(), session.ID, []provider.Message{{Role: "user", Content: "Calculate"}})
+	result, err := service.Run(context.Background(), session.ID, []provider.Message{{Role: "user", Content: "Calculate"}}, nil)
 	if err != nil || result.Content != "Result is 2" {
 		t.Fatalf("%+v %v", result, err)
 	}

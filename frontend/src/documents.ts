@@ -1,5 +1,6 @@
 import { call } from './bridge';
 import { readFile, writeFile } from './files';
+import type { AgentsFile } from './workspaces';
 
 export type Document = { title: string; load: () => Promise<string>; save: (text: string) => Promise<void> };
 
@@ -15,4 +16,8 @@ export const namedDocument = (name: string): Document => ({
 
 export const fileDocument = (path: string): Document => ({
   title: path, load: () => readFile(path), save: (text) => writeFile(path, text),
+});
+
+export const agentsDocument = (file: AgentsFile): Document => ({
+  title: file.path, load: file.exists ? () => readFile(file.path) : async () => '', save: (text) => writeFile(file.path, text),
 });

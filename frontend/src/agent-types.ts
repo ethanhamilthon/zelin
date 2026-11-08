@@ -24,7 +24,8 @@ export type AgentEvent =
   | { kind: 'steer'; message: { content: string; images?: string[] } }
   | { kind: 'activity'; activity: string }
   | { kind: 'execution'; execution: Execution }
-  | { kind: 'usage'; usage: Usage };
+  | { kind: 'usage'; usage: Usage }
+  | { kind: 'compact_error'; activity: string };
 
 export type Pricing = { prompt: number | null; completion: number | null; cacheRead: number | null; cacheWrite: number | null };
 export type ModelOption = { id: string; name: string; contextWindow: number; pricing: Pricing };

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"zash/internal/home"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/home"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 const DefaultBase = "https://openrouter.ai/api/v1"

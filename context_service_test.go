@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"zash/internal/agent"
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 func TestHandoffUsesTitleModelAndFullVisibleHistory(t *testing.T) {

@@ -3,7 +3,7 @@
   import Hotkey from './Hotkey.svelte';
   import { actions, combo, defaultHotkeys } from './hotkeys';
   import type { Action } from './hotkeys';
-  let { hotkeys, onclose, onbind }: { hotkeys: Record<Action, string>; onclose: () => void; onbind: (action: Action, hotkey: string) => void } = $props();
+  let { hotkeys, back = false, onclose, ondismiss, onbind }: { hotkeys: Record<Action, string>; back?: boolean; onclose: () => void; ondismiss?: () => void; onbind: (action: Action, hotkey: string) => void } = $props();
   let recording = $state<Action | null>(null);
 
   function capture(event: KeyboardEvent) {
@@ -20,7 +20,7 @@
 
 <svelte:window onkeydowncapture={capture} />
 
-<Modal title="Hotkeys" hint={recording ? 'Press keys, Cancel Esc' : 'Close Esc'} {onclose}>
+<Modal title="Hotkeys" hint={recording ? 'Press keys, Cancel Esc' : undefined} {back} {onclose} {ondismiss}>
   {#each actions as action (action.id)}
     <button onclick={() => { recording = action.id; }} aria-pressed={recording === action.id}>
       {action.label} <span class:recording={recording === action.id}>{#if recording === action.id}Press keys…{:else}<Hotkey value={hotkeys[action.id]} />{/if}</span>

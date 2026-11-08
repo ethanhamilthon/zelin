@@ -13,7 +13,7 @@ const placeholders: Record<Step, string> = {
 };
 const ask = {
   url: `Provider URL? Press Enter to use OpenRouter (\`${openRouter}\`). Any OpenAI-compatible API works.`,
-  key: 'API key? It is stored in the Zash \`.env\` file.',
+  key: 'API key? It is stored in the Zelin \`.env\` file.',
   model: '**Main model**. Pick it from the list below. Only this model will be enabled, you can enable more later in the Model manager.',
   title: '**Title model** for session names. A small, fast model works best. The main model is preselected.',
 };
@@ -23,7 +23,7 @@ const result = (name: string, check: SetupCheck) => check.error
 export function createSetup(done: (model: string, models: ModelOption[]) => void) {
   const state = $state({
     step: 'url' as Step, busy: false, base: '', models: [] as ModelOption[], model: '', query: '', active: 0,
-    messages: [{ role: 'assistant', content: `Welcome to **Zash**. Let's connect a provider and pick your models.\n\n${ask.url}` }] as Message[],
+    messages: [{ role: 'assistant', content: `Welcome to **Zelin**. Let's connect a provider and pick your models.\n\n${ask.url}` }] as Message[],
   });
   const say = (content: string) => { state.messages = [...state.messages, { role: 'assistant', content }]; };
   const reply = (content: string) => { state.messages = [...state.messages, { role: 'user', content }]; };
@@ -42,7 +42,7 @@ export function createSetup(done: (model: string, models: ModelOption[]) => void
       return say(`${checks}\n\n${main.error ? ask.model : ask.title}`);
     }
     await finishSetup(state.model, title);
-    say(`${checks}\n\nAll set. Starting Zash…`);
+    say(`${checks}\n\nAll set. Starting Zelin…`);
     done(state.model, state.models);
   }
 

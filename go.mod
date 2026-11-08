@@ -1,4 +1,4 @@
-module zash
+module zelin
 
 go 1.26.0
 

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"zash/internal/provider"
+	"zelin/internal/provider"
 )
 
 func TestTurnReportsOnlyThisRun(t *testing.T) {

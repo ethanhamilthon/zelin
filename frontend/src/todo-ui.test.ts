@@ -20,6 +20,8 @@ it('focuses command search and removes redundant actions', () => {
   expect(document.activeElement).toBe(input);
   const labels = [...document.querySelectorAll('button')].map((button) => button.textContent);
   expect(labels).toHaveLength(8);
+  expect(labels[0]).toContain('Session actions');
+  expect(labels.join(' ')).not.toMatch(/Compact|Handoff/);
   expect(labels.at(-1)).toContain('Switch session');
   expect(labels.join(' ')).not.toMatch(/New session|Stop|Attach image|Focus|Scroll|Select model|Select reasoning/);
   input.value = 'system';

@@ -1,12 +1,12 @@
 <script lang="ts">
   import Modal from './Modal.svelte';
-  let { efforts, active, error = '', onclose, onselect }: {
-    efforts: string[]; active: string; error?: string;
-    onclose: () => void; onselect: (effort: string) => void;
+  let { efforts, active, error = '', back = false, onclose, ondismiss, onselect }: {
+    efforts: string[]; active: string; error?: string; back?: boolean;
+    onclose: () => void; ondismiss?: () => void; onselect: (effort: string) => void;
   } = $props();
 </script>
 
-<Modal title="Reasoning effort" {onclose}>
+<Modal title="Reasoning effort" {back} {onclose} {ondismiss}>
   {#each efforts as effort}
     <button onclick={() => onselect(effort)} aria-current={effort === active ? 'true' : undefined}>{effort} <span>{effort === active ? 'Current' : ''}</span></button>
   {/each}

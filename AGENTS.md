@@ -1,7 +1,7 @@
 ## Project Rules
-Zash - Zen AI Agent, Zen UI, Powerfull AI Agent
+Zelin - Zen AI Agent, Zen UI, Powerfull AI Agent
 
-Zash works on codemode by default, it means its only too is JS Repl (Goja)
+Zelin works on codemode by default, it means its only too is JS Repl (Goja)
 
 ## Dev Rules 
 - no more than 150 lines per file, 100 is good.

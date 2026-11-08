@@ -1,8 +1,8 @@
 package main
 
 import (
-	"zash/internal/instructions"
-	"zash/internal/sessions"
+	"zelin/internal/instructions"
+	"zelin/internal/sessions"
 )
 
 type SettingsService struct {

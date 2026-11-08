@@ -7,11 +7,23 @@
   import TurnSummary from './TurnSummary.svelte';
   import LiveTurn from './LiveTurn.svelte';
   import type { Usage } from './agent-types';
-  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, usage = null, baseline = null, window = 0, onimage }: {
+  import type { Ref } from './refs';
+  import MoreButton from './MoreButton.svelte';
+  import { earlier, first, more as count } from './bounded';
+  import { keepScroll } from './scroll-anchor';
+  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, usage = null, baseline = null, window = 0, onimage, onref }: {
     messages: Message[]; executions?: Execution[]; busy?: boolean; showCode?: boolean; foldCode?: boolean; stack?: boolean;
     started?: number; usage?: Usage | null; baseline?: Usage | null; window?: number;
-    onimage?: (url: string, number: number) => void;
+    onimage?: (url: string, number: number) => void; onref?: (ref: Ref) => void;
   } = $props();
+
+  let start = $state<number | null>(null);
+  const from = $derived(Math.min(start ?? first(messages.length), messages.length));
+  let anchor: HTMLElement;
+  const reveal = (event: MouseEvent) => {
+    (event.currentTarget as HTMLElement).blur();
+    void keepScroll(anchor, () => { start = earlier(from); });
+  };
 
   function icon(message: Message, index: number) {
     if (message.role === 'assistant') return 'assistant';
@@ -20,18 +32,20 @@
   }
 </script>
 
-<section aria-label="Conversation" aria-live="polite">
-  {#each messages as message, index}
+<section aria-label="Conversation" aria-live="polite" bind:this={anchor}>
+  {#if from > 0}<MoreButton count={count(from)} label="messages" onclick={reveal} />{/if}
+  {#each messages.slice(from) as message, offset (from + offset)}
+    {@const index = from + offset}
     <article class:assistant={message.role === 'assistant'} aria-label={message.role === 'user' ? 'User message' : 'Assistant message'}>
       <Steps executions={message.executions ?? []} {showCode} {foldCode} {stack} />
       <div class="message">
         <MessageIcon kind={icon(message, index)} />
-        <MessageText content={message.content} markdown={message.role === 'assistant'} images={message.images} {onimage} />
+        <MessageText content={message.content} markdown={message.role === 'assistant'} images={message.images} refs={message.refs} {onimage} {onref} />
       </div>
       {#if message.turn}<TurnSummary turn={message.turn} />{/if}
     </article>
   {/each}
-  <Steps {executions} {showCode} {foldCode} {stack} />
+  <Steps {executions} running={busy} {showCode} {foldCode} {stack} />
   {#if busy && started}<LiveTurn {started} {usage} {baseline} {window} />{/if}
 </section>
 

@@ -39,8 +39,8 @@ describe('model selection', () => {
     expect(document.querySelector('[aria-label="Show DeepSeek"]')?.getAttribute('aria-pressed')).toBe('false');
     document.querySelector<HTMLButtonElement>('[aria-label="Show DeepSeek"]')!.click();
     expect(ontoggle).toHaveBeenCalledWith('deepseek/chat');
-    expect(buttons().filter((item) => item.textContent?.includes('Title model'))).toHaveLength(1);
-    buttons().find((item) => item.textContent?.includes('Use for titles'))!.click();
+    expect(document.querySelector('[aria-label="Use GPT 5 for background tasks"]')?.getAttribute('aria-pressed')).toBe('true');
+    document.querySelector<HTMLButtonElement>('[aria-label="Use DeepSeek for background tasks"]')!.click();
     expect(ontitle).toHaveBeenCalledWith('deepseek/chat');
   });
 

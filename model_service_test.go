@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"zash/internal/provider"
-	"zash/internal/sessions"
+	"zelin/internal/provider"
+	"zelin/internal/sessions"
 )
 
 func modelService(t *testing.T) (*AgentService, *sessions.Store) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"slices"
 
-	"zash/internal/provider"
+	"zelin/internal/provider"
 )
 
 type sessionClient struct {

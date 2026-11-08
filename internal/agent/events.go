@@ -1,6 +1,6 @@
 package agent
 
-import "zash/internal/provider"
+import "zelin/internal/provider"
 
 type Execution struct {
 	ID     string `json:"id"`

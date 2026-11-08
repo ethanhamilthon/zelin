@@ -1,4 +1,5 @@
 import { sendMessage } from './conversation';
+import { usedRefs } from './refs';
 import { runAgent, stopAgent, steerAgent } from './agent';
 import type { createSessionController } from './session-controller.svelte';
 
@@ -10,9 +11,9 @@ export function createChat(sessions: Sessions, onFinish: (id: string, succeeded:
       const id = sessions.state.id;
       const conversation = sessions.conversations[id];
       if (sessions.state.loading || !conversation || conversation.busy || !conversation.draft.trim()) return null;
-      const succeeded = await sendMessage(conversation, async (messages, observe) => {
+      const succeeded = await sendMessage(conversation, async (messages, observe, refs) => {
         await sessions.save(id);
-        return runAgent(messages, observe, id);
+        return runAgent(messages, observe, id, refs);
       });
       if (id !== sessions.state.id) {
         conversation.unread = true;
@@ -26,7 +27,7 @@ export function createChat(sessions: Sessions, onFinish: (id: string, succeeded:
       if (!conversation?.busy || !conversation.started || !conversation.draft.trim() || conversation.steering) return;
       conversation.steering = true;
       try {
-        const accepted = await steerAgent(id, conversation.draft, conversation.attachments);
+        const accepted = await steerAgent(id, conversation.draft, conversation.attachments, usedRefs(conversation.draft, conversation.refs));
         if (!accepted) conversation.steering = false;
       } catch (error) { conversation.steering = false; conversation.error = String(error); }
     },

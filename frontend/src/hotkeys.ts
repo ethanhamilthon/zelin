@@ -1,8 +1,11 @@
-export type Action = 'commands' | 'sessions' | 'newSession' | 'stop' | 'send' | 'newline' | 'save';
+export type Action = 'commands' | 'models' | 'sessions' | 'actions' | 'files' | 'newSession' | 'stop' | 'send' | 'newline' | 'save';
 
 export const actions: { id: Action; label: string }[] = [
   { id: 'commands', label: 'Open commands' },
+  { id: 'models', label: 'Select model' },
   { id: 'sessions', label: 'Switch session' },
+  { id: 'actions', label: 'Session actions' },
+  { id: 'files', label: 'Browse files' },
   { id: 'newSession', label: 'New session' },
   { id: 'stop', label: 'Stop the current run' },
   { id: 'send', label: 'Send message' },
@@ -11,7 +14,7 @@ export const actions: { id: Action; label: string }[] = [
 ];
 
 export const defaultHotkeys: Record<Action, string> = {
-  commands: 'Ctrl+K', sessions: 'Ctrl+S', newSession: 'Ctrl+N', stop: 'Ctrl+C',
+  commands: 'Ctrl+K', models: 'Ctrl+M', sessions: 'Ctrl+S', actions: 'Ctrl+E', files: 'Ctrl+F', newSession: 'Ctrl+N', stop: 'Ctrl+C',
   send: 'Enter', newline: 'Shift+Enter', save: 'Ctrl+S',
 };
 

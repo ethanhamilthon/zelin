@@ -34,15 +34,17 @@
 <div class="screen">
   <div class="editor" bind:this={container}></div>
   <BottomBar label={title}>
-    <span>{title}{text !== saved ? ' •' : ''}</span>
+    <span title={title}>{title}{text !== saved ? ' •' : ''}</span>
     {#if status}<span class="status" role="status">{status}</span>{/if}
-    <button onclick={onclose} title="Close editor">Close <Hotkey value={closeKey} /></button>
-    {#snippet actions()}<button onclick={() => { void commit(); }}>Save <Hotkey value={saveKey} /></button>{/snippet}
+    {#snippet actions()}
+      <button onclick={onclose} title="Close editor">Close <Hotkey value={closeKey} /></button>
+      <button onclick={() => { void commit(); }}>Save <Hotkey value={saveKey} /></button>
+    {/snippet}
   </BottomBar>
 </div>
 
 <style>
-  .screen { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
-  .editor { min-height: 0; overflow: hidden; }
-  .status { color: var(--faint) !important; }
+  .screen { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .editor { min-width: 0; min-height: 0; overflow: hidden; }
+  .status { flex-shrink: 0; color: var(--faint) !important; }
 </style>

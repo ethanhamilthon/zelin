@@ -17,7 +17,7 @@ it('stacks consecutive steps and keeps each block foldable', () => {
   app = mount(Steps, { target: document.body, props: { executions: [thought, code('a'), code('b')], stack: true } });
   flushSync();
   const toggle = document.querySelector<HTMLButtonElement>('.toggle')!;
-  expect(toggle.textContent).toContain('2 code · 1 thinking');
+  expect(toggle.textContent?.trim()).toBe('3 steps');
   expect($$('.execution, .thinking')).toHaveLength(0);
   toggle.click();
   flushSync();

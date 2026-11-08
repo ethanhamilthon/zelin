@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"zash/internal/agent"
-	"zash/internal/provider"
+	"zelin/internal/agent"
+	"zelin/internal/provider"
 )
 
 func TestSessionsSurviveRestart(t *testing.T) {

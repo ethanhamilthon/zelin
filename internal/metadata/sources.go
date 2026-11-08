@@ -36,9 +36,10 @@ func fetch(ctx context.Context, client *http.Client, url string, target any) err
 func openRouter(ctx context.Context, client *http.Client, url string, entries map[string]Entry) error {
 	var data struct {
 		Data []struct {
-			ID            string            `json:"id"`
-			ContextLength int               `json:"context_length"`
-			Pricing       map[string]string `json:"pricing"`
+			ID                  string            `json:"id"`
+			ContextLength       int               `json:"context_length"`
+			Pricing             map[string]string `json:"pricing"`
+			SupportedParameters []string          `json:"supported_parameters"`
 		} `json:"data"`
 	}
 	if err := fetch(ctx, client, url, &data); err != nil {
@@ -50,7 +51,12 @@ func openRouter(ctx context.Context, client *http.Client, url string, entries ma
 			continue
 		}
 		p := model.Pricing
-		entries[key] = Entry{model.ContextLength, Pricing{parse(p["prompt"]), parse(p["completion"]), parse(p["input_cache_read"]), parse(p["input_cache_write"])}}
+		var reasoning *bool
+		if len(model.SupportedParameters) > 0 {
+			supports := slices.Contains(model.SupportedParameters, "reasoning") || slices.Contains(model.SupportedParameters, "include_reasoning") || slices.Contains(model.SupportedParameters, "reasoning_effort")
+			reasoning = &supports
+		}
+		entries[key] = Entry{model.ContextLength, Pricing{parse(p["prompt"]), parse(p["completion"]), parse(p["input_cache_read"]), parse(p["input_cache_write"])}, reasoning}
 	}
 	return nil
 }
@@ -64,17 +70,18 @@ func liteLLM(ctx context.Context, client *http.Client, url string, entries map[s
 		for _, id := range slices.Sorted(maps.Keys(data)) {
 			raw := data[id]
 			var model struct {
-				Input      int      `json:"max_input_tokens"`
-				Prompt     *float64 `json:"input_cost_per_token"`
+				Input     int      `json:"max_input_tokens"`
+				Prompt    *float64 `json:"input_cost_per_token"`
 				Completion *float64 `json:"output_cost_per_token"`
-				CacheRead  *float64 `json:"cache_read_input_token_cost"`
+				CacheRead *float64 `json:"cache_read_input_token_cost"`
 				CacheWrite *float64 `json:"cache_creation_input_token_cost"`
+				Reasoning *bool    `json:"supports_reasoning"`
 			}
 			key := Key(id)
 			if _, exists := entries[key]; exists || direct == strings.Contains(id, "/") || json.Unmarshal(raw, &model) != nil || model.Input == 0 {
 				continue
 			}
-			entries[key] = Entry{model.Input, Pricing{model.Prompt, model.Completion, model.CacheRead, model.CacheWrite}}
+			entries[key] = Entry{model.Input, Pricing{model.Prompt, model.Completion, model.CacheRead, model.CacheWrite}, model.Reasoning}
 		}
 	}
 	return nil

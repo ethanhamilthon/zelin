@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"zash/internal/provider"
+	"zelin/internal/provider"
 )
 
 type loopClient struct {

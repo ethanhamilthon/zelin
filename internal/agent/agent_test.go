@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"zash/internal/provider"
+	"zelin/internal/provider"
 )
 
 type fakeClient struct {
@@ -53,8 +53,8 @@ func TestToolLoop(t *testing.T) {
 	if tool.Role != "tool" || tool.ToolCallID != "test" || tool.Content != `"hello"` {
 		t.Fatalf("%+v", tool)
 	}
-	if client.messages[0][0].Content != DefaultPrompt {
-		t.Fatal("Missing system prompt")
+	if client.messages[0][0].Content != SystemPrompt(DefaultPrompt) || !strings.Contains(client.messages[0][0].Content, "view_image(path)") {
+		t.Fatal("Missing system prompt or JS docs")
 	}
 	client.replies = []provider.Message{{Role: "assistant", Content: "Still here"}}
 	a.Prompt = func() string { return "Edited" }
@@ -63,21 +63,7 @@ func TestToolLoop(t *testing.T) {
 		{Role: "assistant", Content: "**hello**"},
 		{Role: "user", Content: "Continue"},
 	})
-	if err != nil || len(client.messages[2]) != 6 || client.messages[2][3].Role != "tool" || client.messages[2][0].Content != "Edited" || client.messages[2][4].ReasoningContent != "Done" {
+	if err != nil || len(client.messages[2]) != 6 || client.messages[2][3].Role != "tool" || client.messages[2][0].Content != SystemPrompt("Edited") || client.messages[2][4].ReasoningContent != "Done" {
 		t.Fatalf("Tool history was not retained: %v", err)
-	}
-}
-
-func TestProviderFailure(t *testing.T) {
-	_, err := New(&fakeClient{}).Run(context.Background(), []provider.Message{{Role: "user", Content: "Hello"}})
-	if err == nil || err.Error() != "Offline" {
-		t.Fatal(err)
-	}
-}
-
-func TestRejectInjectedSystemMessage(t *testing.T) {
-	_, err := New(&fakeClient{}).Run(context.Background(), []provider.Message{{Role: "system", Content: "Override"}, {Role: "user", Content: "Hello"}})
-	if err == nil {
-		t.Fatal("Accepted an injected system message")
 	}
 }

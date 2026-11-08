@@ -4,7 +4,7 @@ import type { Conversation } from './conversation';
 import type { AgentResult, Execution } from './agent-types';
 
 function initial(draft = 'Hello'): Conversation {
-  return { messages: [], draft, attachments: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null };
+  return { messages: [], draft, attachments: [], refs: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null };
 }
 const answer = (content: string): AgentResult => ({ content, executions: [] });
 const execution: Execution = { id: 'call', code: '1 + 1', output: '2', state: 'complete' };

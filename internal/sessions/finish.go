@@ -2,7 +2,7 @@ package sessions
 
 import (
 	"encoding/json"
-	"zash/internal/agent"
+	"zelin/internal/agent"
 )
 
 func (s *Store) Finish(id string, message Message, state agent.State) error {

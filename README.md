@@ -1,4 +1,4 @@
-# Zash
+# Zelin
 
 A minimal desktop AI agent built with Go, Wails 3.1, Svelte 5, and CodeMirror 6.
 
@@ -43,8 +43,8 @@ Paste or drop images into the input, or use Commands -> Attach image. Each image
 becomes a `[Image #1]` token that is deleted as one unit and opens on click.
 
 Sessions, messages, images, execution output, drafts, and provider context are
-stored in SQLite at `$XDG_DATA_HOME/zash/sessions.db` (default
-`~/.local/share/zash/sessions.db`; `ZASH_HOME` overrides the whole data
+stored in SQLite at `$XDG_DATA_HOME/zelin/sessions.db` (default
+`~/.local/share/zelin/sessions.db`; `ZELIN_HOME` (or the legacy `ZASH_HOME`) overrides the whole data
 directory). Several sessions can run at once. When a background session
 finishes, a toast at the top center (and a sound) links back to it; both can be
 turned off in Commands -> Settings, together with the theme and code display.
@@ -102,7 +102,7 @@ This is not a sandbox or an approval system. Only use a provider and prompts you
 npm --prefix frontend test
 npm --prefix frontend run build
 go test ./...
-go build -tags production -o bin/zash .
+go build -tags production -o bin/zelin .
 ```
 
 Optional Wails CLI:
@@ -122,14 +122,14 @@ Install a separate production copy next to the development checkout:
 wails3 task install:prod
 ```
 
-This builds `~/.local/bin/zash-prod` and a `Zash` launcher entry. The production
+This builds `~/.local/bin/zelin-prod` and a `Zelin` launcher entry. The production
 copy keeps its own data, sessions, system prompt, and web storage in
-`~/.local/share/zash-prod`, so the development build in `~/.local/share/zash`
+`~/.local/share/zelin-prod`, so the development build in `~/.local/share/zelin`
 can be changed and restarted freely while you work with the production one.
 Run `wails3 task install:prod` again to update it, and
 `wails3 task uninstall:prod` to remove the binary and launcher (data is kept).
-On startup Zash reads `.env` from its data directory (for the production copy
-`~/.local/share/zash-prod/.env`, mode 600) with `KEY=value` lines such as
+On startup Zelin reads `.env` from its data directory (for the production copy
+`~/.local/share/zelin-prod/.env`, mode 600) with `KEY=value` lines such as
 `OPENAI_API_KEY` and `OPENAI_BASE_URL`. Variables already set in the environment
 take precedence.
 

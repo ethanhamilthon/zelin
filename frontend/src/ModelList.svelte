@@ -4,9 +4,9 @@
   import type { ModelOption } from './agent-types';
   import { compact, perMillion } from './format';
   import { search, modelName } from './models';
-  let { models, active, hidden = [], loading, error, onclose, onselect }: {
-    models: ModelOption[]; active: string; hidden?: string[]; loading: boolean; error: string;
-    onclose: () => void; onselect: (id: string) => void;
+  let { models, active, hidden = [], loading, error, back = false, onclose, ondismiss, onselect }: {
+    models: ModelOption[]; active: string; hidden?: string[]; loading: boolean; error: string; back?: boolean;
+    onclose: () => void; ondismiss?: () => void; onselect: (id: string) => void;
   } = $props();
   let query = $state('');
   const matches = $derived(search(models.filter((model) => !hidden.includes(model.id)), query));
@@ -16,8 +16,8 @@
   }
 </script>
 
-<Modal title="Select model" {onclose}>
-  <SearchInput bind:value={query} onkeydown={submit} label="Search models" />
+<Modal title="Select model" {back} {onclose} {ondismiss}>
+  {#snippet top()}<SearchInput bind:value={query} onkeydown={submit} label="Search models" />{/snippet}
   {#if loading}<p>Loading models…</p>{:else if error}<p role="alert">{error}</p>{:else if !matches.length}<p>No models found</p>{/if}
   {#each matches as model (model.id)}
     <button onclick={() => onselect(model.id)} aria-current={model.id === active ? 'true' : undefined} title={model.id}>

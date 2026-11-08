@@ -5,21 +5,30 @@ import (
 	"path/filepath"
 )
 
-var Name = "zash"
+var Name = "zelin"
+
+const Legacy = "zash"
 
 func Dir() (string, error) {
+	if dir := os.Getenv("ZELIN_HOME"); dir != "" {
+		return dir, nil
+	}
 	if dir := os.Getenv("ZASH_HOME"); dir != "" {
 		return dir, nil
 	}
-	base := os.Getenv("XDG_DATA_HOME")
-	if base == "" {
+	return base(Name)
+}
+
+func base(name string) (string, error) {
+	root := os.Getenv("XDG_DATA_HOME")
+	if root == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		base = filepath.Join(home, ".local", "share")
+		root = filepath.Join(home, ".local", "share")
 	}
-	return filepath.Join(base, Name), nil
+	return filepath.Join(root, name), nil
 }
 
 func Path(name string) (string, error) {

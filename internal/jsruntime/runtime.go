@@ -6,27 +6,59 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"zash/internal/host"
+	"zelin/internal/files"
+	"zelin/internal/host"
 )
 
 type Runtime struct {
+	cwd       string
 	vm        *goja.Runtime
 	stringify goja.Callable
+	images    []files.Image
 }
 
-func New() *Runtime {
+func New() *Runtime { return NewIn(launch) }
+
+func NewIn(dir string) *Runtime {
+	if dir == "" {
+		dir = launch
+	}
 	vm := goja.New()
 	stringify, _ := goja.AssertFunction(vm.Get("JSON").ToObject(vm).Get("stringify"))
-	r := &Runtime{vm: vm, stringify: stringify}
+	r := &Runtime{vm: vm, stringify: stringify, cwd: dir}
 	vm.Set("fs", r.fs())
+	vm.Set("view_image", r.viewImage)
+	vm.Set("cd", r.chdir)
 	return r
+}
+
+func (r *Runtime) viewImage(path string) any {
+	resolved, err := r.abs(path)
+	if err != nil {
+		return failure(err)
+	}
+	img, err := files.ReadImage(resolved)
+	if err != nil {
+		return failure(err)
+	}
+	r.images = append(r.images, img)
+	return map[string]any{"ok": true, "path": img.Path, "mimeType": img.MimeType}
+}
+
+func (r *Runtime) TakeImages() []files.Image {
+	out := r.images
+	r.images = nil
+	return out
 }
 
 func (r *Runtime) Run(ctx context.Context, code string) string {
 	ctx, cancel := context.WithTimeout(ctx, 125*time.Second)
 	defer cancel()
 	r.vm.Set("bash", func(command string, timeout float64) map[string]any {
-		result := host.Bash(ctx, command, timeout)
+		if err := r.usable(); err != nil {
+			return map[string]any{"stdout": "", "stderr": err.Error(), "exitCode": -1, "timedOut": false}
+		}
+		result := host.BashIn(ctx, r.cwd, command, timeout)
 		return map[string]any{"stdout": result.Stdout, "stderr": result.Stderr, "exitCode": result.ExitCode, "timedOut": result.TimedOut}
 	})
 	done := make(chan struct{})

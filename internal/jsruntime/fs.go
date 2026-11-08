@@ -2,7 +2,7 @@ package jsruntime
 
 import (
 	"github.com/dop251/goja"
-	"zash/internal/files"
+	"zelin/internal/files"
 )
 
 type options struct {
@@ -37,16 +37,33 @@ func (r *Runtime) fs() map[string]any {
 	return map[string]any{
 		"read": func(path string, value goja.Value) any {
 			opts := r.options(value)
+			path, err := r.abs(path)
+			if err != nil {
+				return failure(err)
+			}
 			text, err := files.Read(path, opts.Offset, opts.Limit)
 			if err != nil {
 				return failure(err)
 			}
 			return text
 		},
-		"write": func(path, text string) any { return done(files.Write(path, text)) },
-		"edit":  func(path, old, text string) any { return done(files.Edit(path, old, text)) },
-		"patch": func(path, diff string) any { return done(files.Patch(path, diff)) },
+		"write": func(path, text string) any {
+			return r.mutate(path, func(p string) error { return files.Write(p, text) })
+		},
+		"edit": func(path, old, text string) any {
+			return r.mutate(path, func(p string) error { return files.Edit(p, old, text) })
+		},
+		"patch": func(path, diff string) any {
+			return r.mutate(path, func(p string) error { return files.Patch(p, diff) })
+		},
 		"grep": func(pattern, path string, value goja.Value) any {
+			if path == "" {
+				path = "."
+			}
+			path, err := r.abs(path)
+			if err != nil {
+				return failure(err)
+			}
 			results, err := files.Grep(pattern, path, r.options(value).Glob)
 			if err != nil {
 				return failure(err)
@@ -54,4 +71,12 @@ func (r *Runtime) fs() map[string]any {
 			return results
 		},
 	}
+}
+
+func (r *Runtime) mutate(path string, change func(string) error) any {
+	resolved, err := r.abs(path)
+	if err != nil {
+		return failure(err)
+	}
+	return done(change(resolved))
 }

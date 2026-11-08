@@ -8,7 +8,7 @@ import { call } from './bridge';
 import { placeholderInfo, type AgentEvent, type AgentResult } from './agent-types';
 
 vi.mock('./agent', () => ({ runAgent: vi.fn(), agentInfo: vi.fn(), listModels: vi.fn(), configureModel: vi.fn(), setTitleModel: vi.fn(), steerAgent: vi.fn(), stopAgent: vi.fn() }));
-vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn() }));
+vi.mock('./sessions', () => ({ currentSession: vi.fn(), createSession: vi.fn(), openSession: vi.fn(), listSessions: vi.fn(), saveSession: vi.fn(), saveDraft: vi.fn(), saveAttachments: vi.fn(), saveRefs: vi.fn() }));
 vi.mock('./bridge', () => ({ call: vi.fn(), desktop: () => false, listen: vi.fn(async () => () => {}) }));
 vi.mock('./sound', () => ({ chime: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
@@ -37,7 +37,7 @@ afterEach(async () => { window.getSelection()?.removeAllRanges(); await unmount(
 
 it('queues steering, cancels on edit, retains text, and clears it on consumption', async () => {
   send(); await wait(); type('change direction'); send(); await wait();
-  expect(steerAgent).toHaveBeenLastCalledWith('one', 'change direction', []);
+  expect(steerAgent).toHaveBeenLastCalledWith('one', 'change direction', [], []);
   expect($('[aria-label="Steering queued"]')).not.toBeNull();
   expect($('.cm-content')?.textContent).toBe('change direction');
   type('change direction again'); await tick();
@@ -62,10 +62,17 @@ it('shows Stop before Commands only when busy; selection keeps Ctrl+C for copyin
   expect($('footer')?.textContent).not.toContain('Stop');
 });
 
+it('shows Working in the status bar while a run is active', async () => {
+  send(); await wait();
+  expect($('footer [role="status"]')?.textContent?.trim()).toBe('1 Working');
+  finish({ content: 'done', executions: [] }); await wait();
+  expect($('footer [role="status"]')).toBeNull();
+});
+
 it('runs manual compaction from Commands and updates usage', async () => {
   send(); await wait(); finish({ content: 'done', executions: [] }); await wait();
   vi.mocked(call).mockImplementation(async (method) => method === 'AgentService.Compact' ? { context: 25 } : '');
-  button('Commands').click(); await tick(); button('Compact context').click(); await wait();
+  button('Commands').click(); await tick(); button('Session actions').click(); await tick(); button('Compact context').click(); await wait();
   expect(call).toHaveBeenCalledWith('AgentService.Compact', 'one');
   expect($('[role="dialog"]')).toBeNull();
 });
@@ -74,7 +81,7 @@ it('hands off and opens the new session', async () => {
   send(); await wait(); finish({ content: 'done', executions: [] }); await wait();
   vi.mocked(call).mockImplementation(async (method) => method === 'AgentService.Handoff' ? { id: 'next' } : '');
   vi.mocked(openSession).mockResolvedValue({ id: 'next', title: 'Handoff', draft: '', messages: [{ role: 'user', content: 'Handoff summary' }], updated: '' });
-  button('Commands').click(); await tick(); button('Handoff').click(); await wait(); await wait();
+  button('Commands').click(); await tick(); button('Session actions').click(); await tick(); button('Handoff').click(); await wait(); await wait();
   expect(call).toHaveBeenCalledWith('AgentService.Handoff', 'one');
   expect(openSession).toHaveBeenCalledWith('next');
   expect($('article .text')?.textContent).toBe('Handoff summary');

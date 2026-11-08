@@ -1,12 +1,13 @@
 <script lang="ts">
   import type { Execution } from './agent-types';
   import { highlightJavaScript } from './highlight';
+  import { oneLine } from './preview';
   import { fade } from 'svelte/transition';
   let { execution, folded: initial = false }: { execution: Execution; folded?: boolean } = $props();
   let expanded = $state(false);
   let folded = $state(false);
   $effect.pre(() => { folded = initial; });
-  const code = $derived(folded ? execution.code.trim().replace(/\s*\n\s*/g, ' ') : execution.code);
+  const code = $derived(folded ? oneLine(execution.code) : execution.code);
 </script>
 
 <div class="execution" aria-label="JavaScript execution" aria-busy={execution.state === 'running'}>

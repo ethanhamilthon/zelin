@@ -3,16 +3,17 @@ import { EditorView } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 
 export const theme = EditorView.theme({
-  '&': { height: '100%', backgroundColor: 'var(--background)', color: 'var(--foreground)' },
+  '&': { width: '100%', maxWidth: '100%', height: '100%', backgroundColor: 'var(--background)', color: 'var(--foreground)' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { overflow: 'auto', fontFamily: 'inherit', fontSize: 'var(--font-size)', lineHeight: '1.8' },
-  '.cm-content': { padding: '32px clamp(48px, 6vw, 80px)', minHeight: '100%', caretColor: 'var(--foreground)', overflowWrap: 'anywhere' },
+  '.cm-scroller': { overflowX: 'hidden', overflowY: 'auto', fontFamily: 'inherit', fontSize: 'var(--font-size)', lineHeight: '1.8' },
+  '.cm-content': { width: '100%', maxWidth: '100%', boxSizing: 'border-box', padding: '32px clamp(20px, 6vw, 80px)', minHeight: '100%', caretColor: 'var(--foreground)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' },
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--foreground)' },
   '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': { background: 'var(--selection)' },
   '.cm-content ::selection': { backgroundColor: 'var(--selection)' },
   '.cm-placeholder': { color: 'var(--faint)' },
   '.cm-image-token': { color: 'var(--accent)', cursor: 'pointer' },
+  '.cm-ref-token': { color: 'var(--accent)', cursor: 'pointer', background: 'var(--code-bg)', borderRadius: '4px', padding: '0 4px' },
   '.cm-scroller::-webkit-scrollbar': { width: '8px', height: '8px' },
   '.cm-scroller::-webkit-scrollbar-thumb': { backgroundColor: 'var(--border)', border: '2px solid var(--background)', borderRadius: '8px' },
 });

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"zash/internal/agent"
+	"zelin/internal/agent"
 )
 
 func (s *Store) Save(id string, messages []Message, draft string, attachments []string) error {

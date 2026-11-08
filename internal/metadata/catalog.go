@@ -20,6 +20,7 @@ type Pricing struct {
 type Entry struct {
 	ContextWindow int     `json:"contextWindow"`
 	Pricing       Pricing `json:"pricing"`
+	Reasoning     *bool   `json:"reasoning,omitempty"`
 }
 
 type Catalog struct {

@@ -69,7 +69,7 @@ it('walks through onboarding and enables only the main model', async () => {
   app = mount(Onboarding, { target: document.body, props: { ondone } });
   flushSync(); await wait();
   const footer = () => document.querySelector('footer')!.textContent;
-  expect(footer()).toContain('Welcome to Zash');
+  expect(footer()).toContain('Welcome to Zelin');
   expect(footer()).toContain('Setup 1/4');
   const { EditorView } = await import('@codemirror/view');
   const send = async (text: string) => {

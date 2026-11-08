@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"zash/internal/files"
+	"zelin/internal/files"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -24,14 +24,7 @@ func (s *FileService) Read(path string) (string, error) {
 func (s *FileService) Write(path, text string) error { return files.Write(path, text) }
 
 func (s *FileService) Resolve(path string) (string, error) {
-	path, err := files.Resolve(path)
-	if err != nil {
-		return "", err
-	}
-	if _, err := os.Stat(path); err != nil {
-		return "", fmt.Errorf("File not found: %s", path)
-	}
-	return path, nil
+	return files.Locate(path)
 }
 
 func (s *FileService) Open(path string) error {
