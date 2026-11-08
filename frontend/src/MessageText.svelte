@@ -14,6 +14,8 @@
   .text { font-size: var(--font-size); line-height: 1.8; white-space: pre-wrap; }
   .text :global(strong) { font-weight: 700; color: var(--foreground); }
   .text :global(code) { font-family: inherit; color: var(--foreground); background: var(--code-bg); border-radius: 4px; padding: 1px 4px; }
+  .text :global(a) { color: inherit; text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; cursor: pointer; }
+  .text :global(a:hover) { color: var(--accent); text-decoration-color: currentColor; }
   .token { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
   .token:hover { text-decoration: underline; }
 </style>

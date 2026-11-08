@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"zash/internal/metadata"
 )
@@ -34,12 +33,12 @@ func (c *Client) Models(ctx context.Context) ([]Model, error) {
 	if models := c.cached(); models != nil {
 		return models, nil
 	}
-	url := strings.TrimSuffix(c.URL, "/chat/completions") + "/models"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	_, key := c.endpoint()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.Base()+"/models", nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.Key)
+	req.Header.Set("Authorization", "Bearer "+key)
 	res, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Could not load models: %w", err)

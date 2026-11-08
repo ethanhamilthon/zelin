@@ -9,7 +9,6 @@
 </div>
 
 <style>
-  .thinking { position: relative; margin: 0 0 8px; padding: 4px 14px; border-radius: 6px; color: var(--dim); }
-  .thinking :global(.icon) { top: 10px; }
+  .thinking { position: relative; margin: 0 0 8px; color: var(--dim); }
   p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; max-height: 320px; overflow-y: auto; }
 </style>

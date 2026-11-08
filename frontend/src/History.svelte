@@ -5,8 +5,11 @@
   import MessageIcon from './MessageIcon.svelte';
   import MessageText from './MessageText.svelte';
   import TurnSummary from './TurnSummary.svelte';
-  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, onimage }: {
+  import LiveTurn from './LiveTurn.svelte';
+  import type { Usage } from './agent-types';
+  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, usage = null, baseline = null, window = 0, onimage }: {
     messages: Message[]; executions?: Execution[]; busy?: boolean; showCode?: boolean; foldCode?: boolean; stack?: boolean;
+    started?: number; usage?: Usage | null; baseline?: Usage | null; window?: number;
     onimage?: (url: string, number: number) => void;
   } = $props();
 
@@ -29,12 +32,13 @@
     </article>
   {/each}
   <Steps {executions} {showCode} {foldCode} {stack} />
+  {#if busy && started}<LiveTurn {started} {usage} {baseline} {window} />{/if}
 </section>
 
 <style>
   section { --gutter: clamp(48px, 6vw, 80px); padding: 20px var(--gutter) 0; }
   article:last-child { margin-bottom: 0; }
-  article { margin-bottom: 16px; overflow-wrap: anywhere; color: var(--foreground); animation: appear 180ms ease-out; }
+  article { min-width: 0; margin-bottom: 16px; overflow-wrap: anywhere; color: var(--foreground); animation: appear 180ms ease-out; }
   .message { position: relative; }
   .assistant { color: var(--muted); }
   @keyframes appear { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }

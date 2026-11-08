@@ -16,7 +16,9 @@ export type EditorOptions = {
 
 export function createEditor(parent: HTMLElement, doc: string, onChange: (text: string) => void, options: EditorOptions = {}) {
   const keys = new Compartment();
+  const hint = new Compartment();
   let current = options.keys;
+  let text = options.placeholder ?? 'Write a message…';
 
   function bindings(value?: EditorKeys) {
     if (!value || !options.onSubmit) return keymap.of([]);
@@ -31,7 +33,7 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (text: 
     history(), drawSelection(), dropCursor(), markdown(),
     syntaxHighlighting(highlighting), theme, EditorView.lineWrapping,
     EditorView.contentAttributes.of({ 'aria-label': options.label ?? 'Message', spellcheck: 'false' }),
-    placeholder(options.placeholder ?? 'Write a message…'),
+    hint.of(placeholder(text)),
     keys.of(bindings(current)),
     keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
     options.onImage ? imageTokens(options.onImage) : [],
@@ -50,6 +52,10 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (text: 
     insert(text: string) {
       const { from, to } = view.state.selection.main;
       view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length } });
+    },
+    setPlaceholder(value: string) {
+      text = value;
+      view.dispatch({ effects: hint.reconfigure(placeholder(value)) });
     },
     setKeys(value: EditorKeys) {
       current = value;

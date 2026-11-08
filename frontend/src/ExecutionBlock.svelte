@@ -6,8 +6,7 @@
   let expanded = $state(false);
   let folded = $state(false);
   $effect.pre(() => { folded = initial; });
-  const lines = $derived(execution.code.split('\n'));
-  const code = $derived(folded ? lines[0] + (lines.length > 1 ? ' …' : '') : execution.code);
+  const code = $derived(folded ? execution.code.trim().replace(/\s*\n\s*/g, ' ') : execution.code);
 </script>
 
 <div class="execution" aria-label="JavaScript execution" aria-busy={execution.state === 'running'}>
@@ -23,8 +22,8 @@
 </div>
 
 <style>
-  .execution { position: relative; margin: 0 0 8px; padding: 4px 14px; border-radius: 6px; }
-  .fold { position: absolute; left: -30px; top: 10px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; transition: transform 160ms, color 140ms; }
+  .execution { position: relative; margin: 0 0 8px; }
+  .fold { position: absolute; left: -30px; top: 6px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; transition: transform 160ms, color 140ms; }
   .fold:hover, .fold:focus-visible { color: var(--foreground); outline: none; }
   .fold.folded { transform: rotate(-90deg); }
   .source { display: block; width: 100%; text-align: left; color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; transition: color 160ms; }

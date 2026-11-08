@@ -70,7 +70,7 @@ it('folds code to one line and hides expanded output', () => {
   expect(document.querySelector('.output')?.textContent).toBe('Result');
   document.querySelector<HTMLButtonElement>('.fold')!.click();
   flushSync();
-  expect(document.querySelector('.source code')?.textContent).toBe('const a = 1; …');
+  expect(document.querySelector('.source code')?.textContent).toBe('const a = 1; const b = 2;');
   expect(document.querySelector('.source')?.classList.contains('folded')).toBe(true);
   expect(document.querySelector('.output')).toBeNull();
 });

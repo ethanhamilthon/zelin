@@ -18,16 +18,20 @@
     <span>{running ? 'Working' : 'Steps'} · {label}</span>
   </button>
   {#if open}
-    {#each steps as step (step.id)}
-      {#if step.kind === 'thinking'}<ThinkingBlock text={step.code} />{:else}<ExecutionBlock execution={step} folded={foldCode} />{/if}
-    {/each}
+    <div class="items">
+      {#each steps as step (step.id)}
+        {#if step.kind === 'thinking'}<ThinkingBlock text={step.code} />{:else}<ExecutionBlock execution={step} folded={foldCode} />{/if}
+      {/each}
+    </div>
   {/if}
 </div>
 
 <style>
   .stack { margin: 0 0 8px; }
-  .toggle { position: relative; display: block; width: 100%; padding: 4px 14px; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
+  .items { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; padding-left: 30px; }
+  .items > :global(*) { margin: 0; }
+  .toggle { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
   .toggle:hover, .toggle:focus-visible { color: var(--muted); outline: none; }
-  svg { position: absolute; left: -30px; top: 8px; transform: rotate(-90deg); transition: transform 160ms; }
+  svg { position: absolute; left: -30px; top: 6px; transform: rotate(-90deg); transition: transform 160ms; }
   .open svg { transform: none; }
 </style>

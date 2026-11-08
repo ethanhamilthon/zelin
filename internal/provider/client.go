@@ -68,8 +68,9 @@ func (c *Client) Select(model, effort string) {
 }
 
 func (c *Client) complete(ctx context.Context, request Request) (Message, Usage, error) {
-	if c.Key == "" {
-		return Message{}, Usage{}, fmt.Errorf("Set OPENAI_API_KEY before starting Zash")
+	url, key := c.endpoint()
+	if key == "" {
+		return Message{}, Usage{}, fmt.Errorf("No API key configured")
 	}
 	model, effort := c.Selection()
 	if request.Model != "" {
@@ -90,11 +91,11 @@ func (c *Client) complete(ctx context.Context, request Request) (Message, Usage,
 	if err != nil {
 		return Message{}, Usage{}, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.URL, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return Message{}, Usage{}, err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.Key)
+	req.Header.Set("Authorization", "Bearer "+key)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.HTTP.Do(req)
 	if err != nil {

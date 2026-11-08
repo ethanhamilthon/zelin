@@ -8,7 +8,14 @@ import (
 )
 
 const toolDescription = `Execute synchronous JavaScript in a persistent Goja REPL.
-The only host function is bash(cmd, timeout): it executes a shell command and returns {stdout, stderr, exitCode, timedOut}. Timeout is in seconds, default 30, maximum 120.
+Host APIs:
+- bash(cmd, timeout): runs a shell command, returns {stdout, stderr, exitCode, timedOut}. Timeout is in seconds, default 30, maximum 120.
+- fs.read(path, {offset, limit}): returns file text with line numbers (default 2000 lines from line 1).
+- fs.write(path, text): creates or overwrites a file, creating parent directories.
+- fs.edit(path, oldText, newText): replaces exactly one occurrence of oldText.
+- fs.patch(path, diff): applies a unified diff with @@ hunks; nothing is written if any hunk fails.
+- fs.grep(pattern, path, {glob}): regex search, returns ["file:line:text"], skips .git and node_modules.
+fs functions return {error} on failure; write, edit and patch return {ok: true} on success. Paths may start with ~.
 No async/await, promises, console, require, or other host APIs.
 Use the last expression as the tool output.
 Variables persist across turns; reuse variables or use var to avoid redeclaration errors.

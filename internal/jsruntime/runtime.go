@@ -17,7 +17,9 @@ type Runtime struct {
 func New() *Runtime {
 	vm := goja.New()
 	stringify, _ := goja.AssertFunction(vm.Get("JSON").ToObject(vm).Get("stringify"))
-	return &Runtime{vm: vm, stringify: stringify}
+	r := &Runtime{vm: vm, stringify: stringify}
+	vm.Set("fs", r.fs())
+	return r
 }
 
 func (r *Runtime) Run(ctx context.Context, code string) string {

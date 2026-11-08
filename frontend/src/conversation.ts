@@ -12,6 +12,8 @@ export type Conversation = {
   activity: string;
   executions: Execution[];
   usage: Usage | null;
+  started?: number;
+  baseline?: Usage | null;
 };
 
 export async function sendMessage(
@@ -30,6 +32,8 @@ export async function sendMessage(
   state.error = '';
   state.activity = 'Thinking';
   state.executions = [];
+  state.started = Date.now();
+  state.baseline = state.usage;
   const observe = (event: AgentEvent) => {
     if (event.kind === 'activity') state.activity = event.activity;
     else if (event.kind === 'usage') state.usage = event.usage;
@@ -64,6 +68,7 @@ export async function sendMessage(
     return false;
   } finally {
     state.executions = [];
+    state.started = undefined;
     state.activity = state.error ? 'Error' : 'Ready';
     state.busy = false;
   }

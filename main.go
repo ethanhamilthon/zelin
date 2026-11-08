@@ -48,6 +48,8 @@ func main() {
 			application.NewService(service),
 			application.NewService(&SessionService{store: store}),
 			application.NewService(&SettingsService{store: store, instructions: docs}),
+			application.NewService(&FileService{}),
+			application.NewService(&SetupService{client: client, store: store, agent: service}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

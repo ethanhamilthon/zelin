@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { createEditor } from './editor';
-  import type { Editor } from './editor';
+  import { createEditor, type Editor } from './editor';
   import { createModelController } from './model-controller.svelte';
   import { blank, createSessionController } from './session-controller.svelte';
   import { createSettings } from './settings.svelte';
@@ -12,21 +11,20 @@
   import ImagePicker from './ImagePicker.svelte';
   import { listen } from './bridge';
   import { chime } from './sound';
-  import { documentTitle, readDocument, writeDocument } from './documents';
+  import { fileDocument, namedDocument, type Document } from './documents';
+  import { follow, links, type Target } from './links';
   import History from './History.svelte';
   import StatusBar from './StatusBar.svelte';
-  import Panels from './Panels.svelte';
-  import type { ModalName } from './Panels.svelte';
+  import Panels, { type ModalName } from './Panels.svelte';
   import Toasts from './Toasts.svelte';
   import DocumentEditor from './DocumentEditor.svelte';
 
-  let container: HTMLDivElement, scroller: HTMLElement;
-  let picker: ImagePicker;
+  let container: HTMLDivElement, scroller: HTMLElement, picker: ImagePicker;
   let editor: Editor | undefined;
   let documentEditor = $state<DocumentEditor>();
   let modal = $state<ModalName | null>(null);
   let image = $state<{ url: string; number: number } | null>(null);
-  let documentName = $state<string | null>(null);
+  let doc = $state<Document | null>(null);
   const settings = createSettings();
   const sessions = createSessionController();
   const models = createModelController();
@@ -43,6 +41,7 @@
     toasts.push(id, `${title} · ${succeeded ? 'finished' : 'stopped'}`);
   }
 
+  const openLink = (target: Target) => follow(target, (path) => { modal = null; doc = fileDocument(path); }).catch((error) => toasts.push('', String(error)));
   function scrollLatest() { scroller.querySelector('article:last-of-type')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   function closeModal() { modal = null; image = null; editor?.focus(); }
   function open(name: ModalName) {
@@ -52,7 +51,6 @@
   }
   function toggle(name: ModalName) { if (modal === name) closeModal(); else open(name); }
   function showImage(url: string | undefined, number: number) { if (url) { modal = null; image = { url, number }; } }
-
 
   async function selectSession(id?: string) {
     if (!(await sessions.select(id))) return;
@@ -69,9 +67,9 @@
 
   function keyboard(event: KeyboardEvent) {
     if (event.key === 'Escape' && (modal || image)) { event.preventDefault(); closeModal(); return; }
-    if (event.key === 'Escape' && documentName) { event.preventDefault(); documentName = null; editor?.focus(); return; }
-    if (documentName && matches(event, keys.save)) { event.preventDefault(); void documentEditor?.commit(); return; }
-    if (documentName) return;
+    if (event.key === 'Escape' && doc) { event.preventDefault(); doc = null; editor?.focus(); return; }
+    if (doc && matches(event, keys.save)) { event.preventDefault(); void documentEditor?.commit(); return; }
+    if (doc) return;
     if (matches(event, keys.commands)) toggle('commands');
     else if (matches(event, keys.sessions)) toggle('sessions');
     else if (matches(event, keys.newSession)) void selectSession();
@@ -88,7 +86,7 @@
     scrollLatest();
     const id = await pending;
     if (id && id === sessions.state.id && editor.text() !== current.draft) editor.setText(current.draft);
-    if (!modal && !documentName) editor.focus();
+    if (!modal && !doc) editor.focus();
   }
 
   $effect(() => { editor?.setKeys({ send: keys.send, newline: keys.newline }); });
@@ -115,10 +113,11 @@
 
 <svelte:window onkeydown={keyboard} />
 
-<div class="app" class:hidden={!!documentName}>
-  <main bind:this={scroller}>
+<div class="app" class:hidden={!!doc}>
+  <main bind:this={scroller} use:links={openLink}>
     {#if conversation.messages.length || conversation.busy}
       <History messages={conversation.messages} executions={conversation.executions} busy={conversation.busy}
+        started={conversation.started} usage={conversation.usage} baseline={conversation.baseline} window={models.state.info.contextWindow}
         showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={(url, number) => showImage(url, number)} />
     {/if}
     <div class="editor" class:empty={!conversation.messages.length} bind:this={container}></div>
@@ -128,21 +127,21 @@
   </main>
   <StatusBar context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} onopen={open} />
 </div>
-{#if documentName}
-  <DocumentEditor bind:this={documentEditor} title={documentTitle(documentName)} load={() => readDocument(documentName!)}
-    save={(text) => writeDocument(documentName!, text)} saveKey={keys.save} onclose={() => { documentName = null; editor?.focus(); }} />
+{#if doc}
+  {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} saveKey={keys.save}
+    onclose={() => { doc = null; editor?.focus(); }} />{/key}
 {/if}
 <ImagePicker bind:this={picker} onpick={(url) => { editor?.insert(token(sessions.attach(url))); editor?.focus(); }} />
 <Panels {modal} {image} {settings} {sessions} {models} {conversation} onclose={closeModal} {open}
   onnew={() => { void selectSession(); }} onselect={(id) => { void selectSession(id); }}
   onstop={() => { closeModal(); chat.stop(); }} onattach={() => { closeModal(); picker.open(); }}
-  onlatest={() => { closeModal(); scrollLatest(); }} ondocument={(name) => { modal = null; documentName = name; }} />
-<Toasts items={toasts.items} onopen={(toast) => { toasts.dismiss(toast.id); void selectSession(toast.session); }} />
+  onlatest={() => { closeModal(); scrollLatest(); }} ondocument={(name) => { modal = null; doc = namedDocument(name); }} />
+<Toasts items={toasts.items} onopen={(toast) => { toasts.dismiss(toast.id); if (toast.session) void selectSession(toast.session); }} />
 
 <style>
   .app { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
   .hidden { display: none; }
-  main { min-height: 0; overflow-y: auto; }
+  main { min-height: 0; overflow-x: hidden; overflow-y: auto; }
   .editor { min-height: 180px; }
   .empty { min-height: calc(100vh - 44px); }
   .scroll-space { height: 50vh; }

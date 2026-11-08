@@ -17,3 +17,45 @@
 
 - [x] Fix the "New session" button: it stretches across the whole header row. Make it a compact button next to the "Sessions" title.
 - [x] Show the Ctrl+N hotkey on the "New session" button.
+
+## Steps alignment
+
+- [x] Steps text is offset 14px to the right of message text: `.execution`, `.thinking` and `.stack .toggle` use `padding: 4px 14px` while `.message` has no horizontal padding. Align the left edge of code, thinking and stack labels with message text.
+- [x] Stack toggle chevron sits ~2px above its text line: `StepStack` svg uses `top: 8px` while the line center is at 4px + 28.8px / 2. Execution fold (`top: 10px`) and thinking icon (`top: 10px`) are centered. Use one shared offset for all gutter icons.
+- [x] Uneven vertical rhythm inside an open stack: toggle → first step 8px, step → step 16px (4 + 8 margin + 4), last step → answer 12px (margins collapse with `.stack`). Use one gap for all steps.
+- [x] Nested steps in an open stack have no visual hierarchy: their chevrons sit in the same gutter column as the stack chevron and message icons, so it is unclear what belongs to the stack. Indent or otherwise mark the stack content.
+- [x] Folded code shows two kinds of truncation: a manual ` …` for multiline code and the CSS `text-overflow: ellipsis` for long first lines. Use one.
+
+## File tools
+
+- [x] Add an `fs` host object to the JS runtime next to `bash` (codemode, no new provider tools): `fs.read`, `fs.write`, `fs.edit`, `fs.patch`, `fs.grep`.
+- [x] `fs.read(path, {offset, limit})`: read a text file with line numbers, limited output for large files.
+- [x] `fs.write(path, text)`: create or overwrite a file, create parent directories.
+- [x] `fs.edit(path, oldText, newText)`: replace one exact match, fail on zero or multiple matches.
+- [x] `fs.patch(path, patch)`: apply a unified diff, fail without partial writes.
+- [x] `fs.grep(pattern, path, {glob})`: regex search with `file:line:text` results, skip `.git` and `node_modules`.
+- [x] Keep the Go side in a separate package (`internal/fs`), return `{error}` instead of throwing raw Go errors.
+- [x] Describe `fs` in the `js_repl` tool description.
+
+## Clickable links
+
+- [x] Render Markdown links `[text](url)` and bare URLs in messages, open them in the system browser.
+- [x] Detect file paths in messages (`~/...`, `/...`, relative paths in inline code) and make them clickable.
+- [x] Open `.md` files in the built-in `DocumentEditor`, like the System Prompt. It currently works only with named documents through `SettingsService.Read/Write`, so it needs to accept any file path.
+- [x] Open other files with the system default app.
+
+## Live turn summary
+
+- [x] Show the turn summary divider as soon as the user sends a message, not only after the final answer.
+- [x] Update it live while the turn runs: elapsed time ticks, cost and context update after each provider response, final values when the turn ends.
+- [x] Keep the same divider for finished turns in history.
+
+## Onboarding
+
+- [x] Show onboarding on first launch when no provider is configured, in the same layout as the chat: timeline, input, status bar.
+- [x] Status bar: "Welcome to Zash" on the left, "Setup x/n" on the right.
+- [x] Step 1: add a provider (base URL and API key) through the input. Store it in settings instead of only reading `OPENAI_*` env.
+- [x] Step 2: pick the main model. Only this model is enabled after setup.
+- [x] Step 3: pick the title model.
+- [x] Step 4: run a short test request for both models, show the result in the timeline, block finishing until both work.
+- [x] After a successful check, switch to a normal new session.
