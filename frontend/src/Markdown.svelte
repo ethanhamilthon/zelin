@@ -16,12 +16,13 @@
   .md :global(h2) { font-size: 1.12em; }
   .md :global(ul), .md :global(ol) { padding-left: 1.6em; }
   .md :global(li > ul), .md :global(li > ol), .md :global(li > p) { margin: 0; }
+  .md :global(ul > li::marker) { content: "-  "; }
   .md :global(li) { margin: 0.15em 0; }
   .md :global(input[type='checkbox']) { margin: 0 0.5em 0 -1.2em; }
   .md :global(blockquote) { padding-left: 1em; border-left: 2px solid var(--border); color: var(--dim); }
   .md :global(hr) { border: 0; border-top: 1px solid var(--border); }
-  .md :global(strong) { font-weight: 700; color: var(--foreground); }
-  .md :global(a) { color: inherit; text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; cursor: pointer; }
+  .md :global(strong) { font-weight: 700; color: var(--violet); }
+  .md :global(a) { color: var(--accent); text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; cursor: pointer; }
   .md :global(a:hover) { color: var(--accent); text-decoration-color: currentColor; }
   .md :global(code) { font-family: inherit; color: var(--foreground); background: var(--code-bg); border-radius: 4px; padding: 1px 4px; }
   .md :global(.code-block) { position: relative; }

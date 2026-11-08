@@ -47,7 +47,13 @@ export function createFileRefs({ sessions, workspaces, mentions, modals, toasts,
   function pick(entry: Entry) {
     const mention = mentions.state.mention;
     if (!mention || !editor()) return;
-    editor()!.replace(mention.from, mention.to, fromEntry(entry) + (entry.kind === 'dir' ? '' : ' '));
+    if (entry.kind === 'dir') {
+      const prefix = mention.query.includes('/') ? mention.query.slice(0, mention.query.lastIndexOf('/') + 1) : '';
+      editor()!.replace(mention.from, mention.to, '@' + prefix + entry.name + '/');
+      editor()!.focus();
+      return;
+    }
+    editor()!.replace(mention.from, mention.to, fromEntry(entry) + ' ');
     mentions.close();
     editor()!.focus();
   }

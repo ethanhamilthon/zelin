@@ -32,6 +32,7 @@ beforeEach(async () => {
   vi.mocked(listSessions).mockResolvedValue([row('a', 'Alpha', 'default'), row('b', 'Beta', 'w2'), row('c', 'Gamma', '')]);
   vi.mocked(agentInfo).mockResolvedValue(placeholderInfo('Test'));
   vi.mocked(call).mockImplementation(async (method, ...args) => {
+    if (method === 'WorkspaceService.ChooseDirectory') return '~/my project';
     if (method === 'WorkspaceService.List') return spaces;
     if (method === 'WorkspaceService.Create') { const item = { id: 'w3', name: String(args[0]).trim(), icon: String(args[1]), dir: String(args[2]) }; spaces = [...spaces, item]; return item; }
     if (method === 'WorkspaceService.Update') { const item = { id: String(args[0]), name: String(args[1]), icon: String(args[2]), dir: String(args[3]) }; spaces = spaces.map((s) => s.id === item.id ? item : s); return item; }
@@ -46,9 +47,9 @@ afterEach(async () => { await unmount(app); document.body.replaceChildren(); });
 
 it('groups sessions by workspace and puts legacy sessions in the default one', () => {
   const heads = all('.head .name').map((el) => el.textContent?.trim());
-  expect(heads).toEqual(['▸Default', '📚Docs']);
+  expect(heads).toEqual(['Default', 'Docs']);
   const groups = all('.body > *').map((el) => el.classList.contains('head') ? 'H:' + el.textContent!.replace(/[⋯\s]+$/, '').trim() : el.textContent!.trim().slice(0, 5));
-  expect(groups).toEqual(['H:▸Default', 'Alpha', 'Gamma', 'H:📚Docs', 'Beta']);
+  expect(groups).toEqual(['H:Default', 'Alpha', 'Gamma', 'H:Docs', 'Beta']);
 });
 
 it('gives every workspace row an independent settings button', async () => {
@@ -56,7 +57,7 @@ it('gives every workspace row an independent settings button', async () => {
   all('.head .more')[1].click(); await wait();
   expect($('[role="dialog"]')?.getAttribute('aria-label')).toBe('Workspace settings');
   expect(($('[aria-label="Workspace name"]') as HTMLInputElement).value).toBe('Docs');
-  expect(($('[aria-label="Working directory"]') as HTMLInputElement).value).toBe('/docs');
+  expect($('[aria-label="Choose working directory"]')?.textContent).toBe('/docs');
 });
 
 it('keeps session search working across groups', async () => {
@@ -79,19 +80,20 @@ it('creates a workspace and validates input', async () => {
   expect($('[role="dialog"]')?.getAttribute('aria-label')).toBe('New workspace');
   enter('Workspace name'); await wait();
   expect($('[role="alert"]')?.textContent).toBe('Name is required');
-  type('Workspace name', '  Fresh '); type('Working directory', ' ');
+  type('Workspace name', '  Fresh ');
+  expect(all('.icons button')).toHaveLength(10);
   enter('Workspace name'); await wait();
   expect($('[role="alert"]')?.textContent).toBe('Directory is required');
-  type('Working directory', '~/my project');
+    $('[aria-label="Choose working directory"]')!.click(); await wait();
   enter('Workspace name'); await wait();
-  expect(call).toHaveBeenCalledWith('WorkspaceService.Create', '  Fresh ', '', '~/my project');
-  await vi.waitFor(() => expect(all('.head .name').map((el) => el.textContent?.trim())).toContain('▸Fresh'));
+  expect(call).toHaveBeenCalledWith('WorkspaceService.Create', '  Fresh ', 'folder', '~/my project');
+  await vi.waitFor(() => expect(all('.head .name').map((el) => el.textContent?.trim())).toContain('Fresh'));
 });
 
 it('shows the backend error and keeps the form open', async () => {
   all('.head .more')[0].click(); await wait();
   vi.mocked(call).mockImplementation(async (method) => { if (method === 'WorkspaceService.Update') throw new Error('Directory is not accessible'); return ''; });
-  type('Working directory', '/nope'); enter('Working directory'); await wait();
+  button('Save').click(); await wait();
   expect($('[role="alert"]')?.textContent).toContain('Directory is not accessible');
   expect($('[aria-label="Workspace name"]')).not.toBeNull();
 });
@@ -121,4 +123,17 @@ it('opens an existing AGENTS.md and writes only on explicit save', async () => {
   expect(call).not.toHaveBeenCalledWith('FileService.Write', expect.anything(), expect.anything());
   key('s', 'KeyS', { ctrlKey: true }); await wait();
   expect(call).toHaveBeenCalledWith('FileService.Write', '/docs/AGENTS.md', 'Be brief');
+});
+
+it('folds workspace sessions independently and keeps SVG icons visible', async () => {
+  expect(all('.head [data-workspace-icon]').map((el) => el.getAttribute('data-workspace-icon'))).toEqual(['folder', 'book']);
+  const header = all('.head .name')[0];
+  expect(header.getAttribute('aria-expanded')).toBe('true');
+  header.click(); await wait();
+  expect(header.getAttribute('aria-expanded')).toBe('false');
+  expect(all('.body > button').some((el) => el.textContent?.includes('Alpha'))).toBe(false);
+  expect(all('.body > button').some((el) => el.textContent?.includes('Beta'))).toBe(true);
+  header.click(); await wait();
+  expect(header.getAttribute('aria-expanded')).toBe('true');
+  expect(all('.body > button').some((el) => el.textContent?.includes('Alpha'))).toBe(true);
 });

@@ -24,7 +24,7 @@ export function createMentions(workspace: () => string, delay = 120) {
       try {
         const items = await suggest(workspace(), '', mention.query);
         if (mine !== serial) return;
-        state.items = items.slice(0, 5);
+        state.items = items;
         state.active = 0;
       } catch { if (mine === serial) state.items = []; }
       finally { if (mine === serial) state.loading = false; }

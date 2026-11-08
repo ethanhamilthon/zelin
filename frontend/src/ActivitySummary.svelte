@@ -16,11 +16,13 @@
 {/if}
 
 <style>
-  .activity { display: inline-flex; align-items: center; gap: 10px; min-width: 0; white-space: nowrap; color: var(--muted); }
+  .activity { display: inline-flex; align-items: center; gap: 10px; min-width: 0; white-space: nowrap; color: var(--dim); }
   span { display: inline-flex; align-items: center; gap: 6px; }
   .sep { color: var(--faint); }
   .working svg { animation: spin 1.2s linear infinite; }
-  .done { color: var(--accent); }
+  .done { color: var(--dim); }
+  .done svg { color: var(--success); }
+  .working svg { color: var(--warning); }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .working svg { animation: none; } }
 </style>

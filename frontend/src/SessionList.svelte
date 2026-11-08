@@ -14,6 +14,8 @@
     onworkspace?: (id: string) => void; onsettings?: (id: string) => void; oncreate?: () => void;
   } = $props();
   let query = $state('');
+  let folded = $state<Record<string, boolean>>({});
+  let expanded = $state<Record<string, boolean>>({});
   let limit = $state(ROWS);
   const needle = $derived(query.trim().toLowerCase());
   const matches = $derived(needle ? sessions.filter((session) => session.title.toLowerCase().includes(needle)) : sessions);
@@ -54,14 +56,19 @@
   {/snippet}
   {#if workspaces.length}
     {#each groups as group (group.workspace.id)}
-      <WorkspaceHeader workspace={group.workspace} selected={group.workspace.id === selected} onselect={() => onworkspace(group.workspace.id)} onsettings={() => onsettings(group.workspace.id)} />
-      {#each group.items as session (session.id)}
+      <WorkspaceHeader workspace={group.workspace} selected={group.workspace.id === selected} folded={!!folded[group.workspace.id] && !needle} onselect={() => { onworkspace(group.workspace.id); folded[group.workspace.id] = !folded[group.workspace.id]; }} onsettings={() => onsettings(group.workspace.id)} />
+      {#if !folded[group.workspace.id] || needle}
+      {#each (expanded[group.workspace.id] || needle ? group.items : group.items.slice(0, 3)) as session (session.id)}
         {@const state = status(session.id)}
         <button onclick={() => onselect(session.id)} aria-current={session.id === active ? 'true' : undefined}>
           <strong><i class={state} aria-hidden="true"></i>{session.title}</strong>
           <span>{meta(session, state)}</span>
         </button>
       {/each}
+      {#if !needle && !expanded[group.workspace.id] && group.items.length > 3}
+        <button onclick={() => expanded[group.workspace.id] = true}>Show More ({group.items.length - 3})</button>
+      {/if}
+      {/if}
     {/each}
     {#if !rows.length}<p>No sessions found</p>{/if}
   {:else}
@@ -84,8 +91,8 @@
   strong { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 400; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   span { flex-shrink: 0; white-space: nowrap; }
   i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--border); }
-  i.running { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
-  i.unread { background: var(--accent); }
+  i.running { background: var(--warning); animation: pulse 1.2s ease-in-out infinite; }
+  i.unread { background: var(--success); }
   i.error { background: #d16969; }
   @keyframes pulse { 50% { opacity: 0.3; } }
 </style>

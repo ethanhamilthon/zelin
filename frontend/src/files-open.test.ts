@@ -31,7 +31,7 @@ it('tags a file at the cursor without submitting and returns focus to the input'
   expect(runAgent).not.toHaveBeenCalled();
 });
 
-it('offers at most five suggestions after @, accepts with Enter without sending', async () => {
+it('offers suggestions after @, accepts with Enter without sending', async () => {
   write('@'); await wait();
   expect($('[role="listbox"]')).not.toBeNull();
   expect(all('[role="option"]').length).toBeLessThanOrEqual(5);
@@ -55,13 +55,14 @@ it('dismisses the menu with Escape and never hijacks literal @ in text', async (
 });
 
 it('treats a token as one unit for the cursor and Backspace', async () => {
-  write('@s'); await wait();
-  $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })); await wait();
+  write(''); key('f', 'KeyF', { ctrlKey: true }); await wait();
+  all('.row')[0].querySelectorAll('button')[1].click(); await wait();
   expect($('.cm-ref-token')?.textContent).toBe('@src');
   const full = view().state.doc.toString();
-  expect(full).toMatch(/^\[@[0-9a-f]{12}\|src\]$/);
+  expect(full).toMatch(/^\[@[0-9a-f]{12}\|src\] $/);
+  view().dispatch({ selection: { anchor: full.length - 1 } });
   $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
-  expect(view().state.doc.toString()).toBe('');
+  expect(view().state.doc.toString()).toBe(' ');
   expect($('.cm-ref-token')).toBeNull();
 });
 

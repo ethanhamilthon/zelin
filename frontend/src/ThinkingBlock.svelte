@@ -21,7 +21,7 @@
 
 <style>
   .thinking { position: relative; margin: 0 0 8px; color: var(--dim); }
-  .think-fold { position: absolute; left: -30px; top: 6px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; transition: color 140ms, opacity 140ms; }
+  .think-fold { position: absolute; left: -30px; top: 6px; display: inline-flex; padding: 0; border: 0; background: none; color: var(--violet); cursor: pointer; transition: color 140ms, opacity 140ms; }
   .think-fold.folded { opacity: 0.65; }
   .think-fold:hover, .think-fold:focus-visible { color: var(--foreground); opacity: 1; outline: none; }
   .body { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: color 160ms; }

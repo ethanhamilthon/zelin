@@ -11,7 +11,7 @@ export const $ = (selector: string) => document.querySelector<HTMLElement>(selec
 export const all = (selector: string) => [...document.querySelectorAll<HTMLElement>(selector)];
 export const wait = async () => { await new Promise((r) => setTimeout(r, 160)); await tick(); };
 export const key = (k: string, code: string, init: KeyboardEventInit = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, code, cancelable: true, ...init }));
-export const button = (text: string, scope: ParentNode = document) => [...scope.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === text)!;
+export const button = (text: string, scope: ParentNode = document) => [...scope.querySelectorAll<HTMLButtonElement>('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === text)!;
 export const view = () => EditorView.findFromDOM($('.cm-editor')!)!;
 export const write = (text: string) => { view().dispatch({ changes: { from: 0, to: view().state.doc.length, insert: text }, selection: { anchor: text.length } }); };
 export const press = (name: string) => $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));

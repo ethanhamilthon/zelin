@@ -15,6 +15,7 @@ type Completer interface {
 }
 
 type Agent struct {
+	OutputLimit    func() int
 	Prompt         func() string
 	Extra          func() (string, error)
 	Expand         func(provider.Message) (provider.Message, error)

@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-const SearchLimit = 5
-
 func Suggest(root, dir, query string) ([]Entry, error) {
 	base := root
 	if dir != "" {
@@ -62,9 +60,6 @@ func Suggest(root, dir, query string) ([]Entry, error) {
 	})
 	out := []Entry{}
 	for _, item := range found {
-		if len(out) == SearchLimit {
-			break
-		}
 		out = append(out, item.entry)
 	}
 	return out, nil

@@ -57,8 +57,8 @@ describe('markdown', () => {
   });
 
   it('links local paths in text, inline code and relative links without touching code blocks', () => {
-    const box = dom('open ~/Projects/zash/TODO.md, `README.md`, `npm test`, [rel](./src/App.svelte) and a/b\n\n```\n/etc/hosts\n```');
-    expect([...box.querySelectorAll('a')].map((a) => a.dataset.path)).toEqual(['~/Projects/zash/TODO.md', 'README.md', './src/App.svelte']);
+    const box = dom('open ~/Projects/zelin/TODO.md, `README.md`, `npm test`, [rel](./src/App.svelte) and a/b\n\n```\n/etc/hosts\n```');
+    expect([...box.querySelectorAll('a')].map((a) => a.dataset.path)).toEqual(['~/Projects/zelin/TODO.md', 'README.md', './src/App.svelte']);
     expect(box.querySelector('a code')?.textContent).toBe('README.md');
     expect(box.querySelector('pre a')).toBeNull();
   });

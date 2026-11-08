@@ -28,6 +28,8 @@ export function applyTheme(id: string, root: HTMLElement = document.documentElem
   const shade = current.dark ? '#000' : 'var(--foreground)';
   const values: Record<string, string> = {
     background, foreground, accent, keyword, string, comment,
+    success: current.dark ? '#8bd5a0' : '#287a45', warning: current.dark ? '#edc777' : '#936000',
+    violet: current.dark ? '#c4a7ef' : '#7950b8',
     muted: mix(foreground, 78), dim: mix(foreground, 48), faint: mix(foreground, 36),
     border: mix(foreground, 14), surface: mix(foreground, 7), hover: mix(foreground, 13),
     selection: current.dark ? 'rgb(255 255 255 / 0.18)' : 'rgb(0 0 0 / 0.18)', 'code-bg': mix(foreground, current.dark ? 4 : 3),

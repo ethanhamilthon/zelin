@@ -31,3 +31,19 @@ it('searches across all sessions, not only the mounted page', async () => {
   expect(document.body.textContent).toContain('Session 9999');
   expect(document.body.textContent).not.toContain('Show more');
 });
+
+it('shows three sessions per workspace and expands on request', async () => {
+  app = mount(SessionList, { target: document.body, props: {
+    sessions: make(8).map((session) => ({ ...session, workspaceId: 'default' })),
+    workspaces: [{ id: 'default', name: 'Default', icon: '', dir: '/w' }],
+    active: '', status: () => '' as const, onclose: vi.fn(), onselect: vi.fn(), onnew: vi.fn(),
+  } });
+  flushSync();
+  expect(document.querySelectorAll('.body > button[aria-current]')).toHaveLength(0);
+  expect(document.body.textContent).toContain('Session 2');
+  expect(document.body.textContent).not.toContain('Session 3');
+  const more = [...document.querySelectorAll('button')].find((item) => item.textContent?.includes('Show More'))!;
+  more.click(); await tick();
+  expect(document.body.textContent).toContain('Session 7');
+  expect(document.body.textContent).not.toContain('Show More');
+});

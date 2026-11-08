@@ -5,7 +5,7 @@
 </script>
 
 <button class="context" {onclick} title={label} aria-label={label}>
-  <span style:background={`conic-gradient(#fff ${(percent ?? 0)}%, #383838 0)`}></span>
+  <span style:background={`conic-gradient(var(--dim) ${(percent ?? 0)}%, var(--border) 0)`}></span>
 </button>
 
 <style>

@@ -35,8 +35,10 @@
   .overlay { position: fixed; inset: 0; background: color-mix(in srgb, #000 50%, transparent); z-index: 10; padding: min(20vh, 120px) 20px 20px; }
   .panel { display: flex; flex-direction: column; max-width: 640px; max-height: 65vh; margin: auto; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--foreground) 5%, var(--background)); padding: 8px; box-shadow: 0 20px 80px color-mix(in srgb, #000 40%, transparent); outline: none; }
   .title { flex-shrink: 0; padding: 10px 12px 16px; color: var(--muted); font: var(--font-size)/1.5 var(--mono); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .top { flex-shrink: 0; }
-  .body { min-height: 0; overflow-y: auto; }
+  .top { flex-shrink: 0; padding-inline: 12px; }
+  .body { min-height: 0; overflow-y: auto; padding-inline: 12px; }
+  .body > :global(button), .body > :global(p), .body > :global(label), .body > :global(h3), .body > :global(.row) { padding-inline: 0; }
+  .top > :global(nav) { padding-inline: 0; }
   .title .heading { color: var(--muted); }
   .title span { color: var(--faint); font-size: var(--font-size); }
   .panel :global(button) { width: 100%; display: flex; justify-content: space-between; gap: 16px; padding: 12px; border: 0; border-radius: 4px; color: var(--foreground); background: none; text-align: left; font: var(--font-size)/1.5 var(--mono); cursor: pointer; transition: background 140ms; }

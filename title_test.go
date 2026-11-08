@@ -71,7 +71,7 @@ func TestTitleWrapsConversationDataAndUsesUtilityModel(t *testing.T) {
 		},
 	}
 	service.title(session.ID, []provider.Message{
-		{Role: "user", Content: "Привет! Открой ~/Projects/zash", Images: []string{"data:image/png;base64,AAA"}},
+		{Role: "user", Content: "Привет! Открой ~/Projects/zelin", Images: []string{"data:image/png;base64,AAA"}},
 		{Role: "assistant", Content: "Сейчас открою"},
 		{Role: "user", Content: "Что там по туду?"},
 	})

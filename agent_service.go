@@ -53,6 +53,7 @@ func (s *AgentService) start(ctx context.Context, id string) (*agent.Agent, cont
 		s.agents[id] = current
 	}
 	current.Extra = func() (string, error) { return s.workspaceInstructions(id) }
+	current.OutputLimit = s.toolOutputLimit
 	current.UtilityModel = s.utilityModel
 	current.UtilityWindow = s.utilityWindow
 	if s.instructions != nil {

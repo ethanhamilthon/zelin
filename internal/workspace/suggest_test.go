@@ -18,7 +18,7 @@ func TestSuggestIsBoundedFilteredAndOrdered(t *testing.T) {
 		}
 	}
 	got, err := Suggest(root, "", "alp")
-	if err != nil || len(got) != SearchLimit {
+	if err != nil || len(got) != 6 {
 		t.Fatalf("%d %v", len(got), err)
 	}
 	if got[0].Name != "alpine" {

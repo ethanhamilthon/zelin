@@ -3,10 +3,11 @@ import type { Extension } from '@codemirror/state';
 
 export type Mention = { from: number; to: number; query: string; x: number; y: number } | null;
 
-const trigger = /(?:^|[\s(])@([^\s@\[\]]*)$/;
+const trigger = /(?:^|[\s(])@([^@\[\]\n]*)$/;
 
 export function findMention(before: string) {
   const match = trigger.exec(before);
+  if (match && /\s/.test(match[1]) && !match[1].includes('/')) return null;
   return match ? { query: match[1], length: match[1].length + 1 } : null;
 }
 

@@ -9,7 +9,7 @@ const at = (query: string) => ({ from: 0, to: query.length + 1, query, x: 1, y: 
 beforeEach(() => { vi.useFakeTimers(); vi.resetAllMocks(); });
 afterEach(() => { vi.useRealTimers(); });
 
-it('debounces lookups and limits results to five', async () => {
+it('debounces lookups and retains every matching result', async () => {
   vi.mocked(suggest).mockResolvedValue(Array.from({ length: 9 }, (_, i) => entry('f' + i)));
   const mentions = createMentions(() => 'w');
   mentions.update(at('a')); mentions.update(at('ab')); mentions.update(at('abc'));
@@ -17,7 +17,7 @@ it('debounces lookups and limits results to five', async () => {
   await vi.advanceTimersByTimeAsync(200);
   expect(suggest).toHaveBeenCalledTimes(1);
   expect(suggest).toHaveBeenCalledWith('w', '', 'abc');
-  expect(mentions.state.items).toHaveLength(5);
+  expect(mentions.state.items).toHaveLength(9);
   expect(mentions.state.loading).toBe(false);
 });
 

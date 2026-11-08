@@ -34,7 +34,11 @@ func (a *Agent) call(ctx context.Context, call provider.ToolCall, emit func(Even
 	execution := Execution{ID: call.ID, Code: args.Code, State: "running"}
 	emit(Event{Kind: "activity", Activity: "Running JavaScript"})
 	emit(Event{Kind: "execution", Execution: &execution})
-	result := a.runtime.Run(ctx, args.Code)
+	limit := 4096
+	if a.OutputLimit != nil {
+		limit = a.OutputLimit()
+	}
+	result := LimitOutput(a.runtime.Run(ctx, args.Code), limit)
 	completed := Execution{ID: call.ID, Code: args.Code, Output: result, State: "complete"}
 	emit(Event{Kind: "execution", Execution: &completed})
 	return result

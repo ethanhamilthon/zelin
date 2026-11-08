@@ -125,7 +125,7 @@
     <Notices {conversation} error={sessions.state.error} onretry={() => { void contextAction(sessions, 'compact'); }} />
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} stop={keys.stop} busy={conversation.busy} onstop={() => chat.stop()} onopen={(name) => { modals.clear(); open(name); }} />
+  <StatusBar workspaceIcon={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.icon ?? ''} workspace={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.name ?? ''} working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} commands={keys.commands} stop={keys.stop} busy={conversation.busy} onstop={() => chat.stop()} onopen={(name) => { modals.clear(); open(name); }} />
 </div>
 {#if doc}
   {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} saveKey={keys.save} onclose={stepBack} />{/key}

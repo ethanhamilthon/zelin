@@ -39,6 +39,7 @@ describe('mention detection', () => {
     expect(findMention('(@src/ma')).toEqual({ query: 'src/ma', length: 7 });
     expect(findMention('mail me@example')).toBeNull();
     expect(findMention('hello @a b')).toBeNull();
+    expect(findMention('@my docs/main')).toEqual({ query: 'my docs/main', length: 13 });
     expect(findMention('no at here')).toBeNull();
   });
 });

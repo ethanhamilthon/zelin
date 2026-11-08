@@ -84,8 +84,5 @@ func (r *Runtime) Run(ctx context.Context, code string) string {
 		return fmt.Sprintf("Cannot serialize JavaScript result: %v", err)
 	}
 	result := serialized.String()
-	if len(result) > 128000 {
-		return result[:128000] + "\n[output truncated]"
-	}
 	return result
 }
