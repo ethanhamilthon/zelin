@@ -11,7 +11,7 @@ vi.mock('./sound', () => ({ chime: vi.fn() }));
 vi.mock('svelte/transition', () => ({ fade: () => ({ duration: 0 }), fly: () => ({ duration: 0 }) }));
 useApp();
 
-const info = { name: 'Zelin', version: '0.1.0', commit: 'abc123def456', date: '2026-11-08', description: 'Zen AI agent', runtime: 'go1.26', platform: 'linux/arm64', profile: '/data/zelin', daemon: 'Not used' };
+const info = { name: 'Zelin', version: '0.2.0', commit: 'abc123def456', date: '2026-11-08', description: 'Zen AI agent', runtime: 'go1.26', platform: 'linux/arm64', profile: '/data/zelin', daemon: 'Not used' };
 const open = async () => { key('k', 'KeyK', { ctrlKey: true }); await tick(); button('About Version and licenses').click(); await wait(); };
 
 it('opens About from Commands and shows only safe build facts', async () => {
@@ -20,7 +20,7 @@ it('opens About from Commands and shows only safe build facts', async () => {
   await open();
   const text = $('[role="dialog"]')!.textContent!;
   expect(text).toContain('Zelin');
-  for (const part of ['0.1.0', 'abc123def456', '2026-11-08', 'go1.26', 'linux/arm64', '/data/zelin', 'Not used']) expect(text).toContain(part);
+  for (const part of ['0.2.0', 'abc123def456', '2026-11-08', 'go1.26', 'linux/arm64', '/data/zelin', 'Not used']) expect(text).toContain(part);
   expect(text).not.toMatch(/api.?key|secret|token/i);
   expect(all('.body li')).toHaveLength(notices.length);
   expect(all('.body a').every((a) => a.dataset.url?.startsWith('https://'))).toBe(true);

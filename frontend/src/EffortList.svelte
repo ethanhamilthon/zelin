@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   let { efforts, active, error = '', back = false, onclose, ondismiss, onselect }: {
     efforts: string[]; active: string; error?: string; back?: boolean;
@@ -8,7 +9,7 @@
 
 <Modal title="Reasoning effort" {back} {onclose} {ondismiss}>
   {#each efforts as effort}
-    <button onclick={() => onselect(effort)} aria-current={effort === active ? 'true' : undefined}>{effort} <span>{effort === active ? 'Current' : ''}</span></button>
+    <Button data-ui="ui-effortlist" onclick={() => onselect(effort)} aria-current={effort === active ? 'true' : undefined}>{effort} <span>{effort === active ? 'Current' : ''}</span></Button>
   {/each}
   {#if error}<p role="alert">{error}</p>{/if}
 </Modal>

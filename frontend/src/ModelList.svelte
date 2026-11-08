@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import SearchInput from './SearchInput.svelte';
   import type { ModelOption } from './agent-types';
@@ -20,15 +21,15 @@
   {#snippet top()}<SearchInput bind:value={query} onkeydown={submit} label="Search models" />{/snippet}
   {#if loading}<p>Loading models…</p>{:else if error}<p role="alert">{error}</p>{:else if !matches.length}<p>No models found</p>{/if}
   {#each matches as model (model.id)}
-    <button onclick={() => onselect(model.id)} aria-current={model.id === active ? 'true' : undefined} title={model.id}>
+    <Button data-ui="ui-modellist" onclick={() => onselect(model.id)} aria-current={model.id === active ? 'true' : undefined} title={model.id}>
       <strong>{modelName(model.name)}</strong>
       <span>{model.contextWindow ? compact(model.contextWindow) : '?'} · {perMillion(model.pricing.prompt)} in · {perMillion(model.pricing.completion)} out</span>
-    </button>
+    </Button>
   {/each}
 </Modal>
 
 <style>
   p { margin: 0; padding: 12px; color: var(--dim); }
   strong { font-weight: 400; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  button[aria-current='true'] strong { color: var(--accent); }
+  :global(button[aria-current='true']) strong { color: var(--accent); }
 </style>

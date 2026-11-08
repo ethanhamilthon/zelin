@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import { onMount } from 'svelte';
   import { createEditor } from './editor';
   import type { Editor } from './editor';
@@ -37,14 +38,14 @@
     <span title={title}>{title}{text !== saved ? ' •' : ''}</span>
     {#if status}<span class="status" role="status">{status}</span>{/if}
     {#snippet actions()}
-      <button onclick={onclose} title="Close editor">Close <Hotkey value={closeKey} /></button>
-      <button onclick={() => { void commit(); }}>Save <Hotkey value={saveKey} /></button>
+      <Button data-ui="ui-documenteditor" onclick={onclose} title="Close editor">Close <Hotkey value={closeKey} /></Button>
+      <Button data-ui="ui-documenteditor" onclick={() => { void commit(); }}>Save <Hotkey value={saveKey} /></Button>
     {/snippet}
   </BottomBar>
 </div>
 
 <style>
-  .screen { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .editor { min-width: 0; min-height: 0; overflow: hidden; }
-  .status { flex-shrink: 0; color: var(--faint) !important; }
+  :global(.screen) { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  :global(.editor) { min-width: 0; min-height: 0; overflow: hidden; }
+  :global(.status) { flex-shrink: 0; color: var(--faint) !important; }
 </style>

@@ -1,31 +1,28 @@
+import { createSharedActivity } from './shared-activity.svelte';
+import { syncSession } from './sync-sessions';
 import type { Conversation } from './conversation';
 import { currentSession, createSession, openSession, listSessions, saveSession, saveDraft, saveAttachments, saveRefs } from './sessions';
 import type { Session } from './sessions';
 import { evictable, stale } from './retention';
 import { workspaceSession } from './workspaces';
-
 export type SessionStatus = 'running' | 'unread' | 'error' | '';
-
 export const blank = (): Conversation => ({
   messages: [], draft: '', attachments: [], refs: [], unread: false, busy: false, error: '', activity: 'Ready', executions: [], usage: null,
 });
-
 const same = (a: string[], b: string[]) => a.length === b.length && a.every((item, index) => item === b[index]);
-
 export function createSessionController() {
+  const shared = createSharedActivity();
   const state = $state({ id: '', items: [] as Session[], loading: true, error: '' });
   const conversations = $state<Record<string, Conversation>>({});
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const saved = new Map<string, { draft: string; attachments: string[]; refs: string }>();
   const order: string[] = [];
   let queue = Promise.resolve();
-
   function retain() {
     for (const id of stale(order, state.id, (item) => evictable(conversations[item], saved.get(item)))) {
       delete conversations[id]; saved.delete(id); order.splice(order.indexOf(id), 1);
     }
   }
-
   function enqueue(write: () => Promise<void>) {
     const run = queue.catch(() => {}).then(write);
     queue = run;
@@ -34,7 +31,6 @@ export function createSessionController() {
       throw error;
     });
   }
-
   function apply(session: Session) {
     conversations[session.id] ??= {
       ...blank(), messages: session.messages ?? [], draft: session.draft,
@@ -44,14 +40,15 @@ export function createSessionController() {
     saved.set(session.id, { draft: session.draft, attachments: [...(session.attachments ?? [])], refs: JSON.stringify(session.refs ?? []) });
     state.id = session.id;
     conversations[session.id].unread = false;
+    shared.read(session.id);
     const known = order.indexOf(session.id);
     if (known >= 0) order.splice(known, 1);
     order.push(session.id);
     retain();
   }
-
   async function save(id = state.id) {
     clearTimeout(timers.get(id));
+    timers.delete(id);
     const conversation = conversations[id];
     if (!conversation) return;
     const snapshot = JSON.parse(JSON.stringify([conversation.messages, conversation.attachments, conversation.refs]));
@@ -60,9 +57,9 @@ export function createSessionController() {
     await enqueue(() => saveRefs(id, snapshot[2]));
     saved.set(id, { draft, attachments: [...snapshot[1]], refs: JSON.stringify(snapshot[2]) });
   }
-
   async function flush(id = state.id) {
     clearTimeout(timers.get(id));
+    timers.delete(id);
     const conversation = conversations[id];
     if (!conversation) return;
     const previous = saved.get(id) ?? { draft: '', attachments: [], refs: '[]' };
@@ -81,12 +78,10 @@ export function createSessionController() {
       saved.set(id, { ...(saved.get(id) ?? previous), refs });
     }
   }
-
   function schedule(id = state.id) {
     clearTimeout(timers.get(id));
-    if (!conversations[id]?.busy) timers.set(id, setTimeout(() => { void flush(id).catch(() => {}); }, 250));
+    timers.set(id, setTimeout(() => { void flush(id).catch(() => {}); }, 250));
   }
-
   return {
     state,
     conversations,
@@ -94,13 +89,17 @@ export function createSessionController() {
     save,
     flush,
     status(id: string): SessionStatus {
+      const remote = shared.state.items[id];
+      if (remote) return remote.running ? 'running' : remote.unread ? 'unread' : '';
       const conversation = conversations[id];
       if (!conversation) return '';
       return conversation.busy ? 'running' : conversation.unread ? 'unread' : conversation.error ? 'error' : '';
     },
     get activity() {
       let working = 0, done = 0;
-      for (const item of Object.values(conversations)) {
+      for (const id of new Set([...Object.keys(conversations), ...Object.keys(shared.state.items)])) {
+        const remote = shared.state.items[id], local = conversations[id];
+        const item = remote ? { busy: remote.running, unread: remote.unread, error: '' } : local;
         if (item.busy) working++;
         else if (item.unread && !item.error) done++;
       }
@@ -124,6 +123,12 @@ export function createSessionController() {
       try { apply(await currentSession()); }
       catch (error) { state.error = `Could not load session: ${String(error)}`; }
       finally { state.loading = false; }
+    },
+    async sync() {
+      await shared.sync();
+      shared.read(state.id);
+      await queue.catch(() => {});
+      await syncSession(state.id, conversations, saved);
     },
     async refresh() {
       try { state.items = await listSessions(); }

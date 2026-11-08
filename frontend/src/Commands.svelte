@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import Hotkey from './Hotkey.svelte';
   import SearchInput from './SearchInput.svelte';
@@ -28,7 +29,7 @@
     }} />
   {/snippet}
   {#each matches as command (command.panel)}
-    <button onclick={() => onopen(command.panel)}>{command.label} <span>{#if command.key}<Hotkey value={hotkeys[command.key]} />{:else}{command.hint}{/if}</span></button>
+    <Button data-ui="ui-commands" onclick={() => onopen(command.panel)}>{command.label} <span>{#if command.key}<Hotkey value={hotkeys[command.key]} />{:else}{command.hint}{/if}</span></Button>
   {:else}
     <p>No commands found</p>
   {/each}

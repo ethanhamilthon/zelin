@@ -38,6 +38,9 @@ it('keeps more than five results reachable with arrow keys', async () => {
   for (let i = 0; i < 7; i++) press('ArrowDown');
   await wait();
   expect(all('[role="option"]')[7].getAttribute('aria-selected')).toBe('true');
+  all('[role="option"]')[0].dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+  await wait();
+  expect(all('[role="option"]')[7].getAttribute('aria-selected')).toBe('true');
   press('Tab'); await wait();
   expect($('.cm-ref-token')?.textContent).toBe('@f7');
 });

@@ -13,7 +13,7 @@ export function desktop() {
 export async function call<T>(method: string, ...args: unknown[]): Promise<T> {
   if (!desktop()) throw new Error('Available in the desktop app only');
   const { Call } = await import('@wailsio/runtime');
-  return Call.ByName(`main.${method}`, ...args);
+  return Call.ByName(`zelin/internal/app.${method}`, ...args);
 }
 
 export async function listen(name: string, handler: (data: unknown) => void) {

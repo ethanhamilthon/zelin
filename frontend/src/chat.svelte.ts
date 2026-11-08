@@ -1,3 +1,4 @@
+import { localRuns } from './remote-session';
 import { sendMessage } from './conversation';
 import { usedRefs } from './refs';
 import { runAgent, stopAgent, steerAgent } from './agent';
@@ -11,6 +12,7 @@ export function createChat(sessions: Sessions, onFinish: (id: string, succeeded:
       const id = sessions.state.id;
       const conversation = sessions.conversations[id];
       if (sessions.state.loading || !conversation || conversation.busy || !conversation.draft.trim()) return null;
+      localRuns.add(id);
       const succeeded = await sendMessage(conversation, async (messages, observe, refs) => {
         await sessions.save(id);
         return runAgent(messages, observe, id, refs);
@@ -20,6 +22,7 @@ export function createChat(sessions: Sessions, onFinish: (id: string, succeeded:
         onFinish(id, succeeded);
       }
       await sessions.save(id).catch(() => {});
+      localRuns.delete(id);
       return id;
     },
     async steer() {

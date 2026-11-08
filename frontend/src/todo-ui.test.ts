@@ -4,6 +4,9 @@ import Commands from './Commands.svelte';
 import SessionList from './SessionList.svelte';
 import StatusBar from './StatusBar.svelte';
 import ExecutionBlock from './ExecutionBlock.svelte';
+import Settings from './Settings.svelte';
+import { defaultSettings } from './settings.svelte';
+import { fontFamily } from './appearance';
 import { defaultHotkeys } from './hotkeys';
 import { placeholderInfo } from './agent-types';
 import { modelName, search } from './models';
@@ -79,11 +82,16 @@ it('folds code to one line and hides expanded output', () => {
 
 it.each([
   ['claude-sonnet-5-5', 'Claude Sonnet 5.5'],
-  ['gpt-4-1-mini', 'Gpt 4.1 Mini'],
+  ['gpt-4-1-mini', 'GPT 4.1 Mini'],
   ['model-1-2-3', 'Model 1.2.3'],
   ['GPT-5', 'GPT 5'],
 ])('formats model name %s', (raw, expected) => {
   expect(modelName(raw)).toBe(expected);
   const model = { id: raw, name: raw, contextWindow: 0, pricing: placeholderInfo('').pricing };
   expect(search([model], expected)).toEqual([model]);
+});it('uses SF Pro Display without a font selector', () => {
+ app = mount(Settings, { target: document.body, props: { settings: defaultSettings(), onclose: vi.fn(), onchange: vi.fn() } });
+ flushSync();
+ expect(document.querySelector('[aria-label="Application font"]')).toBeNull();
+ expect(fontFamily).toContain('SF Pro Display');
 });

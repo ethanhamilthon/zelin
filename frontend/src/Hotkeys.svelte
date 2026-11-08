@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import Hotkey from './Hotkey.svelte';
   import { actions, combo, defaultHotkeys } from './hotkeys';
@@ -22,13 +23,13 @@
 
 <Modal title="Hotkeys" hint={recording ? 'Press keys, Cancel Esc' : undefined} {back} {onclose} {ondismiss}>
   {#each actions as action (action.id)}
-    <button onclick={() => { recording = action.id; }} aria-pressed={recording === action.id}>
-      {action.label} <span class:recording={recording === action.id}>{#if recording === action.id}Press keys…{:else}<Hotkey value={hotkeys[action.id]} />{/if}</span>
-    </button>
+    <Button data-ui="ui-hotkeys" onclick={() => { recording = action.id; }} aria-pressed={recording === action.id}>
+      {action.label} <span class={{ recording: recording === action.id }}>{#if recording === action.id}Press keys…{:else}<Hotkey value={hotkeys[action.id]} />{/if}</span>
+    </Button>
   {/each}
-  <button onclick={() => actions.forEach(({ id }) => onbind(id, defaultHotkeys[id]))}>Reset to defaults <span>Defaults</span></button>
+  <Button data-ui="ui-hotkeys" onclick={() => actions.forEach(({ id }) => onbind(id, defaultHotkeys[id]))}>Reset to defaults <span>Defaults</span></Button>
 </Modal>
 
 <style>
-  .recording { color: var(--accent) !important; }
+  :global(.recording) { color: var(--accent) !important; }
 </style>

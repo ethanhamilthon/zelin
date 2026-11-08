@@ -28,8 +28,7 @@
   import Toasts from './Toasts.svelte';
   import Notices from './Notices.svelte';
   import DocumentEditor from './DocumentEditor.svelte';
-
-  let container: HTMLDivElement, scroller: HTMLElement, picker: ImagePicker, editor: Editor | undefined;
+  let container: HTMLDivElement, scroller: HTMLElement, picker: ImagePicker; let editor = $state.raw<Editor>();
   let documentEditor = $state<DocumentEditor>();
   let image = $state<{ url: string; number: number } | null>(null);
   let doc = $state<Document | null>(null);
@@ -47,6 +46,7 @@
   const closeModal = () => { modals.clear(); image = null; files.state.browsing = false; editor?.focus(); };
   const showImage = (url: string | undefined, number: number) => { if (url) { modals.clear(); image = { url, number }; } };
   const stop = () => !(window.getSelection()?.toString() || editor?.selected()) && chat.stop();
+  $effect(() => { const draft = conversation.draft; editor?.setText(draft, false); });
   const onChange = (text: string) => {
     if (!sessions.current) return;
     chat.edit(); sessions.current.draft = text;
@@ -96,7 +96,7 @@
   $effect(() => { editor?.setKeys({ send: keys.send, newline: keys.newline }); });
   onMount(() => {
     let mounted = true;
-    const unlisten = listenToBackend(sessions, workspaces);
+    const unlisten = listenToBackend(sessions, workspaces, settings, models);
     void Promise.all([settings.start(), sessions.start(), workspaces.load()]).then(() => {
       if (!mounted) return;
       workspaces.follow(conversation.workspaceId);
@@ -111,16 +111,16 @@
   });
 </script>
 <svelte:window onkeydown={keyboard} />
-<div class="app" class:hidden={!!doc}>
+<div class={["app", { hidden: !!doc }]}>
   <main bind:this={scroller} use:links={openLink}>
     {#if shown}
       {#key sessions.state.id}<History messages={conversation.messages} executions={conversation.executions} busy={conversation.busy}
         started={conversation.started} usage={conversation.usage} baseline={conversation.baseline} window={models.state.info.contextWindow}
-        showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={showImage} onref={files.openRef} />{/key}
+        showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={showImage} onref={files.openRef} ondocument={(next) => { doc = next; }} />{/key}
     {/if}
     <div class="input-wrap">
       {#if conversation.steering}<div class="steering"><PendingDots /></div>{/if}
-      <div class="editor" class:empty={!conversation.messages.length} bind:this={container}></div>
+      <div class={["editor", { empty: !conversation.messages.length }]} bind:this={container}></div>
     </div>
     <Notices {conversation} error={sessions.state.error} onretry={() => { void contextAction(sessions, 'compact'); }} />
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}

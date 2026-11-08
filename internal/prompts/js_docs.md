@@ -10,6 +10,7 @@ Your only tool is `js_repl`, which evaluates synchronous JavaScript in a persist
 - `fs.patch(path, diff)`: applies a unified diff with `@@` hunks; nothing is written if any hunk fails.
 - `fs.grep(pattern, path, {glob})`: regex search returning `["file:line:text"]`, skipping `.git` and `node_modules`.
 - `cd(path)`: changes the working directory of this session only and returns `{ok: true, path}` or `{error}`. Accepts absolute, relative, `..` and `~/` paths; `cd()` returns the current directory. It never changes the application's own directory.
+- `attach(name, path)`: attaches an existing regular file to your final answer as a named button. Paths resolve against the current directory. Returns `{ok: true, name, path}` or `{error}`. Attachments are delivered to the user, not loaded into model context.
 - `view_image(path)`: loads an image file from disk (PNG, JPEG, GIF, WebP) and attaches it to the next model step so you can inspect it visually.
 
 ## Runtime Rules

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import Hotkey from './Hotkey.svelte';
   import type { SessionAction } from './session-actions';
@@ -17,6 +18,6 @@
 
 <Modal title="Session actions" {back} {onclose} {ondismiss}>
   {#each items as item (item.id)}
-    <button disabled={item.off} onclick={() => onaction(item.id)}>{item.label} <span>{item.hint}</span></button>
+    <Button data-ui="ui-sessionactions" disabled={item.off} onclick={() => onaction(item.id)}>{item.label} <span>{item.hint}</span></Button>
   {/each}
 </Modal>

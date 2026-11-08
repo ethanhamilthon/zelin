@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@theme inline {
+ --color-background: var(--background);
+ --color-foreground: var(--foreground);
+ --color-muted-foreground: var(--dim);
+ --color-primary: var(--accent);
+ --color-primary-foreground: var(--background);
+ --color-secondary: var(--surface);
+ --color-secondary-foreground: var(--foreground);
+ --color-border: var(--border);
+ --color-input: var(--border);
+ --color-ring: var(--accent);
+ --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+ --radius-md: 8px;
+}
+@layer components {
+ .cn-button { border-radius: 8px; font: inherit; cursor: pointer; }
+ .cn-button-size-default { min-height: 36px; padding: 8px 12px; gap: 8px; }
+ .cn-button-size-sm { min-height: 30px; padding: 4px 9px; }
+ .cn-button-size-xs { min-height: 24px; padding: 2px 7px; }
+ .cn-button-size-icon { width: 32px; height: 32px; padding: 6px; }
+ .cn-button-variant-default, .cn-button-variant-ghost { background: transparent; color: var(--foreground); }
+ .cn-button:hover { background: var(--hover); }
+ .cn-button:focus { background: var(--hover); color: var(--foreground); }
+ .cn-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ .cn-button-variant-outline { border: 1px solid var(--border); background: var(--background); color: var(--foreground); }
+ .cn-button-variant-secondary { background: var(--surface); color: var(--foreground); }
+ .cn-button[disabled] { opacity: .5; pointer-events: none; }
+ .cn-input { min-height: 36px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--foreground); font: inherit; }
+ .cn-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent); }
+}

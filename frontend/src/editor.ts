@@ -12,7 +12,7 @@ import { mentionWatcher, type Mention } from './mention';
 
 function menuKeys(handle: (key: string) => boolean) {
   const run = (key: string) => () => handle(key);
-  return Prec.highest(keymap.of(['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].map((key) => ({ key, run: run(key) }))));
+  return Prec.highest(keymap.of(['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].map((key) => ({ key, run: run(key), stopPropagation: true }))));
 }
 
 export type EditorKeys = { send: string; newline: string };
@@ -75,10 +75,10 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (text: 
       current = value;
       view.dispatch({ effects: keys.reconfigure(bindings(value)) });
     },
-    setText(text: string) {
+    setText(text: string, notify = true) {
       if (text === view.state.doc.toString()) return;
       view.setState(EditorState.create({ doc: text, extensions: extensions() }));
-      onChange(text);
+      if (notify) onChange(text);
     },
   };
 }

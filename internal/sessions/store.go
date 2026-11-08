@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"zelin/internal/agent"
+	"zelin/internal/files"
 	"zelin/internal/provider"
 	"zelin/internal/tagged"
 
@@ -15,12 +16,13 @@ import (
 )
 
 type Message struct {
-	Role       string            `json:"role"`
-	Content    string            `json:"content"`
-	Images     []string          `json:"images,omitempty"`
-	Executions []agent.Execution `json:"executions,omitempty"`
-	Turn       *Turn             `json:"turn,omitempty"`
-	Refs       []tagged.Ref      `json:"refs,omitempty"`
+	Files      []files.Attachment `json:"files,omitempty"`
+	Role       string             `json:"role"`
+	Content    string             `json:"content"`
+	Images     []string           `json:"images,omitempty"`
+	Executions []agent.Execution  `json:"executions,omitempty"`
+	Turn       *Turn              `json:"turn,omitempty"`
+	Refs       []tagged.Ref       `json:"refs,omitempty"`
 }
 
 type Session struct {

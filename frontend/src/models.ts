@@ -8,5 +8,5 @@ export function search(models: ModelOption[], query: string, limit = 100) {
 export function modelName(name: string) {
   return name.replace(/(\d)[-_](?=\d)/g, '$1.')
     .split(/[-_\s]+/).filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace(/gpt/gi, 'GPT');
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import type { Execution } from './agent-types';
   import { oneLine } from './preview';
   import BoundedSteps from './BoundedSteps.svelte';
@@ -10,10 +11,10 @@
 </script>
 
 <div class="stack" aria-label="Steps">
-  <button class="toggle" class:open onclick={() => { open = !open; }} aria-expanded={open}>
+  <Button data-ui="ui-stepstack" class={["toggle", { open }]} onclick={() => { open = !open; }} aria-expanded={open}>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
     <span class="count">{steps.length} steps</span>{#if preview}<span class="sep">|</span><span class="preview">{preview}</span>{/if}
-  </button>
+  </Button>
   {#if open}
     <div class="items">
       <BoundedSteps {steps} {foldCode} />
@@ -22,13 +23,13 @@
 </div>
 
 <style>
-  .stack { margin: 0 0 8px; }
-  .items { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; padding-left: 30px; }
-  .items > :global(*) { margin: 0; }
-  .toggle { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
-  .toggle:hover, .toggle:focus-visible { color: var(--muted); outline: none; }
-  .count, .sep { flex-shrink: 0; }
-  .preview { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--faint); }
+  :global(.stack) { margin: 0 0 8px; }
+  :global(.items) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; padding-left: 30px; }
+  :global(.items) > :global(*) { margin: 0; }
+  :global(.toggle) { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; line-height: 1.8; text-align: left; cursor: pointer; transition: color 140ms; }
+  :global(.toggle):hover, :global(.toggle):focus-visible { color: var(--muted); outline: none; }
+  :global(.count), :global(.sep) { flex-shrink: 0; }
+  :global(.preview) { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--faint); }
   svg { position: absolute; left: -30px; top: 6px; transform: rotate(-90deg); transition: transform 160ms; }
-  .open svg { transform: none; }
+  :global(.open) svg { transform: none; }
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import Hotkey from './Hotkey.svelte';
   import SearchInput from './SearchInput.svelte';
@@ -48,7 +49,7 @@
 </script>
 
 <Modal title="Sessions" {back} {onclose} {ondismiss}>
-  {#snippet actions()}<span class="actions"><button onclick={onnew}>New session <Hotkey value={hotkey} /></button>{#if workspaces.length}<button onclick={oncreate}>New workspace</button>{/if}</span>{/snippet}
+  {#snippet actions()}<span class="actions"><Button data-ui="ui-sessionlist" onclick={onnew}>New session <Hotkey value={hotkey} /></Button>{#if workspaces.length}<Button data-ui="ui-sessionlist" onclick={oncreate}>New workspace</Button>{/if}</span>{/snippet}
   {#snippet top()}
     <SearchInput bind:value={query} label="Search sessions" onkeydown={(event) => {
       if (event.key === 'Enter' && matches.length) { event.preventDefault(); onselect(matches[0].id); }
@@ -60,13 +61,13 @@
       {#if !folded[group.workspace.id] || needle}
       {#each (expanded[group.workspace.id] || needle ? group.items : group.items.slice(0, 3)) as session (session.id)}
         {@const state = status(session.id)}
-        <button onclick={() => onselect(session.id)} aria-current={session.id === active ? 'true' : undefined}>
+        <Button data-ui="ui-sessionlist" onclick={() => onselect(session.id)} aria-current={session.id === active ? 'true' : undefined}>
           <strong><i class={state} aria-hidden="true"></i>{session.title}</strong>
           <span>{meta(session, state)}</span>
-        </button>
+        </Button>
       {/each}
       {#if !needle && !expanded[group.workspace.id] && group.items.length > 3}
-        <button onclick={() => expanded[group.workspace.id] = true}>Show More ({group.items.length - 3})</button>
+        <Button data-ui="ui-sessionlist" onclick={() => expanded[group.workspace.id] = true}>Show More ({group.items.length - 3})</Button>
       {/if}
       {/if}
     {/each}
@@ -74,20 +75,20 @@
   {:else}
     {#each rows as session (session.id)}
       {@const state = status(session.id)}
-      <button onclick={() => onselect(session.id)} aria-current={session.id === active ? 'true' : undefined}>
+      <Button data-ui="ui-sessionlist" onclick={() => onselect(session.id)} aria-current={session.id === active ? 'true' : undefined}>
         <strong><i class={state} aria-hidden="true"></i>{session.title}</strong>
         <span>{meta(session, state)}</span>
-      </button>
+      </Button>
     {:else}
       <p>No sessions found</p>
     {/each}
   {/if}
-  {#if matches.length > rows.length}<button onclick={() => { limit += ROWS; }}><span>Show more ({matches.length - rows.length} left)</span></button>{/if}
+  {#if matches.length > rows.length}<Button data-ui="ui-sessionlist" onclick={() => { limit += ROWS; }}><span>Show more ({matches.length - rows.length} left)</span></Button>{/if}
 </Modal>
 
 <style>
   p { margin: 0; padding: 12px; color: var(--dim); }
-  .actions { display: inline-flex; gap: 12px; align-items: center; }
+  :global(.actions) { display: inline-flex; gap: 12px; align-items: center; }
   strong { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 400; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   span { flex-shrink: 0; white-space: nowrap; }
   i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--border); }

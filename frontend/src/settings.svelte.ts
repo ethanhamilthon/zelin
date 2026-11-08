@@ -1,17 +1,16 @@
-import { applyFont } from './appearance';
 import { call } from './bridge';
 import { applyTheme } from './themes';
 import { defaultHotkeys } from './hotkeys';
 import type { Action } from './hotkeys';
 
 export type Settings = {
-  font: string; toolOutputLimit: number; theme: string; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean; stackSteps: boolean;
+  toolOutputLimit: number; theme: string; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean; stackSteps: boolean;
   autoCompact: boolean; compactThreshold: number;
   hiddenModels: string[]; hotkeys: Record<Action, string>;
 };
 
 export const defaultSettings = (): Settings => ({
-  font: 'jetbrains', toolOutputLimit: 4096, theme: 'zen', toast: true, sound: true, showCode: true, foldCode: false, stackSteps: false,
+  toolOutputLimit: 4096, theme: 'zen', toast: true, sound: true, showCode: true, foldCode: false, stackSteps: false,
   autoCompact: true, compactThreshold: 60,
   hiddenModels: [], hotkeys: { ...defaultHotkeys },
 });
@@ -24,7 +23,6 @@ export function createSettings() {
 
   function persist() {
     applyTheme(state.theme);
-    applyFont(state.font);
     void saveSettings(JSON.stringify(state)).catch(() => {});
   }
 
@@ -36,7 +34,6 @@ export function createSettings() {
         Object.assign(state, saved, { hotkeys: { ...defaultHotkeys, ...saved.hotkeys } });
       } catch { }
       applyTheme(state.theme);
-    applyFont(state.font);
     },
     update(change: Partial<Settings>) { Object.assign(state, change); persist(); },
     bind(action: Action, hotkey: string) { state.hotkeys = { ...state.hotkeys, [action]: hotkey }; persist(); },

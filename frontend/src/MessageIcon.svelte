@@ -4,7 +4,7 @@
   const filled = $derived(kind === 'user' || kind === 'assistant');
 </script>
 
-<span class="icon" class:loading={kind === 'loading'} aria-label={kind === 'loading' ? 'Request running' : kind === 'done' ? 'Turn complete' : undefined} aria-hidden={kind !== 'loading' && kind !== 'done'}>
+<span class={["message-icon", { loading: kind === 'loading' }]} aria-label={kind === 'loading' ? 'Request running' : kind === 'done' ? 'Turn complete' : undefined} aria-hidden={kind !== 'loading' && kind !== 'done'}>
   {#if kind === 'loading'}<PendingDots label="Agent working" />{:else}
   <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke={filled ? 'none' : 'currentColor'} stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
     {#if kind === 'user'}
@@ -23,6 +23,6 @@
 </span>
 
 <style>
-  .icon { position: absolute; left: -30px; top: 6px; display: inline-flex; color: var(--dim); }
+  .message-icon { position: absolute; left: -30px; top: 6px; display: inline-flex; color: var(--dim); }
 
 </style>

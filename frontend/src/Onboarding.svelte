@@ -48,7 +48,7 @@
 <div class="app">
   <main bind:this={scroller}>
     <History messages={setup.state.messages} busy={setup.state.busy} />
-    <div class="editor" class:secret={setup.state.step === 'key'} bind:this={container} onkeydowncapture={arrows}></div>
+    <div class={["editor", { secret: setup.state.step === 'key' }]} bind:this={container} onkeydowncapture={arrows}></div>
     {#if setup.picking}<ModelPicker models={setup.options} active={setup.state.active} onhover={(index) => { setup.state.active = index; }} onpick={(id) => act(() => setup.pick(id))} />{/if}
   </main>
   <BottomBar hint={`Setup ${setup.number}/${total}`} label="Setup">

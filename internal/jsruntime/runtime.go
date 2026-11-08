@@ -11,10 +11,11 @@ import (
 )
 
 type Runtime struct {
-	cwd       string
-	vm        *goja.Runtime
-	stringify goja.Callable
-	images    []files.Image
+	cwd         string
+	vm          *goja.Runtime
+	stringify   goja.Callable
+	images      []files.Image
+	attachments []files.Attachment
 }
 
 func New() *Runtime { return NewIn(launch) }
@@ -28,6 +29,7 @@ func NewIn(dir string) *Runtime {
 	r := &Runtime{vm: vm, stringify: stringify, cwd: dir}
 	vm.Set("fs", r.fs())
 	vm.Set("view_image", r.viewImage)
+	vm.Set("attach", r.attach)
 	vm.Set("cd", r.chdir)
 	return r
 }

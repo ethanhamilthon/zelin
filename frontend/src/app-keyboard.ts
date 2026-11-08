@@ -12,7 +12,7 @@ const panels: [Action, ModalName][] = [['commands', 'commands'], ['models', 'mod
 export function createKeyboard(deps: Deps) {
   return (event: KeyboardEvent) => {
     const keys = deps.keys();
-    if (event.key === 'Escape' && deps.blocked()) { event.preventDefault(); deps.stepBack(); return; }
+    if (event.key === 'Escape' && deps.blocked()) { if (event.defaultPrevented) return; event.preventDefault(); deps.stepBack(); return; }
     if (deps.doc()) {
       if (matches(event, keys.save)) { event.preventDefault(); deps.commit(); }
       return;

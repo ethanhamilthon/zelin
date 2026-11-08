@@ -1,5 +1,5 @@
 :root {
-  --mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --mono: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
   --background: #111111;
   --foreground: #e0e0e0;
   --muted: #b0b0b0;
@@ -17,7 +17,7 @@
   --thinking-bg: #0b0b0b;
   --font-size: 16px;
   font-size: var(--font-size);
-  font-family: var(--mono);
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--foreground);
   background: var(--background);
   color-scheme: dark;

@@ -11,7 +11,8 @@
 
 <style>
   footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-width: 0; height: 44px; padding: 0 20px; border-top: 1px solid var(--border); background: var(--background); color: var(--dim); font: var(--font-size)/1.5 var(--mono); white-space: nowrap; }
-  .left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; overflow: hidden; color: var(--dim); }
+  .left { min-width: 80px; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; overflow: hidden; color: var(--dim); }
+  .left > :global(button) { flex-shrink: 0; min-width: 0; }
   .left > :global(span) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .right { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
   .centered { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); }
