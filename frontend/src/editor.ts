@@ -18,7 +18,7 @@ function menuKeys(handle: (key: string) => boolean) {
 export type EditorKeys = { send: string; newline: string };
 export type EditorOptions = {
   label?: string; placeholder?: string; keys?: EditorKeys; onSubmit?: () => void;
-  onImage?: (number: number) => void; onAttach?: (url: string) => number | string;
+  onImage?: (number: number) => void; onAttach?: (url: string, name?: string) => number | string;
   onRef?: (id: string) => void; onMention?: (mention: Mention) => void; onMenuKey?: (key: string) => boolean;
 };
 

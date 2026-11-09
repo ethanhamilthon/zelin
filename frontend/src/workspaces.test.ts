@@ -17,7 +17,7 @@ let spaces: { id: string; name: string; icon: string; dir: string }[];
 const $ = (selector: string) => document.querySelector<HTMLElement>(selector);
 const all = (selector: string) => [...document.querySelectorAll<HTMLElement>(selector)];
 const wait = async () => { await new Promise((r) => setTimeout(r, 0)); await tick(); };
-const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text))!;
+const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text) || b.getAttribute('aria-label') === text)!;
 const key = (k: string, code: string, init: KeyboardEventInit = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, code, cancelable: true, ...init }));
 const row = (id: string, title: string, workspaceId: string) => ({ id, title, draft: '', messages: [], updated: '', workspaceId });
 const type = (label: string, value: string) => { const input = $('[aria-label="' + label + '"]') as HTMLInputElement; input.value = value; input.dispatchEvent(new Event('input', { bubbles: true })); };
@@ -67,9 +67,7 @@ it('keeps session search working across groups', async () => {
   expect(all('.body > button:not(.name)').map((el) => el.textContent?.trim().slice(0, 4))).toEqual(['Beta']);
 });
 
-it('starts a new session in the selected workspace', async () => {
-  all('.head .name')[1].click(); await wait();
-  expect(all('.head')[1].classList.contains('selected')).toBe(true);
+it('starts a new session in the workspace whose add button was pressed', async () => {
   all('.head .add')[1].click(); await wait();
   expect(call).toHaveBeenCalledWith('WorkspaceService.NewSession', 'w2');
   expect(createSession).not.toHaveBeenCalled();

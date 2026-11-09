@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { entryRef, refToken, tagged, unresolved, usedRefs, newId } from './refs';
+import { entryRef, refToken, tagged, unresolved, usedRefs, newId, imageName } from './refs';
 import { splitTokens } from './images';
 import { findMention } from './mention';
 import { crumbs } from './browser';
@@ -49,4 +49,14 @@ describe('breadcrumbs', () => {
     expect(crumbs('/w/proj', '/w/proj/src/deep').map((c) => c.name)).toEqual(['proj', 'src', 'deep']);
     expect(crumbs('/w/proj', '/w/proj')[0].path).toBe('/w/proj');
   });
+});
+
+it('names pasted images uniquely and keeps dropped names', () => {
+  const png = 'data:image/png;base64,QQ==';
+  const one = { id: 'a1a1a1', kind: 'image' as const, label: 'image-1.png', data: png };
+  expect(imageName([], png)).toBe('image-1.png');
+  expect(imageName([one], png)).toBe('image-2.png');
+  expect(imageName([], 'data:image/jpeg;base64,QQ==')).toBe('image-1.jpg');
+  expect(imageName([one], png, 'shot 1.png')).toBe('shot_1.png');
+  expect(imageName([{ ...one, label: 'shot.png' }], png, 'shot.png')).toBe('image-2.png');
 });

@@ -5,7 +5,7 @@ import "runtime/debug"
 const Name = "Zelin"
 
 var (
-	Number = "0.2.1"
+	Number = "0.3.0"
 	Commit = ""
 	Date   = ""
 )

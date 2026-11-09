@@ -1,4 +1,4 @@
-import { entryRef, newId, refToken, type Entry, type Ref } from './refs';
+import { entryRef, imageName, newId, refToken, type Entry, type Ref } from './refs';
 import { openPath } from './browser';
 import { fileDocument, type Document } from './documents';
 import type { Editor } from './editor';
@@ -81,7 +81,7 @@ export function createFileRefs({ sessions, workspaces, mentions, modals, toasts,
   return {
     state,
     get root() { return root(); },
-    image: (url: string) => add(() => ({ id: newId(), kind: 'image', label: 'image', data: url, workspaceId: workspaces.state.selected, sessionId: sessions.state.id })),
+    image: (url: string, name?: string) => add((conversation) => ({ id: newId(), kind: 'image', label: imageName(conversation.refs, url, name), data: url, workspaceId: workspaces.state.selected, sessionId: sessions.state.id })),
     openEntry,
     openRef,
     openById(id: string) { const ref = sessions.current?.refs.find((item) => item.id === id); if (ref) openRef(ref); },

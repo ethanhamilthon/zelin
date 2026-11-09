@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"zelin/internal/home"
 	"zelin/internal/provider"
 	"zelin/internal/tagged"
 )
@@ -26,10 +28,18 @@ func (s *AgentService) expand(id string, message provider.Message, refs []tagged
 	if err != nil {
 		return message, fmt.Errorf("Workspace is unavailable: %w", err)
 	}
-	result, err := tagged.Expand(item.Dir, record.WorkspaceID, message.Content, message.Images, refs)
+	result, err := tagged.Expand(item.Dir, s.assets(id), record.WorkspaceID, message.Content, message.Images, refs)
 	if err != nil {
 		return message, err
 	}
 	message.Content, message.Images = result.Content, result.Images
 	return message, nil
+}
+
+func (s *AgentService) assets(id string) string {
+	dir, err := home.Dir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "images", id)
 }

@@ -16,7 +16,7 @@ let app: ReturnType<typeof mount>;
 let finish: (result: AgentResult) => void;
 const $ = (selector: string) => document.querySelector<HTMLElement>(selector);
 const wait = async () => { await new Promise((r) => setTimeout(r, 0)); await tick(); };
-const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text))!;
+const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text) || b.getAttribute('aria-label') === text)!;
 const key = (k: string, code: string, init: KeyboardEventInit = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, code, cancelable: true, ...init }));
 const send = () => $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true }));
 const record = { id: 'one', title: 'Task', draft: 'start', messages: [], updated: '' };

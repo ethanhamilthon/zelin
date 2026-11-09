@@ -9,11 +9,11 @@
   import type { SessionStatus } from './session-controller.svelte';
   import { DEFAULT_WORKSPACE, type Workspace } from './workspaces';
   import { ROWS } from './bounded';
-  let { sessions, active, status, steps = () => 0, back = false, workspaces = [], selected = '', onclose, ondismiss, onselect, onworkspacenew = () => {}, onworkspace = () => {}, onsettings = () => {}, oncreate = () => {} }: {
+  let { sessions, active, status, steps = () => 0, back = false, workspaces = [], selected = '', onclose, ondismiss, onselect, onworkspacenew = () => {}, onsettings = () => {}, oncreate = () => {} }: {
     sessions: Session[]; active: string; back?: boolean; workspaces?: Workspace[]; selected?: string;
     status: (id: string) => SessionStatus; steps?: (id: string) => number;
     onclose: () => void; ondismiss?: () => void; onselect: (id: string) => void; onworkspacenew?: (id: string) => void;
-    onworkspace?: (id: string) => void; onsettings?: (id: string) => void; oncreate?: () => void;
+    onsettings?: (id: string) => void; oncreate?: () => void;
   } = $props();
   let query = $state('');
   let folded = $state<Record<string, boolean>>({});
@@ -58,7 +58,7 @@
   {/snippet}
   {#if workspaces.length}
     {#each groups as group (group.workspace.id)}
-      <WorkspaceHeader workspace={group.workspace} selected={group.workspace.id === selected} folded={!!folded[group.workspace.id] && !needle} onselect={() => { onworkspace(group.workspace.id); folded[group.workspace.id] = !folded[group.workspace.id]; }} onsettings={() => onsettings(group.workspace.id)} onnew={() => onworkspacenew(group.workspace.id)} />
+      <WorkspaceHeader workspace={group.workspace} selected={group.workspace.id === selected} folded={!!folded[group.workspace.id] && !needle} onselect={() => { folded[group.workspace.id] = !folded[group.workspace.id]; }} onsettings={() => onsettings(group.workspace.id)} onnew={() => onworkspacenew(group.workspace.id)} />
       {#if !folded[group.workspace.id] || needle}
       {#each (expanded[group.workspace.id] || needle ? group.items : group.items.slice(0, 3)) as session (session.id)}
         {@const state = status(session.id)}

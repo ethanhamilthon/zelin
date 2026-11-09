@@ -15,9 +15,8 @@ export function createWorkspaces() {
     if (!name.trim()) return 'Name is required';
     if (!dir.trim()) return 'Directory is required';
     try {
-      const item = state.editing ? await updateWorkspace(state.editing, name, icon, dir) : await createWorkspace(name, icon, dir);
+      if (state.editing) await updateWorkspace(state.editing, name, icon, dir); else await createWorkspace(name, icon, dir);
       await load();
-      state.selected = item.id;
       return null;
     } catch (error) { return reason(error); }
   }

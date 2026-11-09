@@ -24,10 +24,10 @@ export function imageTokens(onOpen: (number: number) => void) {
   });
 }
 
-export function imageInput(onAttach: (url: string) => number | string) {
+export function imageInput(onAttach: (url: string, name?: string) => number | string) {
   async function attach(view: EditorView, files: File[], at?: number) {
     for (const file of files) {
-      const made = onAttach(await readImage(file));
+      const made = onAttach(await readImage(file), file.name);
       const text = typeof made === 'string' ? made : token(made);
       const from = at ?? view.state.selection.main.from;
       const to = at ?? view.state.selection.main.to;

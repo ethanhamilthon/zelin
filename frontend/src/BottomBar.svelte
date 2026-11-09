@@ -14,7 +14,7 @@
   .left { min-width: 80px; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; overflow: hidden; color: var(--dim); }
   .left > :global(button) { flex-shrink: 0; min-width: 0; }
   .left > :global(span) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .right { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
+  .right { display: flex; gap: 16px; align-items: center; min-width: 0; max-width: 60%; }
   .centered { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); }
   .centered .right { justify-self: end; }
   .center { display: flex; align-items: center; justify-content: center; min-width: 0; }

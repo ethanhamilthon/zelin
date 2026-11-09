@@ -48,7 +48,7 @@ func image(root string, ref Ref) (string, error) {
 	return img.DataURL, err
 }
 
-func Expand(root, workspaceID, content string, images []string, refs []Ref) (Result, error) {
+func Expand(root, assets, workspaceID, content string, images []string, refs []Ref) (Result, error) {
 	result := Result{Content: content, Images: append([]string{}, images...)}
 	known := map[string]Ref{}
 	for _, ref := range Used(content, refs) {
@@ -76,12 +76,16 @@ func Expand(root, workspaceID, content string, images []string, refs []Ref) (Res
 		switch ref.Kind {
 		case "image":
 			url, err := image(root, ref)
+			path, _, _ := resolve(root, ref)
 			if err != nil {
 				failure = fmt.Errorf("Tagged image %s: %w", ref.Label, err)
 				return token
 			}
 			result.Images = append(result.Images, url)
 			text = fmt.Sprintf("[Image #%d]", len(result.Images))
+			if found := imagePath(path, assets, ref); found != "" {
+				text = "@" + found + " " + text
+			}
 		case "file", "dir":
 			path, real, err := resolve(root, ref)
 			if err != nil {

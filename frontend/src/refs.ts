@@ -27,3 +27,15 @@ export function unresolved(text: string, refs: Ref[]) {
 }
 
 export const tagged = (text: string) => text.replace(refPattern, (_, id: string, label?: string) => '@' + (label || id));
+
+const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+
+export function imageName(refs: Ref[], url: string, name?: string) {
+  const taken = new Set(refs.map((ref) => ref.label));
+  const clean = (name ?? '').replace(/[\s\]|]+/g, '_');
+  if (isImageName(clean) && !taken.has(clean)) return clean;
+  const extension = extensions[/^data:([^;,]+)/.exec(url)?.[1] ?? ''] ?? 'png';
+  let number = refs.filter((ref) => ref.data).length + 1;
+  while (taken.has(`image-${number}.${extension}`)) number++;
+  return `image-${number}.${extension}`;
+}

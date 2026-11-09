@@ -10,3 +10,5 @@ export function modelName(name: string) {
     .split(/[-_\s]+/).filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace(/gpt/gi, 'GPT');
 }
+
+export const effortName = (effort: string) => effort.charAt(0).toUpperCase() + effort.slice(1);

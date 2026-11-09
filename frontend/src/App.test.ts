@@ -46,7 +46,7 @@ function pending() {
   vi.mocked(runAgent).mockImplementation((_, notify) => new Promise((finish) => { runs.push({ finish, notify }); }));
   return runs;
 }
-const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(text))!;
+const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(text) || item.getAttribute('aria-label') === text)!;
 
 describe('agent UI', () => {
   it('sends with Enter, shows thinking and code, and renders minimal Markdown', async () => {
@@ -75,8 +75,9 @@ describe('agent UI', () => {
     expect($('[aria-label="Unfold code"]')).not.toBeNull();
     expect($('.cm-content')?.textContent).toBe('Next draft');
     expect($('footer')?.textContent).toContain('Test Model');
-    expect($('footer')?.textContent).toContain('medium');
-    expect($('footer .right button')?.textContent).toBe('Commands');
+    expect($('footer')?.textContent).toContain('Medium');
+    expect($('footer .right button')).toBeNull();
+    expect($('button.commands')?.getAttribute('aria-label')).toBe('Commands');
     expect($('footer [role="status"]')).toBeNull();
     expect(saveSession).toHaveBeenLastCalledWith('first', expect.arrayContaining([expect.objectContaining({ content: '**Done** with `code`' })]), 'Next draft', []);
   });

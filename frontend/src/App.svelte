@@ -25,7 +25,7 @@
   import { follow, links, type Target } from './links';
   import History from './History.svelte';
   import { zoomed } from './zoom';
-  import StatusBar from './StatusBar.svelte'; import Toasts from './Toasts.svelte'; import Notices from './Notices.svelte';
+  import CommandsButton from './CommandsButton.svelte'; import StatusBar from './StatusBar.svelte'; import Toasts from './Toasts.svelte'; import Notices from './Notices.svelte';
   import Panels, { type ModalName } from './Panels.svelte'; import DocumentEditor from './DocumentEditor.svelte';
   let container: HTMLDivElement, scroller: HTMLElement, picker: ImagePicker; let editor = $state.raw<Editor>();
   let documentEditor = $state<DocumentEditor>();
@@ -127,13 +127,14 @@
     <Notices {conversation} error={sessions.state.error} onretry={() => { void contextAction(sessions, 'compact'); }} />
     {#if conversation.messages.length}<div class="scroll-space" aria-hidden="true"></div>{/if}
   </main>
-  <StatusBar workspaceIcon={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.icon ?? ''} workspace={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.name ?? ''} working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} busy={conversation.busy} onstop={() => chat.stop()} onopen={(name) => { modals.clear(); open(name); }} />
+  <CommandsButton onclick={() => { modals.clear(); open('commands'); }} />
+  <StatusBar title={sessions.state.items.find((item) => item.id === sessions.state.id)?.title ?? ''} workspaceIcon={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.icon ?? ''} workspace={workspaces.state.items.find((item) => item.id === workspaces.state.selected)?.name ?? ''} working={sessions.activity.working} done={sessions.activity.done} context={conversation.usage?.context ?? null} info={models.state.info} onopen={(name) => { modals.clear(); open(name); }} />
 </div>
 {#if doc}
   {#key doc}<DocumentEditor bind:this={documentEditor} title={doc.title} load={doc.load} save={doc.save} onclose={stepBack} />{/key}
 {/if}
 <FileOverlays {files} {mentions} workspace={workspaces.state.selected} hidden={!!doc} />
-<ImagePicker bind:this={picker} onpick={(url) => { editor?.insert(files.image(url)); editor?.focus(); }} />
+<ImagePicker bind:this={picker} onpick={(url, name) => { editor?.insert(files.image(url, name)); editor?.focus(); }} />
 <Panels {modal} back={modals.canBack} {image} {settings} {sessions} {models} {conversation} onclose={stepBack} ondismiss={closeModal} {open}
   {workspaces} onagents={async () => { await workspaces.refreshAgents(); if (workspaces.state.agents) { modals.clear(); doc = agentsDocument(workspaces.state.agents); } }}
   target={actions.state.target} onaction={(action) => { void actions.run(action); }} onrename={actions.rename}

@@ -48,7 +48,7 @@ describe('model selection', () => {
     const efforts = ['none', 'low', 'medium', 'high', 'xhigh', 'max'];
     app = mount(EffortList, { target: document.body, props: { efforts, active: 'high', onclose: vi.fn(), onselect: vi.fn() } });
     flushSync();
-    expect(buttons().map((item) => item.firstChild?.textContent?.trim())).toEqual(efforts);
+    expect(buttons().map((item) => item.firstChild?.textContent?.trim())).toEqual(['None', 'Low', 'Medium', 'High', 'Xhigh', 'Max']);
   });
 
   it('keeps the current effort when switching models and sets the title model', async () => {

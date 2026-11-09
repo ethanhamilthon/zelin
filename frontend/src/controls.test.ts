@@ -16,7 +16,7 @@ let app: ReturnType<typeof mount>;
 let notify: (event: AgentEvent) => void, finish: (result: AgentResult) => void;
 const $ = (selector: string) => document.querySelector<HTMLElement>(selector);
 const wait = async () => { await new Promise((r) => setTimeout(r, 0)); await tick(); };
-const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text))!;
+const button = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(text) || b.getAttribute('aria-label') === text)!;
 function send() { $('.cm-content')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true })); }
 function type(text: string) { const view = EditorView.findFromDOM($('.cm-editor')!)!; view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }); }
 function key() { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', code: 'KeyC', ctrlKey: true, cancelable: true })); }
@@ -50,14 +50,13 @@ it('queues steering, cancels on edit, retains text, and clears it on consumption
   expect(document.querySelectorAll('article')).toHaveLength(3);
 });
 
-it('shows Stop before Commands only when busy; selection keeps Ctrl+C for copying', async () => {
+it('has no Stop button; selection keeps Ctrl+C for copying', async () => {
   expect($('footer')?.textContent).not.toContain('Stop');
   send(); await wait();
-  expect([...document.querySelectorAll('footer .right button')].map((b) => b.textContent)).toEqual(['Stop', 'Commands']);
+  expect($('footer')?.textContent).not.toContain('Stop');
   const range = document.createRange(); range.selectNodeContents($('article .text')!);
   window.getSelection()!.removeAllRanges(); window.getSelection()!.addRange(range); key(); expect(stopAgent).not.toHaveBeenCalled();
   window.getSelection()!.removeAllRanges(); key(); expect(stopAgent).toHaveBeenCalledWith('one');
-  vi.mocked(stopAgent).mockClear(); button('Stop').click(); expect(stopAgent).toHaveBeenCalledWith('one');
   finish({ content: 'done', executions: [] }); await wait();
   expect($('footer')?.textContent).not.toContain('Stop');
 });
