@@ -36,7 +36,7 @@ func (s *AgentService) recordLive(id string, event agent.Event) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if live := s.live[id]; live != nil {
-		if event.Kind == "steer" {
+		if event.Kind == "steer" || event.Kind == "notice" {
 			kept := live.Events[:0]
 			for _, previous := range live.Events {
 				if previous.Kind != "execution" {

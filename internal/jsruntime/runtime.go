@@ -7,9 +7,11 @@ import (
 
 	"github.com/dop251/goja"
 	"zelin/internal/files"
+	"zelin/internal/tasks"
 )
 
 type Runtime struct {
+	Tasks       *tasks.Session
 	cwd         string
 	vm          *goja.Runtime
 	stringify   goja.Callable
@@ -57,6 +59,7 @@ func (r *Runtime) Run(ctx context.Context, code string) string {
 	defer cancel()
 	r.bindBash(ctx)
 	r.bindMCP(ctx)
+	r.bindTasks()
 	done := make(chan struct{})
 	stop := context.AfterFunc(ctx, func() {
 		r.vm.Interrupt("JavaScript execution timed out or was cancelled")

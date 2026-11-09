@@ -5,7 +5,7 @@
   import MoreButton from './MoreButton.svelte';
   import { STEP_PAGE, more } from './bounded';
   import { keepScroll } from './scroll-anchor';
-  let { steps, foldCode = false }: { steps: Execution[]; foldCode?: boolean } = $props();
+  let { steps }: { steps: Execution[] } = $props();
   let limit = $state(STEP_PAGE);
   const hidden = $derived(Math.max(0, steps.length - limit));
   const shown = $derived(hidden ? steps.slice(hidden) : steps);
@@ -19,8 +19,8 @@
 {#if hidden}<MoreButton count={more(hidden, STEP_PAGE)} label="steps" onclick={reveal} />{/if}
 {#each shown as step (step.id)}
   {#if step.kind === 'thinking'}
-    <ThinkingBlock text={step.code} folded={foldCode} />
+    <ThinkingBlock text={step.code} folded />
   {:else}
-    <ExecutionBlock execution={step} folded={foldCode} />
+    <ExecutionBlock execution={step} folded />
   {/if}
 {/each}

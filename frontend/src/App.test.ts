@@ -53,17 +53,22 @@ describe('agent UI', () => {
     const runs = pending();
     await start(); submit(); await wait();
     expect($('article .text')?.textContent).toBe('Hello **world**');
-    expect($('[aria-label="Request running"]')).not.toBeNull();
+    expect($('article [aria-label="User message"] .dot')).not.toBeNull();
+    expect($('[aria-label="Request running"], .dots')).toBeNull();
     draft('Next draft'); submit();
     expect(runAgent).toHaveBeenCalledOnce();
     runs[0].notify({ kind: 'execution', execution: thinking });
     runs[0].notify({ kind: 'execution', execution: { ...execution, state: 'running', output: '' } });
     await tick();
+    expect($('.toggle')?.textContent).toContain('2 steps');
+    expect($('.spinner')).not.toBeNull();
+    $('.toggle')!.click(); await tick();
     expect($('[aria-label="Thinking"]')?.textContent).toContain('Plan the command');
     runs[0].finish({ content: '**Done** with `code`', executions: [thinking, execution] }); await wait();
     expect($('article.assistant strong')?.textContent).toBe('Done');
     expect($('article.assistant .text')?.textContent).toBe('Done with code');
-    expect($('article [aria-label="Turn complete"]')).not.toBeNull();
+    $('.toggle')!.click(); await tick();
+    $('[aria-label="Unfold code"]')!.click(); await tick();
     button('bash').click(); await tick();
     expect($('.output')?.textContent).toBe('"/tmp"');
     $('[aria-label="Fold code"]')!.click(); await tick();
@@ -116,7 +121,6 @@ describe('agent UI', () => {
     expect(openSession).toHaveBeenLastCalledWith('first');
     expect(agentInfo).toHaveBeenLastCalledWith('first');
     expect($('article.assistant .text')?.textContent).toBe('First done');
-    expect($('[aria-label="Request running"]')).toBeNull();
   });
 
   it('edits the system prompt and saves with Ctrl+S', async () => {
@@ -132,17 +136,5 @@ describe('agent UI', () => {
     key('ы', 'KeyS', { ctrlKey: true }); await wait();
     expect(call).toHaveBeenCalledWith('SettingsService.Write', 'system', 'You are Zelin. Be brief.');
     expect($('[aria-label="System Prompt"] [role="status"]')?.textContent).toBe('Saved');
-  });
-
-  it('hides code blocks from settings', async () => {
-    vi.mocked(currentSession).mockResolvedValue({ ...session(), messages: [{ role: 'assistant', content: 'Done', executions: [execution, thinking] }] });
-    await start();
-    expect($('[aria-label="JavaScript execution"]')).not.toBeNull();
-    key('k', 'KeyK', { ctrlKey: true }); await tick();
-    button('Settings').click(); await tick();
-    button('Show code').click(); await tick();
-    expect($('[aria-label="JavaScript execution"]')).toBeNull();
-    expect($('[aria-label="Thinking"]')).not.toBeNull();
-    expect(call).toHaveBeenCalledWith('SettingsService.Save', expect.stringContaining('"showCode":false'));
   });
 });

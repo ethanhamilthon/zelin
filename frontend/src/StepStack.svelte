@@ -5,11 +5,10 @@
   import BoundedSteps from './BoundedSteps.svelte';
   import Elapsed from './Elapsed.svelte';
   import Spinner from './Spinner.svelte';
-  let { steps, running = false, foldCode = false, started, activity = '', expanded = false }: {
-    steps: Execution[]; running?: boolean; foldCode?: boolean; started?: number; activity?: string; expanded?: boolean;
+  let { steps, running = false, started, activity = '' }: {
+    steps: Execution[]; running?: boolean; started?: number; activity?: string;
   } = $props();
-  let toggled = $state<boolean | null>(null);
-  const open = $derived(toggled ?? expanded);
+  let open = $state(false);
   const active = $derived(running || steps.some((step) => step.state === 'running'));
   const current = $derived(steps.find((step) => step.state === 'running') ?? steps.at(-1));
   const preview = $derived(active ? (current ? oneLine(current.code, /\s+/g) : activity) : '');
@@ -17,7 +16,7 @@
 </script>
 
 <div class="stack" aria-label="Steps">
-  <Button data-ui="ui-stepstack" class={["toggle", { open }]} onclick={() => { toggled = !open; }} aria-expanded={open}>
+  <Button data-ui="ui-stepstack" class={["toggle", { open }]} onclick={() => { open = !open; }} aria-expanded={open}>
     <span class="icon-slot">{#if active}<Spinner />{:else}<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>{/if}</span>
     <span class="count">{label}</span>
     {#if started}<span class="sep">|</span><span class="count"><Elapsed {started} /></span>{/if}
@@ -25,7 +24,7 @@
   </Button>
   {#if open && steps.length}
     <div class="items">
-      <BoundedSteps {steps} {foldCode} />
+      <BoundedSteps {steps} />
     </div>
   {/if}
 </div>

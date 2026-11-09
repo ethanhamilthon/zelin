@@ -6,7 +6,7 @@ import { usedRefs, type Ref } from './refs';
 
 export const failure = (reason: string) => reason === 'Stopped' ? 'Stopped by user.' : `Error: ${reason}`;
 
-export type Message = { role: 'user' | 'assistant'; content: string; files?: FileAttachment[]; images?: string[]; executions?: Execution[]; turn?: Turn; refs?: Ref[]; error?: boolean };
+export type Message = { role: 'user' | 'assistant'; kind?: 'task'; content: string; files?: FileAttachment[]; images?: string[]; executions?: Execution[]; turn?: Turn; refs?: Ref[]; error?: boolean };
 export type Conversation = {
   messages: Message[];
   draft: string;

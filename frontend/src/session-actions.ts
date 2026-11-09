@@ -4,7 +4,7 @@ import { contextAction } from './context-actions';
 import type { createSessionController } from './session-controller.svelte';
 import type { createToasts } from './toasts.svelte';
 
-export type SessionAction = 'compact' | 'handoff' | 'export' | 'stop' | 'rename';
+export type SessionAction = 'compact' | 'handoff' | 'export' | 'stop' | 'rename' | 'tasks';
 type Sessions = ReturnType<typeof createSessionController>;
 
 const reason = (error: unknown) => String(error).replace(/^Error: /, '');
@@ -16,7 +16,7 @@ export async function saveTitle(sessions: Sessions, id: string, title: string): 
 }
 
 export async function runSessionAction(
-  sessions: Sessions, toasts: ReturnType<typeof createToasts>, action: Exclude<SessionAction, 'rename'>, id: string,
+  sessions: Sessions, toasts: ReturnType<typeof createToasts>, action: Exclude<SessionAction, 'rename' | 'tasks'>, id: string,
 ): Promise<string | null> {
   const conversation = sessions.conversations[id];
   if (action === 'stop') {

@@ -39,6 +39,7 @@ it('renders short histories in full without a button', () => {
 it('bounds execution blocks per message and keeps full source reachable', async () => {
   const messages: Message[] = [{ role: 'assistant', content: 'done', executions: Array.from({ length: 80 }, (_, i) => step(i)) }];
   show(messages);
+  document.querySelector<HTMLButtonElement>('.toggle')!.click(); flushSync();
   const count = () => document.querySelectorAll('[aria-label="JavaScript execution"]').length;
   expect(count()).toBe(10);
   expect(document.body.textContent).toContain('step_79()');

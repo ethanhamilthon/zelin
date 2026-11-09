@@ -2,11 +2,15 @@
   import Button from "./lib/ui/button/button.svelte";
   import Modal from './Modal.svelte';
   import type { SessionAction } from './session-actions';
-  let { busy = false, hasMessages = false, back = false, onclose, ondismiss, onaction }: {
-    busy?: boolean; hasMessages?: boolean; back?: boolean;
+  import { listTasks } from './tasks';
+  let { busy = false, hasMessages = false, session = '', back = false, onclose, ondismiss, onaction }: {
+    busy?: boolean; hasMessages?: boolean; session?: string; back?: boolean;
     onclose: () => void; ondismiss?: () => void; onaction: (action: SessionAction) => void;
   } = $props();
+  let tasks = $state(0);
+  $effect(() => { if (session) void listTasks(session).then((list) => { tasks = list.length; }).catch(() => {}); });
   const items = $derived<{ id: SessionAction; label: string; hint: string; off: boolean }[]>([
+    ...(tasks ? [{ id: 'tasks' as const, label: `Tasks (${tasks})`, hint: 'Running in the background', off: false }] : []),
     { id: 'compact', label: 'Compact context', hint: 'Summarize in this session', off: busy || !hasMessages },
     { id: 'handoff', label: 'Handoff', hint: 'Continue in a new session', off: busy || !hasMessages },
     { id: 'export', label: 'Export session', hint: 'Markdown file', off: !hasMessages },

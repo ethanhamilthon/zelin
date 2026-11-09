@@ -38,6 +38,7 @@ func (a *Agent) call(ctx context.Context, call provider.ToolCall, emit func(Even
 	if a.OutputLimit != nil {
 		limit = a.OutputLimit()
 	}
+	a.runtime.Tasks = a.Tasks
 	result := LimitOutput(a.runtime.Run(ctx, args.Code), limit)
 	completed := Execution{ID: call.ID, Code: args.Code, Output: result, State: "complete"}
 	emit(Event{Kind: "execution", Execution: &completed})

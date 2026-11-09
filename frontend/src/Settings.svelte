@@ -13,11 +13,6 @@
 <Modal title="Settings" {back} {onclose} {ondismiss}>
   <Button data-ui="ui-settings" onclick={() => onchange({ toast: !settings.toast })} aria-pressed={settings.toast}>Toast when a session finishes <span class="setting-state">{state(settings.toast)}<Switch checked={settings.toast} label="toast" /></span></Button>
   <Button data-ui="ui-settings" onclick={() => onchange({ sound: !settings.sound })} aria-pressed={settings.sound}>Sound when a session finishes <span class="setting-state">{state(settings.sound)}<Switch checked={settings.sound} label="sound" /></span></Button>
-  <Button data-ui="ui-settings" onclick={() => onchange({ showCode: !settings.showCode })} aria-pressed={settings.showCode}>Show code <span class="setting-state">{state(settings.showCode)}<Switch checked={settings.showCode} label="showCode" /></span></Button>
-  {#if settings.showCode}
-    <Button data-ui="ui-settings" onclick={() => onchange({ foldCode: !settings.foldCode })} aria-pressed={settings.foldCode}>Fold code blocks by default <span class="setting-state">{state(settings.foldCode)}<Switch checked={settings.foldCode} label="foldCode" /></span></Button>
-  {/if}
-  <Button data-ui="ui-settings" onclick={() => onchange({ stackSteps: !settings.stackSteps })} aria-pressed={settings.stackSteps}>Stack consecutive steps <span class="setting-state">{state(settings.stackSteps)}<Switch checked={settings.stackSteps} label="stackSteps" /></span></Button>
   <Separator /><h3>Compaction</h3>
   <Button data-ui="ui-settings" onclick={() => onchange({ autoCompact: !settings.autoCompact })} aria-pressed={settings.autoCompact}>Auto compaction <span class="setting-state">{state(settings.autoCompact)}<Switch checked={settings.autoCompact} label="autoCompact" /></span></Button>
   <label>Context threshold (%) <Input class="threshold-input" aria-label="Compaction threshold" type="number" min="1" max="100" value={settings.compactThreshold}

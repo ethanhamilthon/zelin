@@ -14,7 +14,7 @@ export function createAppActions({ sessions, toasts, modals, close, select }: De
     state,
     aim() { state.target = sessions.state.id; },
     async run(action: SessionAction) {
-      if (action === 'rename') { modals.open('rename'); return; }
+      if (action === 'rename' || action === 'tasks') { modals.open(action); return; }
       close();
       const next = await runSessionAction(sessions, toasts, action, state.target);
       if (next) await select(next);

@@ -8,6 +8,7 @@ import (
 
 	"zelin/internal/jsruntime"
 	"zelin/internal/provider"
+	"zelin/internal/tasks"
 )
 
 type Completer interface {
@@ -22,6 +23,8 @@ type Agent struct {
 	UtilityModel   func() string
 	UtilityWindow  func() int
 	AutoCompact    func() (bool, int, int)
+	Notices        func() string
+	Tasks          *tasks.Session
 	CompactTimeout time.Duration
 	LastCompaction CompactionDiag
 	client         Completer
@@ -92,9 +95,9 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			messages = append(messages, *imgMessage)
 			sync()
 		}
-		if message, model := a.takeSteer(emit); message != nil {
-			messages = append(messages, *model)
-			history = append(history, *message)
+		if model, shown := a.inbox(emit); len(model) > 0 {
+			messages = append(messages, model...)
+			history = append(history, shown...)
 			sync()
 		}
 		compacted, compactErr := a.autoCompact(ctx, messages, emit)
@@ -126,9 +129,9 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			if strings.TrimSpace(reply.Content) == "" {
 				return "", fmt.Errorf("Agent returned an empty response")
 			}
-			if message, model := a.takeSteer(emit); message != nil {
-				messages = append(messages, reply, *model)
-				history = append(history, *message)
+			if model, shown := a.inbox(emit); len(model) > 0 {
+				messages = append(append(messages, reply), model...)
+				history = append(history, shown...)
 				sync()
 				continue
 			}

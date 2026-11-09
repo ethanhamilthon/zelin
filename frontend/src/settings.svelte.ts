@@ -4,13 +4,13 @@ import { defaultHotkeys } from './hotkeys';
 import type { Action } from './hotkeys';
 
 export type Settings = {
-  toolOutputLimit: number; toast: boolean; sound: boolean; showCode: boolean; foldCode: boolean; stackSteps: boolean; zoom: number;
+  toolOutputLimit: number; toast: boolean; sound: boolean; zoom: number;
   autoCompact: boolean; compactThreshold: number;
   hiddenModels: string[]; hotkeys: Record<Action, string>;
 };
 
 export const defaultSettings = (): Settings => ({
-  toolOutputLimit: 4096, toast: true, sound: true, showCode: true, foldCode: false, stackSteps: false, zoom: 16,
+  toolOutputLimit: 4096, toast: true, sound: true, zoom: 16,
   autoCompact: true, compactThreshold: 60,
   hiddenModels: [], hotkeys: { ...defaultHotkeys },
 });

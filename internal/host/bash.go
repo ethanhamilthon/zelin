@@ -3,10 +3,7 @@ package host
 import (
 	"context"
 	"errors"
-	"os"
-	"os/exec"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -40,39 +37,26 @@ func Bash(parent context.Context, command string, timeout float64) Result {
 }
 
 func BashIn(parent context.Context, dir, command string, timeout float64, level string) Result {
-	level, err := resolveLevel(level)
-	if err != nil {
-		return Result{Stderr: err.Error(), ExitCode: -1}
-	}
 	if timeout <= 0 || timeout > 120 {
 		timeout = 30
 	}
 	ctx, cancel := context.WithTimeout(parent, time.Duration(timeout*float64(time.Second)))
 	defer cancel()
-	name, args := shell(level, command)
-	cmd := exec.CommandContext(ctx, name, args...)
-	if dir != "" {
-		cmd.Dir = dir
-		cmd.Env = append(os.Environ(), "PWD="+dir)
+	cmd, level, err := Command(ctx, dir, command, level)
+	if err != nil {
+		return Result{Stderr: err.Error(), ExitCode: -1}
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
-	cmd.WaitDelay = time.Second
 	stdout, stderr := &output{}, &output{}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	err = cmd.Run()
 	result := Result{Stdout: string(stdout.data), Stderr: string(stderr.data), TimedOut: errors.Is(ctx.Err(), context.DeadlineExceeded)}
-	if err != nil {
-		result.ExitCode = -1
-		var exit *exec.ExitError
-		if errors.As(err, &exit) {
-			result.ExitCode = exit.ExitCode()
-		} else {
-			result.Stderr += err.Error()
-		}
-		if ctx.Err() == nil && killedByLimit(err, result.ExitCode) {
-			result.Stderr += limitNote(level)
-		}
+	code, exited := ExitCode(err)
+	result.ExitCode = code
+	if !exited {
+		result.Stderr += err.Error()
+	}
+	if err != nil && ctx.Err() == nil {
+		result.Stderr += LimitNote(err, code, level)
 	}
 	return result
 }

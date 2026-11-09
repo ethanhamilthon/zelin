@@ -25,8 +25,7 @@ func (r *Runtime) bindBash(ctx context.Context) {
 
 func (r *Runtime) bashArgs(call goja.FunctionCall) bashArgs {
 	first := call.Argument(0)
-	if _, ok := first.Export().(map[string]any); ok {
-		obj := first.ToObject(r.vm)
+	if obj, ok := first.(*goja.Object); ok && obj.ClassName() == "Object" {
 		return bashArgs{cmd: exportString(obj.Get("cmd")), timeout: number(obj.Get("timeout")), level: exportString(obj.Get("level"))}
 	}
 	return bashArgs{cmd: exportString(first), timeout: number(call.Argument(1)), level: exportString(call.Argument(2))}

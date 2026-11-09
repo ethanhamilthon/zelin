@@ -81,7 +81,7 @@ it('shows live preview in StepStack while running and folds ThinkingBlock to one
     { id: '1', code: 'fs.read("a.go")', output: 'ok', state: 'complete' },
     { id: '2', kind: 'thinking', code: 'Checking modal\nnavigation state', output: '', state: 'complete' },
   ];
-  const props = $state({ executions, running: true, stack: true, foldCode: true });
+  const props = $state({ executions, running: true });
   app = mount(Steps, { target: document.body, props }); flushSync();
   expect(q('.toggle')?.textContent).toContain('2 steps');
   expect(q('.preview')?.textContent).toBe('Checking modal navigation state');

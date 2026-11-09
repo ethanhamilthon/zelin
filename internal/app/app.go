@@ -12,6 +12,7 @@ import (
 	"zelin/internal/metadata"
 	"zelin/internal/provider"
 	"zelin/internal/sessions"
+	"zelin/internal/tasks"
 	"zelin/internal/version"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -46,6 +47,13 @@ func Run(assets fs.FS) {
 	}
 	docs := &instructions.Store{Dir: dir, Documents: map[string]instructions.Document{"system": {File: "SYSTEM.md", Default: agent.DefaultPrompt}}}
 	service := &AgentService{client: client, store: store, instructions: docs, agents: map[string]*agent.Agent{}}
+	taskDir, err := home.Path("tasks")
+	if err != nil {
+		log.Fatal(err)
+	}
+	service.tasks = &tasks.Manager{Dir: taskDir, Deliver: service.deliver}
+	service.tasks.Clean()
+	defer service.tasks.KillAll()
 	if wd, err := os.Getwd(); err == nil {
 		if err := store.EnsureDefault(wd); err != nil {
 			log.Fatal(err)
@@ -65,6 +73,7 @@ func Run(assets fs.FS) {
 			application.NewService(sessionService),
 			application.NewService(workspaces),
 			application.NewService(mcpService),
+			application.NewService(&TaskService{tasks: service.tasks}),
 			application.NewService(&AboutService{}),
 			application.NewService(&SettingsService{store: store, instructions: docs, notify: func(name string, data any) { application.Get().Event.Emit(name, data) }}),
 			application.NewService(&FileService{}),
@@ -80,6 +89,7 @@ func Run(assets fs.FS) {
 
 	service.emit = func(event agent.Event) { app.Event.Emit("agent:update", event) }
 	service.notify = func(name string, data any) { app.Event.Emit(name, data) }
+	service.tasks.Changed = func(id string) { app.Event.Emit("tasks:changed", id) }
 	sessionService.notify = service.notify
 	workspaces.notify = service.notify
 	count := 1

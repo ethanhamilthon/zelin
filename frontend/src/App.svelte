@@ -19,7 +19,7 @@
   import { unresolved } from './refs';
   import { inputPlaceholder } from './placeholder';
   import { createAppActions } from './app-actions.svelte';
-  import PendingDots from './PendingDots.svelte';
+  import UserDot from './UserDot.svelte';
   import { agentsDocument, fileDocument, namedDocument, type Document } from './documents';
   import { createWorkspaces } from './workspace-controller.svelte';
   import { follow, links, type Target } from './links';
@@ -118,10 +118,10 @@
     {#if shown}
       {#key sessions.state.id}<History messages={conversation.messages} executions={conversation.executions} busy={conversation.busy}
         started={conversation.started} activity={conversation.activity} streaming={conversation.streaming}
-        showCode={settings.state.showCode} foldCode={settings.state.foldCode} stack={settings.state.stackSteps} onimage={showImage} onref={files.openRef} ondocument={(next) => { doc = next; }} />{/key}
+        onimage={showImage} onref={files.openRef} ondocument={(next) => { doc = next; }} />{/key}
     {/if}
     <div class="input-wrap">
-      {#if conversation.steering}<div class="steering"><PendingDots /></div>{/if}
+      <div class={["input-dot", { first: !conversation.messages.length }]}><UserDot queued={conversation.steering} /></div>
       <div class={["editor", { empty: !conversation.messages.length }]} bind:this={container}></div>
     </div>
     <Notices {conversation} error={sessions.state.error} onretry={() => { void contextAction(sessions, 'compact'); }} />
@@ -145,6 +145,6 @@
   .hidden { display: none; }
   main { min-height: 0; overflow-x: hidden; overflow-y: auto; font-size: var(--font-size); }
   .input-wrap { position: relative; }
-  .steering { position: absolute; left: calc(clamp(48px, 6vw, 80px) + var(--icon-x)); top: 16px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; }
+  .input-dot { position: absolute; left: calc(clamp(48px, 6vw, 80px) + var(--icon-x)); top: 16px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; } .input-dot.first { top: 32px; }
   .editor { min-height: 180px; } .editor:not(.empty) :global(.cm-content) { padding-top: 16px; } .empty { min-height: calc(100vh - 44px); } .scroll-space { height: 50vh; }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  export type ModalName = 'commands' | 'sessions' | 'about' | 'workspace' | 'actions' | 'rename' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions' | 'mcp';
+  export type ModalName = 'commands' | 'sessions' | 'about' | 'workspace' | 'actions' | 'rename' | 'models' | 'efforts' | 'usage' | 'manager' | 'settings' | 'hotkeys' | 'instructions' | 'mcp' | 'tasks';
 </script>
 
 <script lang="ts">
@@ -13,6 +13,7 @@
   import WorkspaceForm from './WorkspaceForm.svelte';
   import About from './About.svelte';
   import MCPServers from './MCPServers.svelte';
+  import Tasks from './Tasks.svelte';
   import type { createWorkspaces } from './workspace-controller.svelte';
   import type { SessionAction } from './session-actions';
   import SessionList from './SessionList.svelte';
@@ -42,7 +43,9 @@
 {:else if modal === 'commands'}
   <Commands {back} {onclose} {ondismiss} onopen={open} />
 {:else if modal === 'actions'}
-  <SessionActions busy={subject?.busy} hasMessages={!!subject?.messages.length} {back} {onclose} {ondismiss} {onaction} />
+  <SessionActions busy={subject?.busy} hasMessages={!!subject?.messages.length} session={target} {back} {onclose} {ondismiss} {onaction} />
+{:else if modal === 'tasks'}
+  <Tasks session={target} {back} {onclose} {ondismiss} />
 {:else if modal === 'rename'}
   <RenameSession title={sessions.state.items.find((item) => item.id === target)?.title ?? ''} {back} {onclose} {ondismiss} onsave={onrename} />
 {:else if modal === 'sessions'}

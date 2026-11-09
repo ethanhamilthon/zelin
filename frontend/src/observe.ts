@@ -11,6 +11,11 @@ export function observeEvent(state: Conversation, event: AgentEvent) {
       if (state.steering) { state.draft = ''; state.attachments = []; state.refs = []; }
       state.steering = false;
     }
+    else if (event.kind === 'notice') {
+      const steps = state.executions.filter((item) => item.state === 'complete');
+      state.messages = [...state.messages, { role: 'user', kind: 'task', content: event.message.content, ...(steps.length && { executions: steps }) }];
+      state.executions = state.executions.filter((item) => item.state !== 'complete');
+    }
     else if (event.kind === 'activity') state.activity = event.activity;
     else if (event.kind === 'compact_error') { state.error = event.activity; state.compactFailed = true; }
     else if (event.kind === 'usage') state.usage = event.usage;

@@ -13,6 +13,7 @@ import (
 	"zelin/internal/provider"
 	"zelin/internal/sessions"
 	"zelin/internal/tagged"
+	"zelin/internal/tasks"
 )
 
 type AgentService struct {
@@ -27,6 +28,8 @@ type AgentService struct {
 	steerRefs    map[string][]tagged.Ref
 	live         map[string]*RunSnapshot
 	activity     map[string]SessionActivity
+	tasks        *tasks.Manager
+	paused       map[string]bool
 }
 
 type AgentResult struct {
@@ -68,34 +71,15 @@ func (s *AgentService) start(ctx context.Context, id string) (*agent.Agent, cont
 	return current, ctx, nil
 }
 
-func (s *AgentService) finish(id string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if cancel := s.runs[id]; cancel != nil {
-		cancel()
-	}
-	if current := s.agents[id]; current != nil {
-		current.Steer(provider.Message{})
-	}
-	delete(s.runs, id)
-}
-
-func (s *AgentService) Stop(id string) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if cancel := s.runs[id]; cancel != nil {
-		cancel()
-		return true
-	}
-	return false
-}
-
-func (s *AgentService) Run(ctx context.Context, id string, history []provider.Message, refs []tagged.Ref) (AgentResult, error) {
+func (s *AgentService) run(ctx context.Context, id string, history []provider.Message, refs []tagged.Ref, claim func() (string, error)) (AgentResult, error) {
 	current, ctx, err := s.start(ctx, id)
 	if err != nil {
 		return AgentResult{}, err
 	}
 	defer s.finish(id)
+	if history, err = claimed(history, claim); err != nil {
+		return AgentResult{}, err
+	}
 	s.beginLive(id)
 	defer s.endLive(id)
 	if s.client != nil {
@@ -111,10 +95,14 @@ func (s *AgentService) Run(ctx context.Context, id string, history []provider.Me
 	current.Persist = func(state agent.State) error { return s.store.SaveState(id, state) }
 	current.Expand = s.expander(id, refs)
 	current.AutoCompact = func() (bool, int, int) { return s.compactionSettings(id) }
+	s.bindTasks(id, current)
 	started, before, result := time.Now(), current.State().Usage, AgentResult{Executions: []agent.Execution{}}
 	content, err := current.Run(ctx, history, func(event agent.Event) {
 		if event.Kind == "steer" && event.Message != nil {
 			s.recordSteer(id, event, &result, current)
+		}
+		if event.Kind == "notice" && event.Message != nil {
+			s.recordNotice(id, event, &result, current)
 		}
 		if event.Execution != nil && event.Execution.State == "complete" {
 			result.Executions = append(result.Executions, *event.Execution)

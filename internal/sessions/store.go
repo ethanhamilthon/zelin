@@ -18,6 +18,7 @@ import (
 type Message struct {
 	Files      []files.Attachment `json:"files,omitempty"`
 	Role       string             `json:"role"`
+	Kind       string             `json:"kind,omitempty"`
 	Content    string             `json:"content"`
 	Images     []string           `json:"images,omitempty"`
 	Executions []agent.Execution  `json:"executions,omitempty"`

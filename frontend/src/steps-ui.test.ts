@@ -16,7 +16,7 @@ const thought: Execution = { id: 'think', kind: 'thinking', code: 'Plan', output
 const $$ = (selector: string) => document.querySelectorAll(selector);
 
 it('stacks consecutive steps and keeps each block foldable', () => {
-  app = mount(Steps, { target: document.body, props: { executions: [thought, code('a'), code('b')], stack: true } });
+  app = mount(Steps, { target: document.body, props: { executions: [thought, code('a'), code('b')] } });
   flushSync();
   const toggle = document.querySelector<HTMLButtonElement>('.toggle')!;
   expect(toggle.textContent?.trim()).toBe('3 steps');
@@ -27,23 +27,33 @@ it('stacks consecutive steps and keeps each block foldable', () => {
   expect($$('.thinking')).toHaveLength(1);
   $$('.fold')[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
   flushSync();
-  expect($$('.source')[0].classList.contains('folded')).toBe(true);
-  expect($$('.source')[1].classList.contains('folded')).toBe(false);
+  expect($$('.source')[0].classList.contains('folded')).toBe(false);
+  expect($$('.source')[1].classList.contains('folded')).toBe(true);
   toggle.click();
   flushSync();
   expect($$('.execution')).toHaveLength(0);
 });
 
-it('renders steps flat when stacking is off or there is one step', () => {
-  app = mount(Steps, { target: document.body, props: { executions: [thought, code('a')] } });
+it('renders a single step flat and folded', () => {
+  app = mount(Steps, { target: document.body, props: { executions: [code('a')] } });
   flushSync();
   expect($$('.toggle')).toHaveLength(0);
-  expect($$('.execution, .thinking')).toHaveLength(2);
+  expect($$('.source.folded')).toHaveLength(1);
+});
+
+it('renders a finished task notice as a folded block', () => {
+  const text = 'Background tasks finished:\n- #1 "build": exit 0 after 4s\nRead the logs with tasks.output(id).';
+  app = mount(History, { target: document.body, props: { messages: [{ role: 'user', kind: 'task', content: text }] } });
+  flushSync();
+  expect(document.querySelector('[aria-label="Task notice"] p')?.textContent).toBe('#1 "build": exit 0 after 4s');
+  document.querySelector<HTMLButtonElement>('[aria-label="Unfold tasks"]')!.click(); flushSync();
+  expect(document.querySelector('[aria-label="Task notice"] p')?.textContent).toBe(text);
+  expect(document.querySelector('[aria-label="User message"] .dot')).toBeNull();
 });
 
 it('renders interim assistant text as a regular answer between step groups', () => {
   const step = (id: string) => ({ id, code: id, output: '', state: 'complete' as const });
-  app = mount(Timeline, { target: document.body, props: { stack: true, executions: [step('a'), step('b'), { id: 'n', kind: 'message', code: 'Checking **files**', output: '', state: 'complete' }, step('c'), step('d')] } });
+  app = mount(Timeline, { target: document.body, props: { executions: [step('a'), step('b'), { id: 'n', kind: 'message', code: 'Checking **files**', output: '', state: 'complete' }, step('c'), step('d')] } });
   flushSync();
   const note = document.querySelector('.note')!;
   expect(note.textContent).toContain('Checking files');

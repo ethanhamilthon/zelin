@@ -9,12 +9,13 @@
   import MessageIcon from './MessageIcon.svelte';
   import MessageText from './MessageText.svelte';
   import TurnTime from './TurnTime.svelte';
+  import TaskNotice from './TaskNotice.svelte';
   import type { Ref } from './refs';
   import MoreButton from './MoreButton.svelte';
   import { earlier, first, more as count } from './bounded';
   import { keepScroll } from './scroll-anchor';
-  let { messages, executions = [], busy = false, showCode = true, foldCode = false, stack = false, started, activity = '', streaming = '', onimage, onref, ondocument }: {
-    messages: Message[]; executions?: Execution[]; busy?: boolean; showCode?: boolean; foldCode?: boolean; stack?: boolean;
+  let { messages, executions = [], busy = false, started, activity = '', streaming = '', onimage, onref, ondocument }: {
+    messages: Message[]; executions?: Execution[]; busy?: boolean;
     started?: number; activity?: string; streaming?: string;
     onimage?: (url: string, number: number) => void; onref?: (ref: Ref) => void; ondocument?: (doc: Document) => void;
   } = $props();
@@ -29,30 +30,25 @@
     void keepScroll(anchor, () => { start = earlier(from); });
   };
 
-  function icon(message: Message, index: number) {
-    if (message.error) return 'error';
-    if (message.role === 'assistant') return 'assistant';
-    if (busy && index === messages.length - 1) return 'loading';
-    return 'done';
-  }
+  const icon = (message: Message) => message.error ? 'error' : message.role === 'assistant' ? 'assistant' : 'user';
 </script>
 
 <section aria-label="Conversation" aria-live="polite" bind:this={anchor}>
   {#if from > 0}<MoreButton count={count(from)} label="messages" onclick={reveal} />{/if}
   {#each messages.slice(from) as message, offset (from + offset)}
-    {@const index = from + offset}
-    <article class:assistant={message.role === 'assistant'} aria-label={message.role === 'user' ? 'User message' : 'Assistant message'}>
-      <Timeline executions={message.executions ?? []} {showCode} {foldCode} {stack} />
+    <article class:assistant={message.role === 'assistant'} aria-label={message.kind === 'task' ? 'Tasks finished' : message.role === 'user' ? 'User message' : 'Assistant message'}>
+      <Timeline executions={message.executions ?? []} />
+      {#if message.kind === 'task'}<TaskNotice content={message.content} />{:else}
       <div class="message">
-        <MessageIcon kind={icon(message, index)} />
+        <MessageIcon kind={icon(message)} />
         <MessageText content={message.content} markdown={message.role === 'assistant'} images={message.images} refs={message.refs} {onimage} {onref} />
-      </div>
+      </div>{/if}
       {#if message.files?.length}<Attachments files={message.files} onopen={open} />{/if}
       {#if message.turn}<TurnTime duration={message.turn.duration} />{/if}
     </article>
   {/each}
   {#if error}<p role="alert">{error}</p>{/if}
-  {#if busy}<Timeline {executions} running {showCode} {foldCode} {stack} {started} {activity} />{/if}
+  {#if busy}<Timeline {executions} running {started} {activity} />{/if}
   {#if busy && streaming}<div class="message streaming" aria-label="Streaming answer"><MessageText content={streaming} markdown /></div>{/if}
 </section>
 
