@@ -59,6 +59,6 @@
 <style>
   .app { width: 100%; height: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   main { --gutter: clamp(48px, 6vw, 80px); min-height: 0; overflow-x: hidden; overflow-y: auto; }
-  .editor { min-height: 60px; }
+  .editor { min-height: 60px; } .editor :global(.cm-content) { padding-left: var(--gutter); padding-right: var(--gutter); }
   .secret :global(.cm-line) { -webkit-text-security: disc; }
 </style>

@@ -95,7 +95,7 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			messages = append(messages, *imgMessage)
 			sync()
 		}
-		if model, shown := a.inbox(emit); len(model) > 0 {
+		if model, shown := a.inbox(emit, provider.Message{}, ""); len(model) > 0 {
 			messages = append(messages, model...)
 			history = append(history, shown...)
 			sync()
@@ -129,7 +129,7 @@ func (a *Agent) Run(ctx context.Context, history []provider.Message, observers .
 			if strings.TrimSpace(reply.Content) == "" {
 				return "", fmt.Errorf("Agent returned an empty response")
 			}
-			if model, shown := a.inbox(emit); len(model) > 0 {
+			if model, shown := a.inbox(emit, reply, thinkingID); len(model) > 0 {
 				messages = append(append(messages, reply), model...)
 				history = append(history, shown...)
 				sync()

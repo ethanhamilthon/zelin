@@ -79,3 +79,14 @@ it('titles the list Workspaces with a new workspace button', () => {
   expect(document.querySelector('.heading')?.textContent).toBe('Workspaces');
   expect(document.querySelector('.title button')?.textContent).toBe('New workspace');
 });
+
+it('unfolds a code block on the first click and shows output on the second', () => {
+  app = mount(Steps, { target: document.body, props: { executions: [code('x')] } });
+  flushSync();
+  const source = () => document.querySelector<HTMLButtonElement>('.source')!;
+  source().click(); flushSync();
+  expect(source().classList.contains('folded')).toBe(false);
+  expect(document.querySelector('.output')).toBeNull();
+  source().click(); flushSync();
+  expect(document.querySelector('.output')?.textContent).toBe('x');
+});

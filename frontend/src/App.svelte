@@ -146,5 +146,5 @@
   main { min-height: 0; overflow-x: hidden; overflow-y: auto; font-size: var(--font-size); }
   .input-wrap { position: relative; }
   .input-dot { position: absolute; left: calc(clamp(48px, 6vw, 80px) + var(--icon-x)); top: 16px; height: calc(var(--font-size) * 1.8); display: flex; align-items: center; z-index: 1; pointer-events: none; } .input-dot.first { top: 32px; }
-  .editor { min-height: 180px; } .editor:not(.empty) :global(.cm-content) { padding-top: 16px; } .empty { min-height: calc(100vh - 44px); } .scroll-space { height: 50vh; }
+  .editor { min-height: 180px; } .editor :global(.cm-content) { padding-left: clamp(48px, 6vw, 80px); padding-right: clamp(48px, 6vw, 80px); } .editor:not(.empty) :global(.cm-content) { padding-top: 16px; } .empty { min-height: calc(100vh - 44px); } .scroll-space { height: 50vh; }
 </style>

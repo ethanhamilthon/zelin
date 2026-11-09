@@ -29,3 +29,11 @@ it('keeps text typed while a remote refresh is in flight', async () => {
   await syncSession('one', conversations, new Map([['one', { draft: 'typed', attachments: [], refs: '[]' }]]));
   expect(target.draft).toBe('typed');
 });
+
+it('keeps the answer given right before a steer', () => {
+  const state = { ...blank(), busy: true, steering: true, draft: 'more' };
+  observeEvent(state, { kind: 'execution', execution: { id: 't-note', kind: 'message', code: 'First answer', output: '', state: 'complete' } });
+  observeEvent(state, { kind: 'steer', message: { role: 'user', content: 'more' } } as never);
+  expect(state.messages[0].executions?.[0].code).toBe('First answer');
+  expect(state.messages[0].content).toBe('more');
+});
